@@ -4,7 +4,6 @@ import {
   Banknote,
   BarChart3,
   Gamepad2,
-  Gem,
   Home,
   Medal,
   ShieldCheck,
@@ -107,8 +106,9 @@ export const featureCards = [
 ];
 
 export const tribeStats = [
-  { label: "Racha", value: "3 días" },
-  { label: "Retos activos", value: "2/4" },
+  { label: "Racha activa", value: "3 días 🔥" },
+  { label: "Reto diario", value: "Pendiente" },
+  { label: "Retos semana", value: "2/2" },
   { label: "Posición", value: "#4" },
 ];
 
@@ -123,21 +123,40 @@ export const challengeCards = [
   {
     title: "Trivia Express",
     description: "Mental agility",
-    points: "+40 pts",
+    points: "+60 pts",
+    icon: Trophy,
+    dark: false,
+  },
+  {
+    title: "Reflejos Tribe",
+    description: "Action game",
+    points: "+55 pts",
+    icon: SquareActivity,
+    dark: false,
+  },
+];
+
+export const dailyChallenge = {
+  title: "Reto diario de racha",
+  description: "Completa este reto antes de medianoche para mantener tu racha activa.",
+  points: "+25 pts",
+  status: "Pendiente",
+  closesAt: "Cierra hoy a las 23:59",
+  countdown: "05h 42m",
+};
+
+export const weeklyChallenges = [
+  {
+    title: "Trivia Express",
+    description: "Mental agility",
+    points: "+60 pts",
     icon: Trophy,
   },
   {
     title: "Reflejos Tribe",
     description: "Action game",
-    points: "+25 pts",
+    points: "+55 pts",
     icon: SquareActivity,
-  },
-  {
-    title: "Reto Premium",
-    description: "High stakes",
-    points: "+80 pts",
-    icon: Gem,
-    dark: true,
   },
 ];
 
@@ -160,9 +179,9 @@ export const rewardCards = [
 ];
 
 export const activityItems = [
-  { title: "Racha activa", value: "3 días" },
-  { title: "Retos completados", value: "2/4" },
-  { title: "Bonus semanal", value: "+85 pts hoy" },
+  { title: "Racha activa", value: "3 días 🔥" },
+  { title: "Reto diario", value: "Pendiente" },
+  { title: "Retos semana", value: "2/2" },
 ];
 
 export const profileHighlights = [
