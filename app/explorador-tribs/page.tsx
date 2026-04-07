@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { TribeCard } from "@/components/tribe-card";
 import { FIGMA_ASSETS } from "@/lib/data";
+import Link from "next/link";
 
 const tiers = ["Todos", "Bronce", "Plata", "Oro", "Diamante"];
 
@@ -72,23 +71,16 @@ export default function ExplorerPage() {
   );
 
   return (
-    <main className="explorer-page">
-      {/* Header Section */}
-      <div className="explorer-header">
-        <div className="explorer-header-content">
-          <h1 className="explorer-title">Explorador de Tribs</h1>
-          <p className="explorer-subtitle">
-            Descubre nuevas comunidades, únete y compite con otros jugadores
-          </p>
+    <main className="fig-mobile-explorer">
+      <header className="fig-mobile-search-head">
+        <div className="fig-mobile-search-box">
+          <span>🔍</span>
+          <input type="text" placeholder="Buscar Tribe..." />
         </div>
-        <Link href="/dashboard" className="btn btn--secondary">
-          ← Volver al Dashboard
-        </Link>
-      </div>
+        <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" draggable="false" />
+      </header>
 
-      {/* Filter Section */}
-      <div className="explorer-filters">
-        <div className="filter-label">Filtrar por Tier:</div>
+      <section className="fig-mobile-filter-strip">
         <div className="filter-pills-container">
           {tiers.map((tier) => (
             <button
@@ -100,40 +92,69 @@ export default function ExplorerPage() {
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Results Counter */}
-      <div className="explorer-results">
-        <span className="results-count">
-          {filteredTribes.length} tribu{filteredTribes.length !== 1 ? "s" : ""} encontrada{filteredTribes.length !== 1 ? "s" : ""}
-        </span>
-      </div>
+      <section className="fig-mobile-recommended">
+        <h2>Tribes recomendadas</h2>
+        {filteredTribes.slice(0, 1).map((tribe) => (
+          <article key={tribe.id} className="fig-mobile-reco-card">
+            <div>
+              <img src={tribe.avatarUrl} alt={tribe.name} />
+              <div>
+                <h3>{tribe.name}</h3>
+                <p>
+                  <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
+                </p>
+              </div>
+            </div>
+            <div className="fig-mobile-reco-bottom">
+              <div>
+                <small>PUNTOS SEMANA</small>
+                <strong>{new Intl.NumberFormat("es-ES").format(tribe.pointsWeek)} pts</strong>
+              </div>
+              <button type="button">Unirse</button>
+            </div>
+          </article>
+        ))}
+      </section>
 
-      {/* Tribes Grid */}
-      {filteredTribes.length > 0 ? (
-        <div className="tribes-grid">
-          {filteredTribes.map((tribe) => (
-            <TribeCard
-              key={tribe.id}
-              name={tribe.name}
-              avatarUrl={tribe.avatarUrl}
-              tier={tribe.tier}
-              memberCount={tribe.memberCount}
-              maxMembers={tribe.maxMembers}
-              pointsWeek={tribe.pointsWeek}
-              onJoin={() => console.log(`Joining tribe: ${tribe.name}`)}
-            />
-          ))}
-        </div>
-      ) : (
+      <section className="fig-mobile-popular">
+        <h2>Tribes populares esta semana</h2>
+        {filteredTribes.map((tribe) => (
+          <article key={tribe.id}>
+            <div>
+              <img src={tribe.avatarUrl} alt={tribe.name} />
+              <div>
+                <h3>{tribe.name}</h3>
+                <p>
+                  <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
+                </p>
+              </div>
+            </div>
+            <button type="button" disabled={tribe.memberCount >= tribe.maxMembers}>
+              {tribe.memberCount >= tribe.maxMembers ? "Lleno" : "Unirse"}
+            </button>
+          </article>
+        ))}
+      </section>
+
+      <button type="button" className="fig-mobile-create-tribe-btn">
+        + Crear mi Tribe
+      </button>
+
+      <nav className="fig-mobile-bottom-nav">
+        <Link href="/dashboard" className="active">INICIO</Link>
+        <Link href="/tribe">SQUAD</Link>
+        <Link href="/retos">RETOS</Link>
+        <Link href="/perfil">PERFIL</Link>
+      </nav>
+
+      {filteredTribes.length === 0 ? (
         <div className="explorer-empty">
           <div className="empty-icon">🔍</div>
-          <h3 className="empty-title">No se encontraron tribs</h3>
-          <p className="empty-message">
-            Intenta con otro filtro o crea tu propia tribu
-          </p>
+          <h3 className="empty-title">No se encontraron tribus</h3>
         </div>
-      )}
+      ) : null}
     </main>
   );
 }

@@ -1,44 +1,100 @@
 import Link from "next/link";
-import { Gamepad2, Medal, Users } from "lucide-react";
+import { FIGMA_ASSETS } from "@/lib/data";
 
 export default function OnboardingPage() {
   return (
-    <div className="app-shell" style={{ padding: 18 }}>
-      <div className="mobile-frame">
-        <div className="phone-shell">
-          <div className="phone-topbar">
-            <div className="brand" style={{ gap: 8 }}>
-              <div className="brand__mark" style={{ width: 30, height: 30, borderRadius: 10 }}>✦</div>
-              <div className="brand__text" style={{ fontSize: "0.98rem" }}>TokaTribe</div>
-            </div>
-            <Link href="/dashboard" className="button button--primary" style={{ padding: "0.65rem 1rem" }}>Entrar</Link>
-          </div>
-
-          <div className="phone-content">
-            <section className="hero-card" style={{ minHeight: 430, padding: 20 }}>
-              <div className="hero-card__content" style={{ gap: 18 }}>
-                <span className="pill" style={{ width: "fit-content" }}>Mini app dentro del ecosistema Toka</span>
-                <h1 className="hero-card__title" style={{ fontSize: "2.5rem" }}>Bienvenido a tu Tribe</h1>
-                <p className="hero-card__copy" style={{ fontSize: "0.96rem" }}>Compite en retos semanales, suma puntos con tu equipo y sube de división dentro de Toka.</p>
-                <div className="phone-cta">
-                  <Link href="/dashboard" className="button button--secondary full-width">Entrar con Toka</Link>
-                  <Link href="/" className="button button--ghost full-width" style={{ color: "#fff" }}>Conocer la dinámica</Link>
-                </div>
-                <div className="feature-row" style={{ gridTemplateColumns: "1fr", marginTop: 8 }}>
-                  <article className="mini-card"><div className="mini-icon"><Gamepad2 size={18} /></div><h3>Juega retos</h3><p>Acciones rápidas para sumar puntos.</p></article>
-                  <article className="mini-card"><div className="mini-icon"><Users size={18} /></div><h3>Compite en equipo</h3><p>La Tribe marca el avance colectivo.</p></article>
-                  <article className="mini-card"><div className="mini-icon"><Medal size={18} /></div><h3>Gana recompensas</h3><p>Saldo Toka y beneficios del ecosistema.</p></article>
-                </div>
-              </div>
-            </section>
-
-            <div className="feature-row" style={{ gridTemplateColumns: "1fr" }}>
-              <article className="feature-card"><div className="feature-card__icon"><Gamepad2 size={18} /></div><h3>Tu Tribe importa</h3><p>La identidad tribal es el motor de retención.</p></article>
-              <article className="feature-card"><div className="feature-card__icon"><Medal size={18} /></div><h3>Todo en una temporada</h3><p>El ranking reinicia y premia el desempeño constante.</p></article>
-            </div>
-          </div>
+    <main className="fig-mobile-home">
+      <header className="fig-mobile-topbar">
+        <div className="fig-mobile-topbar__left">
+          <span className="fig-mobile-menu">☰</span>
+          <strong>TokaTribe</strong>
         </div>
-      </div>
-    </div>
+        <Link href="/dashboard" className="fig-mobile-enter-btn">
+          Entrar
+        </Link>
+      </header>
+
+      <section className="fig-mobile-hero">
+        <img className="fig-mobile-hero-img" src={FIGMA_ASSETS.landing.hero} alt="Axo mascot" draggable="false" />
+        <span className="fig-mobile-kicker">MINI APP DENTRO DEL ECOSISTEMA TOKA</span>
+        <h1>Bienvenido a tu Tribe</h1>
+        <div className="fig-mobile-hero-cta">
+          <Link href="/dashboard" className="fig-pill-btn fig-pill-btn--primary">
+            Entrar con Toka
+          </Link>
+          <Link href="/" className="fig-pill-btn fig-pill-btn--light">
+            Conocer la dinámica
+          </Link>
+        </div>
+      </section>
+
+      <section className="fig-mobile-quick-actions">
+        <article>
+          <img src={FIGMA_ASSETS.landing.playIcon} alt="Jugar retos" />
+          <span>JUEGA RETOS</span>
+        </article>
+        <article>
+          <img src={FIGMA_ASSETS.landing.teamIcon} alt="Compite en equipo" />
+          <span>COMPITE EN EQUIPO</span>
+        </article>
+        <article>
+          <img src={FIGMA_ASSETS.landing.rewardIcon} alt="Gana recompensas" />
+          <span>GANA RECOMPENSAS</span>
+        </article>
+      </section>
+
+      <section className="fig-mobile-status-card">
+        <div className="fig-mobile-status-top">
+          <div>
+            <p>ESTADO DE TU TRIBE</p>
+            <h2>Axo Squad</h2>
+          </div>
+          <span>RANKING #4</span>
+        </div>
+        <div className="fig-mobile-status-main">
+          <div className="fig-mobile-avatar-ring">
+            <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" />
+          </div>
+          <div>
+            <div className="fig-mobile-tier">Plata ♦</div>
+            <div className="fig-mobile-points">1480 pts</div>
+          </div>
+          <img className="fig-mobile-status-mascot" src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
+        </div>
+        <div className="fig-mobile-progress-labels">
+          <span>A 120 pts de ascender</span>
+          <strong>92%</strong>
+        </div>
+        <div className="fig-mobile-progress-track">
+          <div style={{ width: "92%" }} />
+        </div>
+      </section>
+
+      <section className="fig-mobile-ecosystem">
+        <h3>Explora el Ecosistema</h3>
+        <article>
+          <img src={FIGMA_ASSETS.landing.rewardIcon} alt="Tu tribe importa" />
+          <h4>Tu Tribe importa</h4>
+          <p>Colabora con tu equipo para desbloquear niveles exclusivos y bonos semanales.</p>
+        </article>
+        <article>
+          <img src={FIGMA_ASSETS.landing.rewardIcon} alt="Todo en una temporada" />
+          <h4>Todo en una temporada</h4>
+          <p>Cada 30 dias el tablero se reinicia. Nuevos retos te esperan cada mes.</p>
+        </article>
+        <article>
+          <img src={FIGMA_ASSETS.landing.rewardIcon} alt="Recompensas dentro de Toka" />
+          <h4>Recompensas dentro de Toka</h4>
+          <p>Canjea tus puntos por beneficios reales en todo el ecosistema de aplicaciones.</p>
+        </article>
+      </section>
+
+      <nav className="fig-mobile-bottom-nav">
+        <Link href="/dashboard" className="active">INICIO</Link>
+        <Link href="/tribe">SQUAD</Link>
+        <Link href="/retos">RETOS</Link>
+        <Link href="/perfil">PERFIL</Link>
+      </nav>
+    </main>
   );
 }
