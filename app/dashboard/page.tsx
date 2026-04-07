@@ -1,11 +1,19 @@
-import { ArrowRight, CircleCheckBig, Gift, Play } from "lucide-react";
+import { ArrowRight, CircleCheckBig, Clock3, Gift, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
-import { activityItems, challengeCards, FIGMA_ASSETS, leaderboardRows, seasonMilestones, tribeStats } from "@/lib/data";
+import {
+  activityItems,
+  dailyChallenge,
+  FIGMA_ASSETS,
+  leaderboardRows,
+  seasonMilestones,
+  tribeStats,
+  weeklyChallenges,
+} from "@/lib/data";
 
 export default function DashboardPage() {
   return (
-    <AppShell title="Hola, Alix y Nafa" subtitle="Tu Tribe está cerca de subir de división" headerBadge={<div className="balance-pill">Balance: $1,240</div>}>
+    <AppShell title="Hola, Alix y Nafa" subtitle="Tu Tribe está cerca de subir de división" headerBadge={<div className="balance-pill">1,480 pts</div>}>
       <Panel className="hero-panel fig-dashboard-hero">
         <div className="hero-panel__layout">
           <div className="hero-panel__copy">
@@ -73,7 +81,7 @@ export default function DashboardPage() {
 
         <div className="dashboard-side fig-dashboard-side-stack">
           <Panel>
-            <SectionHeader eyebrow="Actividad" title="Tu actividad" description="+85 pts hoy" />
+            <SectionHeader eyebrow="Actividad" title="Tu actividad" description="Estado actual de tus retos" />
             <div className="stack stack--tight">
               {activityItems.map((item) => (
                 <div key={item.title} className="activity-row">
@@ -89,13 +97,6 @@ export default function DashboardPage() {
             <div className="panel" style={{ marginTop: 16, padding: 16, background: "#4a77e3", color: "#fff" }}>
               Completa 2 retos más para el bonus semanal.
             </div>
-          </Panel>
-
-          <Panel className="muted-card">
-            <span className="status-pill">Disponible ahora</span>
-            <h3 style={{ fontSize: "1.55rem" }}>$50 en saldo Toka</h3>
-            <p>Recompensa disponible por racha.</p>
-            <button className="button button--primary full-width" style={{ marginTop: 14 }} type="button">Reclamar</button>
           </Panel>
 
           <Panel>
@@ -114,11 +115,27 @@ export default function DashboardPage() {
 
       <div className="workspace__grid" style={{ marginTop: 2 }}>
         <Panel>
-          <SectionHeader eyebrow="Retos de hoy" title="Acciones rápidas" description="Selecciona una actividad y gana puntos al instante." />
+          <SectionHeader eyebrow="Reto diario" title={dailyChallenge.title} description={dailyChallenge.description} />
+          <article className="challenge-card" style={{ border: "1px solid rgba(74, 119, 227, 0.2)", background: "linear-gradient(180deg, #f2f6ff 0%, #e9f0ff 100%)" }}>
+            <div className="inline-row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
+              <span className="status-pill">{dailyChallenge.status}</span>
+              <span className="reward-pill"><Clock3 size={14} /> {dailyChallenge.countdown}</span>
+            </div>
+            <p style={{ margin: 0, color: "#3557a8", fontWeight: 700 }}>{dailyChallenge.closesAt}</p>
+            <div className="inline-row" style={{ justifyContent: "space-between", marginTop: 16 }}>
+              <strong>{dailyChallenge.points}</strong>
+              <a className="button button--secondary" href="/retos">Jugar ahora <ArrowRight size={16} /></a>
+            </div>
+            <p className="subtle" style={{ marginTop: 10 }}>Si no lo completas hoy, la racha se rompe.</p>
+          </article>
+        </Panel>
+
+        <Panel>
+          <SectionHeader eyebrow="Retos de la semana" title="Toka Trivia y Reflejos Tribe" description="Cierra en 2 días 14 h · solo una vez por semana" />
           <div className="challenge-grid fig-dashboard-challenges">
-            {challengeCards.map((item) => (
-              <article key={item.title} className={`challenge-card ${item.dark ? "challenge-card--dark" : ""}`}>
-                <div className="mini-icon" style={{ background: item.dark ? "rgba(255,255,255,0.1)" : undefined }}>
+            {weeklyChallenges.map((item) => (
+              <article key={item.title} className="challenge-card">
+                <div className="mini-icon">
                   <item.icon size={18} />
                 </div>
                 <h3>{item.title}</h3>
@@ -129,36 +146,6 @@ export default function DashboardPage() {
                 </div>
               </article>
             ))}
-          </div>
-        </Panel>
-
-        <Panel>
-          <SectionHeader eyebrow="Actividad reciente" title="Últimos eventos" description="Lo que hizo tu Tribe hoy." />
-          <div className="timeline">
-            <div className="timeline-row">
-              <div className="timeline-dot" />
-              <div>
-                <strong>Trivia completada</strong>
-                <p>Hace 2 horas • +40 pts</p>
-              </div>
-              <span className="subtle">Hoy</span>
-            </div>
-            <div className="timeline-row">
-              <div className="timeline-dot" />
-              <div>
-                <strong>Ascenso en el ranking</strong>
-                <p>Ayer • Posición #4</p>
-              </div>
-              <span className="subtle">Ayer</span>
-            </div>
-            <div className="timeline-row">
-              <div className="timeline-dot" />
-              <div>
-                <strong>Recompensa lista</strong>
-                <p>Ayer • $50 saldo</p>
-              </div>
-              <span className="subtle">Ayer</span>
-            </div>
           </div>
         </Panel>
       </div>
