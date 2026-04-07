@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
 import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
 
 const tiers = ["Todos", "Bronce", "Plata", "Oro", "Diamante"];
 
@@ -70,8 +71,8 @@ export default function ExplorerPage() {
     (tribe) => selectedTier === "Todos" || tribe.tier === selectedTier
   );
 
-  return (
-    <main className="fig-mobile-explorer">
+  const content = (
+    <>
       <header className="fig-mobile-search-head">
         <div className="fig-mobile-search-box">
           <span>🔍</span>
@@ -94,60 +95,57 @@ export default function ExplorerPage() {
         </div>
       </section>
 
-      <section className="fig-mobile-recommended">
-        <h2>Tribes recomendadas</h2>
-        {filteredTribes.slice(0, 1).map((tribe) => (
-          <article key={tribe.id} className="fig-mobile-reco-card">
-            <div>
-              <img src={tribe.avatarUrl} alt={tribe.name} />
-              <div>
-                <h3>{tribe.name}</h3>
-                <p>
-                  <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
-                </p>
-              </div>
-            </div>
-            <div className="fig-mobile-reco-bottom">
-              <div>
-                <small>PUNTOS SEMANA</small>
-                <strong>{new Intl.NumberFormat("es-ES").format(tribe.pointsWeek)} pts</strong>
-              </div>
-              <button type="button">Unirse</button>
-            </div>
-          </article>
-        ))}
-      </section>
+      <div className="fig-explorer-responsive-grid">
+        <section className="fig-mobile-recommended">
+          <h2>Tribes recomendadas</h2>
+          <div className="fig-mobile-reco-scroll">
+            {filteredTribes.slice(0, 3).map((tribe) => (
+              <article key={tribe.id} className="fig-mobile-reco-card">
+                <div>
+                  <img src={tribe.avatarUrl} alt={tribe.name} />
+                  <div>
+                    <h3>{tribe.name}</h3>
+                    <p>
+                      <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
+                    </p>
+                  </div>
+                </div>
+                <div className="fig-mobile-reco-bottom">
+                  <div>
+                    <small>PUNTOS SEMANA</small>
+                    <strong>{new Intl.NumberFormat("es-ES").format(tribe.pointsWeek)} pts</strong>
+                  </div>
+                  <button type="button">Unirse</button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
 
-      <section className="fig-mobile-popular">
-        <h2>Tribes populares esta semana</h2>
-        {filteredTribes.map((tribe) => (
-          <article key={tribe.id}>
-            <div>
-              <img src={tribe.avatarUrl} alt={tribe.name} />
+        <section className="fig-mobile-popular">
+          <h2>Tribes populares esta semana</h2>
+          {filteredTribes.map((tribe) => (
+            <article key={tribe.id}>
               <div>
-                <h3>{tribe.name}</h3>
-                <p>
-                  <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
-                </p>
+                <img src={tribe.avatarUrl} alt={tribe.name} />
+                <div>
+                  <h3>{tribe.name}</h3>
+                  <p>
+                    <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
+                  </p>
+                </div>
               </div>
-            </div>
-            <button type="button" disabled={tribe.memberCount >= tribe.maxMembers}>
-              {tribe.memberCount >= tribe.maxMembers ? "Lleno" : "Unirse"}
-            </button>
-          </article>
-        ))}
-      </section>
+              <button type="button" disabled={tribe.memberCount >= tribe.maxMembers}>
+                {tribe.memberCount >= tribe.maxMembers ? "Lleno" : "Unirse"}
+              </button>
+            </article>
+          ))}
+        </section>
+      </div>
 
       <button type="button" className="fig-mobile-create-tribe-btn">
         + Crear mi Tribe
       </button>
-
-      <nav className="fig-mobile-bottom-nav">
-        <Link href="/dashboard" className="active">INICIO</Link>
-        <Link href="/tribe">SQUAD</Link>
-        <Link href="/retos">RETOS</Link>
-        <Link href="/perfil">PERFIL</Link>
-      </nav>
 
       {filteredTribes.length === 0 ? (
         <div className="explorer-empty">
@@ -155,6 +153,27 @@ export default function ExplorerPage() {
           <h3 className="empty-title">No se encontraron tribus</h3>
         </div>
       ) : null}
-    </main>
+    </>
+  );
+
+  return (
+    <>
+      <div className="fig-desktop-only">
+        <AppShell title="Explorador" subtitle="Descubre, filtra y únete a nuevas Tribes">
+          {content}
+        </AppShell>
+      </div>
+
+      <main className="fig-mobile-explorer fig-responsive-page fig-mobile-only">
+        {content}
+
+        <nav className="fig-mobile-bottom-nav">
+          <Link href="/dashboard" className="active">INICIO</Link>
+          <Link href="/tribe">SQUAD</Link>
+          <Link href="/retos">RETOS</Link>
+          <Link href="/perfil">PERFIL</Link>
+        </nav>
+      </main>
+    </>
   );
 }
