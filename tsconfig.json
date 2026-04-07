@@ -17,6 +17,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -31,6 +32,7 @@
   },
   "include": [
     "next-env.d.ts",
+    "**/*.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"

@@ -19,6 +19,8 @@ export function TribeCard({
   pointsWeek,
   onJoin,
 }: TribeCardProps) {
+  const formattedPoints = new Intl.NumberFormat("es-ES").format(pointsWeek);
+
   const getTierColor = () => {
     switch (tier) {
       case "Oro":
@@ -66,7 +68,7 @@ export function TribeCard({
         <div>
           <p className="tribe-points-label">Puntos semana</p>
           <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-            <span className="tribe-points-display">{pointsWeek.toLocaleString()}</span>
+            <span className="tribe-points-display">{formattedPoints}</span>
             <span className="tribe-points-unit">pts</span>
           </div>
         </div>
