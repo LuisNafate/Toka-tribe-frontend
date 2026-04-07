@@ -1,22 +1,18 @@
 import { ArrowRight, CircleCheckBig, Gift, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
-import { activityItems, challengeCards, leaderboardRows, seasonMilestones, tribeStats } from "@/lib/data";
+import { activityItems, challengeCards, FIGMA_ASSETS, leaderboardRows, seasonMilestones, tribeStats } from "@/lib/data";
 
 export default function DashboardPage() {
   return (
     <AppShell title="Hola, Alix y Nafa" subtitle="Tu Tribe está cerca de subir de división" headerBadge={<div className="balance-pill">Balance: $1,240</div>}>
-      <Panel className="hero-panel">
+      <Panel className="hero-panel fig-dashboard-hero">
         <div className="hero-panel__layout">
           <div className="hero-panel__copy">
             <span className="pill" style={{ background: "rgba(255,255,255,0.14)" }}>Temporada activa</span>
             <div>
               <h2 className="hero-panel__title">Axo Squad</h2>
-              <p className="hero-panel__subtitle">Compite en retos semanales, suma puntos con tu equipo y sube de división dentro de Toka.</p>
-            </div>
-            <div className="chip-list">
-              <span className="chip chip--active">Plata</span>
-              <span className="chip">#4 esta semana</span>
+              <p className="hero-panel__subtitle">Plata · #4 esta semana</p>
             </div>
             <div className="hero-panel__points">
               <ProgressBar value={80} label="A 120 pts de ascender" suffix="80%" />
@@ -26,14 +22,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="panel" style={{ margin: 0, background: "rgba(255,255,255,0.96)", boxShadow: "var(--shadow-strong)" }}>
+          <div className="panel fig-dashboard-status" style={{ margin: 0, background: "rgba(255,255,255,0.96)", boxShadow: "var(--shadow-strong)" }}>
             <SectionHeader eyebrow="Estado de tu Tribe" title="Axo Squad" description="#4 posición semanal" />
             <div className="inline-row" style={{ justifyContent: "space-between", alignItems: "end" }}>
               <div>
                 <div className="metric-card__value" style={{ color: "#5d89e4" }}>1,480 pts</div>
                 <div className="metric-card__label">Meta: 1,600 pts</div>
               </div>
-              <div style={{ fontSize: "3rem" }} aria-hidden="true">🫧</div>
+              <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" style={{ width: 68, height: 82, objectFit: "cover", borderRadius: 14 }} />
             </div>
             <div style={{ marginTop: 20 }}>
               <ProgressBar value={92} label="A 120 pts de ascender" suffix="92%" muted />
@@ -45,7 +41,7 @@ export default function DashboardPage() {
         </div>
       </Panel>
 
-      <div className="feature-row">
+      <div className="feature-row fig-dashboard-mini-row">
         {tribeStats.map((item) => (
           <article key={item.label} className="mini-card">
             <div className="mini-icon" aria-hidden="true"><Gift size={18} /></div>
@@ -55,7 +51,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="workspace__grid">
+      <div className="workspace__grid fig-dashboard-main-grid">
         <Panel>
           <SectionHeader eyebrow="Leaderboard" title="Leaderboard de tu división" description="División Plata • Semana 4" action={<a href="/leaderboard" className="button button--secondary" style={{ padding: "0.7rem 1rem" }}>Ver todo</a>} />
           <div className="leaderboard-list">
@@ -75,7 +71,7 @@ export default function DashboardPage() {
           </div>
         </Panel>
 
-        <div className="dashboard-side">
+        <div className="dashboard-side fig-dashboard-side-stack">
           <Panel>
             <SectionHeader eyebrow="Actividad" title="Tu actividad" description="+85 pts hoy" />
             <div className="stack stack--tight">
@@ -119,7 +115,7 @@ export default function DashboardPage() {
       <div className="workspace__grid" style={{ marginTop: 2 }}>
         <Panel>
           <SectionHeader eyebrow="Retos de hoy" title="Acciones rápidas" description="Selecciona una actividad y gana puntos al instante." />
-          <div className="challenge-grid">
+          <div className="challenge-grid fig-dashboard-challenges">
             {challengeCards.map((item) => (
               <article key={item.title} className={`challenge-card ${item.dark ? "challenge-card--dark" : ""}`}>
                 <div className="mini-icon" style={{ background: item.dark ? "rgba(255,255,255,0.1)" : undefined }}>
