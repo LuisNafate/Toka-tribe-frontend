@@ -2,14 +2,12 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { TribeDashboardContent } from "@/components/tribe-dashboard-content";
 
-export default function TribePage() {
-  const content = <TribeDashboardContent />;
-
+export default function TribeSinTierPage() {
   return (
     <>
       <div className="fig-desktop-only">
-        <AppShell title="Mi Tribe" subtitle="Rendimiento, miembros y actividad del equipo">
-          {content}
+        <AppShell title="Mi Tribe" subtitle="Vista de progreso sin tier asignado">
+          <TribeDashboardContent withoutTier />
         </AppShell>
       </div>
 
@@ -21,7 +19,7 @@ export default function TribePage() {
           </div>
         </header>
 
-        {content}
+        <TribeDashboardContent withoutTier />
 
         <nav className="fig-mobile-bottom-nav">
           <Link href="/dashboard">INICIO</Link>
