@@ -1,9 +1,9 @@
-import { AlertTriangle, Clock, Flame, Menu, Sparkles, TimerReset, TrendingUp, Trophy, Zap } from "lucide-react";
+import { AlertTriangle, Brain, Clock, Flame, Menu, Sparkles, TimerReset, TrendingUp, Trophy, Zap } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import BottomNav from "@/components/BottomNav";
 import { Panel, SectionHeader } from "@/components/common";
-import { challengeCards, dailyChallenge, FIGMA_ASSETS, weeklyChallenges } from "@/lib/data";
+import { challengeCards, FIGMA_ASSETS } from "@/lib/data";
 
 export default function RetosPage() {
   const desktopContent = (
@@ -89,7 +89,7 @@ export default function RetosPage() {
                 <h2>Trivia Rápida</h2>
                 <p className="fig-retos-pts"><Zap size={14} /> +15 pts</p>
               </div>
-              <div className="fig-retos-quiz-icon">📋</div>
+              <div className="fig-retos-quiz-icon"><Brain size={22} color="#2a55b9" /></div>
             </div>
             <div className="fig-retos-alert"><AlertTriangle size={13} /> ¡Juega hoy para no perder tu racha!</div>
             <Link href="/retos" className="fig-retos-play">JUGAR AHORA</Link>
@@ -105,7 +105,7 @@ export default function RetosPage() {
           <div className="fig-retos-weekly-list">
             <article>
               <div className="fig-retos-weekly-icon fig-retos-weekly-icon--teal">
-                <Sparkles size={18} />
+                <Brain size={18} />
               </div>
               <div className="fig-retos-weekly-info">
                 <h3>Toka Trivia</h3>
