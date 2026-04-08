@@ -1,0 +1,132 @@
+import { getSessionToken } from "@/services/auth.service";
+
+export type ApiEnvelope<T = unknown> = {
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
+  data?: T;
+  [key: string]: unknown;
+};
+
+type RequestOptions = {
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  body?: unknown;
+  requiresAuth?: boolean;
+};
+
+function getApiBaseUrl(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (!baseUrl) throw new Error("NEXT_PUBLIC_API_BASE_URL no está configurado.");
+  return baseUrl.replace(/\/$/, "");
+}
+
+async function apiRequest<T = unknown>(path: string, options: RequestOptions = {}): Promise<ApiEnvelope<T>> {
+  const { method = "GET", body, requiresAuth = true } = options;
+  const token = requiresAuth ? getSessionToken() : null;
+
+  if (requiresAuth && !token) {
+    throw new Error("No hay sesión JWT activa. Inicia sesión primero.");
+  }
+
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...(typeof body !== "undefined" ? { body: JSON.stringify(body) } : {}),
+  });
+
+  let payload: ApiEnvelope<T> = {};
+  try {
+    payload = (await response.json()) as ApiEnvelope<T>;
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok) {
+    const message = payload.message || `Error HTTP ${response.status} al consumir ${path}.`;
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
+export const TokaApi = {
+  // Health
+  health: () => apiRequest("/health", { requiresAuth: false }),
+  healthReady: () => apiRequest("/health/ready", { requiresAuth: false }),
+  healthLive: () => apiRequest("/health/live", { requiresAuth: false }),
+
+  // Auth
+  authLogin: (authCode: string) => apiRequest("/auth/toka/login", { method: "POST", requiresAuth: false, body: { authCode } }),
+  authMe: () => apiRequest("/auth/me"),
+  authSyncProfile: (authCodes: string[]) => apiRequest("/auth/me/sync-profile", { method: "POST", body: { authCodes } }),
+
+  // Users
+  usersMe: () => apiRequest("/users/me"),
+  usersUpdateMe: (body: { username?: string; avatarUrl?: string }) => apiRequest("/users/me", { method: "PATCH", body }),
+
+  // Pets
+  petsCreate: (name: string) => apiRequest("/pets", { method: "POST", body: { name } }),
+  petsMe: () => apiRequest("/pets/me"),
+  petsEquip: (itemId: string) => apiRequest("/pets/me/equip", { method: "POST", body: { itemId } }),
+  petsStore: () => apiRequest("/pets/items/store"),
+  petsUnlockItem: (itemId: string) => apiRequest(`/pets/items/${itemId}/unlock`, { method: "POST" }),
+
+  // Seasons
+  seasonsCurrent: () => apiRequest("/seasons/current"),
+  seasonsById: (seasonId: string) => apiRequest(`/seasons/${seasonId}`),
+
+  // Admin Seasons
+  adminCreateSeason: () => apiRequest("/admin/seasons", { method: "POST" }),
+  adminCloseSeason: (seasonId: string) => apiRequest(`/admin/seasons/${seasonId}/close`, { method: "POST" }),
+
+  // Tribes
+  tribesList: () => apiRequest("/tribes"),
+  tribesCreate: (body: Record<string, unknown>) => apiRequest("/tribes", { method: "POST", body }),
+  tribesDetail: (tribeId: string) => apiRequest(`/tribes/${tribeId}`),
+  tribesJoin: (tribeId: string) => apiRequest(`/tribes/${tribeId}/join`, { method: "POST" }),
+  tribesLeave: (tribeId: string) => apiRequest(`/tribes/${tribeId}/leave`, { method: "POST" }),
+  tribesMembers: (tribeId: string) => apiRequest(`/tribes/${tribeId}/members`),
+
+  // Games
+  gamesList: () => apiRequest("/games"),
+  gamesDetail: (gameId: string) => apiRequest(`/games/${gameId}`),
+
+  // Admin Games
+  adminGamesCreate: (body: Record<string, unknown>) => apiRequest("/admin/games", { method: "POST", body }),
+  adminGamesUpdate: (gameId: string, body: Record<string, unknown>) => apiRequest(`/admin/games/${gameId}`, { method: "PATCH", body }),
+  adminGamesDeactivate: (gameId: string) => apiRequest(`/admin/games/${gameId}`, { method: "DELETE" }),
+
+  // Challenges
+  challengesActive: () => apiRequest("/challenges/active"),
+  challengesDetail: (challengeId: string) => apiRequest(`/challenges/${challengeId}`),
+
+  // Admin Challenges
+  adminChallengesCreate: (body: Record<string, unknown>) => apiRequest("/admin/challenges", { method: "POST", body }),
+  adminChallengesActivate: (challengeId: string) => apiRequest(`/admin/challenges/${challengeId}/activate`, { method: "POST" }),
+  adminChallengesClose: (challengeId: string) => apiRequest(`/admin/challenges/${challengeId}/close`, { method: "POST" }),
+
+  // Scoring
+  gameSessionsCreate: (body: Record<string, unknown>) => apiRequest("/game-sessions", { method: "POST", body }),
+  gameSessionsMe: () => apiRequest("/game-sessions/me"),
+
+  // Leaderboard
+  leaderboardCurrent: () => apiRequest("/leaderboard/current"),
+  leaderboardByDivision: (division: string) => apiRequest(`/leaderboard/divisions/${division}`),
+  leaderboardTribeHistory: (tribeId: string) => apiRequest(`/leaderboard/tribes/${tribeId}/history`),
+
+  // Rewards
+  rewardsList: () => apiRequest("/rewards"),
+  rewardsMyClaims: () => apiRequest("/rewards/my-claims"),
+  rewardsClaim: (rewardId: string) => apiRequest(`/rewards/${rewardId}/claim`, { method: "POST" }),
+
+  // Admin Rewards
+  adminRewardsCreate: (body: Record<string, unknown>) => apiRequest("/admin/rewards", { method: "POST", body }),
+
+  // Payments
+  paymentsCreateOrder: (body: Record<string, unknown>) => apiRequest("/payments", { method: "POST", body }),
+  paymentsSync: (id: string) => apiRequest(`/payments/${id}/sync`, { method: "POST" }),
+  paymentsMe: () => apiRequest("/payments/me"),
+};

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trophy, Users, Zap, Tag } from "lucide-react";
 import type { TriviaResult } from "@/types/trivia";
 import { getSessionToken } from "@/services/auth.service";
+import { TokaApi } from "@/services/toka-api.service";
 
 const RESULT_KEY = "toka_trivia_result";
 
@@ -21,6 +22,7 @@ export default function TriviaResultadoPage({
 }) {
   const [result, setResult] = useState<TriviaResult | null>(null);
   const [posted, setPosted] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string>("Pendiente de sincronizar puntos...");
 
   useEffect(() => {
     try {
@@ -33,25 +35,33 @@ export default function TriviaResultadoPage({
     if (!result || posted) return;
     setPosted(true);
     const token = getSessionToken();
-    if (!token) return;
+    if (!token) {
+      setSyncMessage("No hay sesión activa. No se pudo sincronizar puntaje con backend.");
+      return;
+    }
 
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
-    if (!apiBase) return;
+    setSyncMessage("Sincronizando puntaje de trivia con backend...");
 
-    fetch(`${apiBase}/game-sessions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+    TokaApi.gameSessionsCreate({
+      gameType: "trivia",
+      gameId: "trivia",
+      challengeId: params.id,
+      sessionId: params.id,
+      score: result.finalScore,
+      correctCount: result.correctCount,
+      totalQuestions: result.totalQuestions,
+      metadata: {
+        baseScore: result.baseScore,
+        multiplier: result.multiplier,
       },
-      body: JSON.stringify({
-        gameType: "trivia",
-        sessionId: params.id,
-        score: result.finalScore,
-        correctCount: result.correctCount,
-        totalQuestions: result.totalQuestions,
-      }),
-    }).catch(() => {});
+    })
+      .then(() => {
+        setSyncMessage(`Puntos sincronizados correctamente: +${result.finalScore} pts`);
+      })
+      .catch((error) => {
+        const detail = error instanceof Error ? error.message : "Error externo desconocido.";
+        setSyncMessage(`No se pudo sincronizar puntaje con backend. Detalle: ${detail}`);
+      });
   }, [result, posted, params.id]);
 
   if (!result) {
@@ -112,6 +122,9 @@ export default function TriviaResultadoPage({
         <div className="fig-trivia-result-row">
           <span><Users size={15} />Aportación a tu Tribe</span>
           <strong>+{tribeContribution} pts</strong>
+        </div>
+        <div style={{ marginTop: 10, fontSize: 12, fontWeight: 600, color: "#2a55b9" }}>
+          {syncMessage}
         </div>
       </section>
 
