@@ -1,7 +1,10 @@
+"use client";
+
 import { ArrowRight, Clock3, Flame, Trophy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AppPointsBadge } from "@/components/app-points-badge";
 import BottomNav from "@/components/BottomNav";
+import { formatAppPoints, useAppPoints } from "@/components/use-app-points";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import {
@@ -35,6 +38,8 @@ const leaderboardData = [
 ];
 
 export default function DashboardPage() {
+  const { points } = useAppPoints();
+
   return (
     <>
       <div className="fig-desktop-only">
@@ -168,7 +173,7 @@ export default function DashboardPage() {
         <section className="fig-retos-hero">
           <div className="fig-retos-hero__content">
             <h1>Home</h1>
-            <p>Axo Squad · 2,140 pts</p>
+            <p>Axo Squad · {formatAppPoints(points)} pts</p>
             <span className="fig-retos-racha"><Flame size={14} /> Racha: 3 días</span>
           </div>
           <img src="/images/ajolote_2.png" alt="Mascot" draggable="false" />

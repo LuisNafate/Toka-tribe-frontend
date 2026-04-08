@@ -6,6 +6,7 @@ import { Trophy, Users, Zap, Tag } from "lucide-react";
 import type { TriviaResult } from "@/types/trivia";
 import { getSessionToken } from "@/services/auth.service";
 import { TokaApi } from "@/services/toka-api.service";
+import { refreshAppPointsFromBackend } from "@/components/use-app-points";
 
 const RESULT_KEY = "toka_trivia_result";
 
@@ -55,7 +56,8 @@ export default function TriviaResultadoPage({
         multiplier: result.multiplier,
       },
     })
-      .then(() => {
+      .then(async () => {
+        await refreshAppPointsFromBackend();
         setSyncMessage(`Puntos sincronizados correctamente: +${result.finalScore} pts`);
       })
       .catch((error) => {
