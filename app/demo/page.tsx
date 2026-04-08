@@ -838,16 +838,43 @@ export default function DemoPage() {
 
   async function authenticateWithCode(code: string) {
     const effectiveAppId = getEffectiveAppId();
-    const effectiveMerchantCode = merchantCode.trim() || DEFAULT_MERCHANT_CODE.trim();
-    const result = await callApi("Legacy POST /v1/user/authenticate", "/v1/user/authenticate", {
+    const effectiveMerchantCodeRaw = merchantCode.trim() || DEFAULT_MERCHANT_CODE.trim();
+    const merchantCandidates = Array.from(
+      new Set([
+        effectiveMerchantCodeRaw,
+        effectiveMerchantCodeRaw.length > 5 ? effectiveMerchantCodeRaw.slice(0, 5) : "",
+      ].filter(Boolean)),
+    );
+
+    let result = await callApi("Legacy POST /v1/user/authenticate", "/v1/user/authenticate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-App-Id": effectiveAppId,
-        ...(effectiveMerchantCode ? { "Alipay-MerchantCode": effectiveMerchantCode } : {}),
       },
       body: JSON.stringify({ authcode: code.trim() }),
     });
+
+    if (!result.ok && merchantCandidates.length > 0) {
+      for (const merchantCandidate of merchantCandidates) {
+        result = await callApi(
+          `Legacy POST /v1/user/authenticate (merchant ${merchantCandidate})`,
+          "/v1/user/authenticate",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-App-Id": effectiveAppId,
+              "Alipay-MerchantCode": merchantCandidate,
+              MerchantCode: merchantCandidate,
+            },
+            body: JSON.stringify({ authcode: code.trim() }),
+          },
+        );
+
+        if (result.ok) break;
+      }
+    }
 
     const data = getResultData(result.payload);
     const nextToken = data?.accessToken;
@@ -872,6 +899,7 @@ export default function DemoPage() {
   async function requestUserInfo(codes: string[], jwtOverride?: string) {
     const jwt = (jwtOverride ?? token).trim();
     const effectiveAppId = getEffectiveAppId();
+    const effectiveMerchantCodeRaw = merchantCode.trim() || DEFAULT_MERCHANT_CODE.trim();
 
     if (!jwt) {
       return {
@@ -887,6 +915,10 @@ export default function DemoPage() {
       headers: {
         "Content-Type": "application/json",
         "X-App-Id": effectiveAppId,
+        ...(effectiveMerchantCodeRaw ? {
+          "Alipay-MerchantCode": effectiveMerchantCodeRaw,
+          MerchantCode: effectiveMerchantCodeRaw,
+        } : {}),
         Authorization: `Bearer ${jwt}`,
       },
       body: JSON.stringify({ authCodes: codes }),
@@ -983,7 +1015,7 @@ export default function DemoPage() {
     event.preventDefault();
 
     if (!isValidAppId(appId)) {
-      setMessage("X-App-Id debe tener al menos 16 caracteres.");
+      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
       return;
     }
 
@@ -1001,7 +1033,7 @@ export default function DemoPage() {
     event.preventDefault();
 
     if (!isValidAppId(appId)) {
-      setMessage("X-App-Id debe tener al menos 16 caracteres.");
+      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
       return;
     }
 
@@ -1046,7 +1078,7 @@ export default function DemoPage() {
     event.preventDefault();
 
     if (!isValidAppId(appId)) {
-      setMessage("X-App-Id debe tener al menos 16 caracteres.");
+      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
       return;
     }
 
