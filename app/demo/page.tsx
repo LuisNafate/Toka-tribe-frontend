@@ -39,6 +39,7 @@ const FORBIDDEN_HEADER_KEYS = new Set(["host", "content-length"]);
 
 export default function DemoPage() {
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
+  const [useServerProxy, setUseServerProxy] = useState(true);
   const [token, setToken] = useState("");
   const [extraHeadersJson, setExtraHeadersJson] = useState("{}");
   const [tagFilter, setTagFilter] = useState("all");
@@ -180,6 +181,35 @@ export default function DemoPage() {
     return maybeData as Record<string, unknown>;
   }
 
+  function toHeaderRecord(headers: HeadersInit | undefined): Record<string, string> {
+    if (!headers) return {};
+
+    if (Array.isArray(headers)) {
+      return Object.fromEntries(headers.map(([key, value]) => [key, String(value)]));
+    }
+
+    if (headers instanceof Headers) {
+      const collected: Record<string, string> = {};
+      headers.forEach((value, key) => {
+        collected[key] = value;
+      });
+      return collected;
+    }
+
+    return Object.fromEntries(Object.entries(headers).map(([key, value]) => [key, String(value)]));
+  }
+
+  function toSerializableBody(body: BodyInit | null | undefined): unknown {
+    if (body == null) return undefined;
+    if (typeof body !== "string") return String(body);
+
+    try {
+      return JSON.parse(body);
+    } catch {
+      return body;
+    }
+  }
+
   async function callApi(action: string, path: string, options: RequestInit = {}) {
     setLoadingAction(action);
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -199,10 +229,23 @@ export default function DemoPage() {
       const controller = new AbortController();
       timeoutId = setTimeout(() => controller.abort(), 20000);
 
-      const response = await fetch(`${normalizedBaseUrl}${path}`, {
-        ...options,
-        signal: controller.signal,
-      });
+      const response = useServerProxy
+        ? await fetch("/api/toka-proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            baseUrl: normalizedBaseUrl,
+            path,
+            method: (options.method ?? "GET").toUpperCase(),
+            headers: toHeaderRecord(options.headers),
+            body: toSerializableBody(options.body),
+          }),
+          signal: controller.signal,
+        })
+        : await fetch(`${normalizedBaseUrl}${path}`, {
+          ...options,
+          signal: controller.signal,
+        });
 
       let payload: unknown;
       try {
@@ -617,7 +660,17 @@ export default function DemoPage() {
             Headers extra JSON
             <input value={extraHeadersJson} onChange={(e) => setExtraHeadersJson(e.target.value)} placeholder='{"X-App-Id":"abc"}' />
           </label>
+          <label>
+            Transporte
+            <select value={useServerProxy ? "proxy" : "direct"} onChange={(e) => setUseServerProxy(e.target.value === "proxy")}>
+              <option value="proxy">Proxy seguro (recomendado en HTTPS)</option>
+              <option value="direct">Directo desde navegador</option>
+            </select>
+          </label>
         </div>
+        <p className="subtle" style={{ marginTop: 10 }}>
+          En Vercel HTTPS, usa proxy para evitar bloqueo por mixed-content al consumir APIs HTTP.
+        </p>
       </section>
 
       <section className="demo-panel">
