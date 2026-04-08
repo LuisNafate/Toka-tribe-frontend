@@ -44,6 +44,9 @@ type BridgeApi = {
 };
 
 const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_TOKA_API_BASE_URL ?? "http://talentland-toka.eastus2.cloudapp.azure.com";
+const DEFAULT_APP_ID = process.env.NEXT_PUBLIC_TOKA_APP_ID ?? "";
+const DEFAULT_MERCHANT_CODE = process.env.NEXT_PUBLIC_TOKA_MERCHANT_CODE ?? "";
+const DEFAULT_TEST_AUTH_CODE = process.env.NEXT_PUBLIC_TOKA_TEST_AUTH_CODE ?? "";
 const SWAGGER_OPERATIONS = getApiOperations();
 const SWAGGER_STATS = getApiStats();
 const SWAGGER_TAGS = ["all", ...getApiTags()];
@@ -60,9 +63,9 @@ export default function DemoPage() {
   const [pathParamsJson, setPathParamsJson] = useState("{}");
   const [bodyJson, setBodyJson] = useState("{}");
 
-  const [appId, setAppId] = useState("");
-  const [merchantCode, setMerchantCode] = useState("");
-  const [authCode, setAuthCode] = useState("");
+  const [appId, setAppId] = useState(DEFAULT_APP_ID);
+  const [merchantCode, setMerchantCode] = useState(DEFAULT_MERCHANT_CODE);
+  const [authCode, setAuthCode] = useState(DEFAULT_TEST_AUTH_CODE);
   const [authCodesCsv, setAuthCodesCsv] = useState("");
   const [userId, setUserId] = useState("");
   const [orderTitle, setOrderTitle] = useState("Demo TokaTribe");
@@ -390,6 +393,93 @@ export default function DemoPage() {
     }
   }
 
+  async function getDigitalIdentityCodeFromBridge(): Promise<string | null> {
+    const bridge = getBridge();
+
+    if (!bridge) {
+      return null;
+    }
+
+    setLoadingAction("Bridge auth code");
+
+    try {
+      const result = await new Promise<BridgePayload>((resolve) => {
+        bridge.call(
+          "getUserDigitalIdentityAuthCode",
+          {
+            usage: "Autenticar usuario en TokaTribe",
+            scopes: ["USER_ID", "USER_AVATAR", "USER_NICKNAME"],
+          },
+          (response) => resolve(response),
+        );
+      });
+
+      const code = result.authCode ?? result.authcode;
+      if (!code) return null;
+
+      const normalizedCode = String(code);
+      setAuthCode(normalizedCode);
+      return normalizedCode;
+    } finally {
+      setLoadingAction("");
+    }
+  }
+
+  async function authenticateWithCode(code: string) {
+    const result = await callApi("Legacy POST /v1/user/authenticate", "/v1/user/authenticate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+      },
+      body: JSON.stringify({ authcode: code.trim() }),
+    });
+
+    const data = getResultData(result.payload);
+    const nextToken = data?.accessToken;
+    const nextUserId = data?.userId;
+
+    if (typeof nextToken === "string") {
+      setToken(nextToken);
+    }
+
+    if (typeof nextUserId === "string") {
+      setUserId(nextUserId);
+      setRealUserProfile((prev) => ({ ...prev, userId: nextUserId }));
+    }
+
+    return result;
+  }
+
+  async function requestUserInfo(codes: string[]) {
+    const result = await callApi("Legacy POST /v1/user/info", "/v1/user/info", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+        Authorization: `Bearer ${token.trim()}`,
+      },
+      body: JSON.stringify({ authCodes: codes }),
+    });
+
+    const data = getResultData(result.payload);
+    if (data) {
+      setRealUserProfile({
+        userId: typeof data.userId === "string" ? data.userId : userId || undefined,
+        nickName: typeof data.nickName === "string" ? data.nickName : undefined,
+        fullName: typeof data.fullName === "string" ? data.fullName : undefined,
+        firstName: typeof data.firstName === "string" ? data.firstName : undefined,
+        lastName: typeof data.lastName === "string" ? data.lastName : undefined,
+        avatar: typeof data.avatar === "string" ? data.avatar : undefined,
+        mobilePhone: typeof data.mobilePhone === "string" ? data.mobilePhone : undefined,
+        email: typeof data.email === "string" ? data.email : undefined,
+        kycState: typeof data.kycState === "string" ? data.kycState : undefined,
+      });
+    }
+
+    return result;
+  }
+
   async function onLegacyAuthenticate(event: FormEvent) {
     event.preventDefault();
 
@@ -405,27 +495,7 @@ export default function DemoPage() {
 
     setMessage("");
 
-    const result = await callApi("Legacy POST /v1/user/authenticate", "/v1/user/authenticate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId.trim(),
-      },
-      body: JSON.stringify({ authcode: authCode.trim() }),
-    });
-
-    const data = getResultData(result.payload);
-    const nextToken = data?.accessToken;
-    const nextUserId = data?.userId;
-
-    if (typeof nextToken === "string") {
-      setToken(nextToken);
-    }
-
-    if (typeof nextUserId === "string") {
-      setUserId(nextUserId);
-      setRealUserProfile((prev) => ({ ...prev, userId: nextUserId }));
-    }
+    await authenticateWithCode(authCode.trim());
   }
 
   async function onLegacyUserInfo(event: FormEvent) {
@@ -454,30 +524,57 @@ export default function DemoPage() {
 
     setMessage("");
 
-    const result = await callApi("Legacy POST /v1/user/info", "/v1/user/info", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId.trim(),
-        Authorization: `Bearer ${token.trim()}`,
-      },
-      body: JSON.stringify({ authCodes }),
-    });
+    await requestUserInfo(authCodes);
+  }
 
-    const data = getResultData(result.payload);
-    if (data) {
-      setRealUserProfile({
-        userId: typeof data.userId === "string" ? data.userId : userId || undefined,
-        nickName: typeof data.nickName === "string" ? data.nickName : undefined,
-        fullName: typeof data.fullName === "string" ? data.fullName : undefined,
-        firstName: typeof data.firstName === "string" ? data.firstName : undefined,
-        lastName: typeof data.lastName === "string" ? data.lastName : undefined,
-        avatar: typeof data.avatar === "string" ? data.avatar : undefined,
-        mobilePhone: typeof data.mobilePhone === "string" ? data.mobilePhone : undefined,
-        email: typeof data.email === "string" ? data.email : undefined,
-        kycState: typeof data.kycState === "string" ? data.kycState : undefined,
-      });
+  async function onAutoCompleteAndRunDemo(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId)) {
+      setMessage("Configura un X-App-Id válido (16 caracteres) para ejecutar automático.");
+      return;
     }
+
+    if (!merchantCode.trim() && DEFAULT_MERCHANT_CODE) {
+      setMerchantCode(DEFAULT_MERCHANT_CODE);
+    }
+
+    let code = authCode.trim();
+    if (!code) {
+      const bridgeCode = await getDigitalIdentityCodeFromBridge();
+      if (bridgeCode) {
+        code = bridgeCode;
+      }
+    }
+
+    if (!code && DEFAULT_TEST_AUTH_CODE) {
+      code = DEFAULT_TEST_AUTH_CODE;
+      setAuthCode(code);
+    }
+
+    if (!code) {
+      setMessage("No hay authCode. Obtén uno por bridge o define NEXT_PUBLIC_TOKA_TEST_AUTH_CODE.");
+      return;
+    }
+
+    setMessage("Ejecutando prueba automática: authenticate -> user/info...");
+
+    const authResult = await authenticateWithCode(code);
+    if (!authResult.ok) {
+      setMessage("Falló authenticate automático. Revisa la última respuesta.");
+      return;
+    }
+
+    const authCodes = [code];
+    setAuthCodesCsv(authCodes.join(","));
+
+    const infoResult = await requestUserInfo(authCodes);
+    if (!infoResult.ok) {
+      setMessage("Authenticate OK, pero falló user/info. Revisa la última respuesta.");
+      return;
+    }
+
+    setMessage("Prueba automática completada. Token y datos reales cargados.");
   }
 
   async function onLegacyCreatePayment(event: FormEvent) {
@@ -752,6 +849,7 @@ export default function DemoPage() {
         </div>
 
         <div className="demo-actions demo-actions--buttons">
+          <form onSubmit={onAutoCompleteAndRunDemo}><button type="submit" disabled={loadingAction !== ""}>Autocompletar y probar demo</button></form>
           <form onSubmit={onGetDigitalIdentityCode}><button type="submit" disabled={loadingAction === "Bridge auth code"}>Obtener auth code desde bridge</button></form>
           <form onSubmit={onLegacyAuthenticate}><button type="submit" disabled={loadingAction === "Legacy POST /v1/user/authenticate"}>POST /v1/user/authenticate</button></form>
           <form onSubmit={onLegacyUserInfo}><button type="submit" disabled={loadingAction === "Legacy POST /v1/user/info"}>POST /v1/user/info</button></form>
