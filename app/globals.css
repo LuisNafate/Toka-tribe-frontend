@@ -3203,6 +3203,34 @@ img {
   padding: 10px 12px;
 }
 
+.demo-page select,
+.demo-page textarea {
+  border-radius: 10px;
+  border: 1px solid rgba(12, 35, 65, 0.14);
+  padding: 10px 12px;
+  width: 100%;
+  background: #fff;
+  color: #10294c;
+}
+
+.demo-page textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.demo-actions--buttons {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 12px;
+}
+
+.demo-actions--buttons form {
+  margin: 0;
+}
+
+.demo-actions--buttons button {
+  width: 100%;
+}
+
 .demo-page button {
   border: 0;
   background: #1f4fc3;

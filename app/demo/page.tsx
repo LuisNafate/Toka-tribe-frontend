@@ -17,6 +17,20 @@ type ApiResult = {
   payload: unknown;
 };
 
+type BridgePayload = {
+  authCode?: string;
+  authcode?: string;
+  [key: string]: unknown;
+};
+
+type BridgeApi = {
+  call: (
+    method: string,
+    payload: Record<string, unknown>,
+    callback?: (response: BridgePayload) => void,
+  ) => void;
+};
+
 const DEFAULT_BASE_URL = "http://talentland-toka.eastus2.cloudapp.azure.com";
 const SWAGGER_OPERATIONS = getApiOperations();
 const SWAGGER_STATS = getApiStats();
@@ -32,6 +46,19 @@ export default function DemoPage() {
   const [operationId, setOperationId] = useState(SWAGGER_OPERATIONS[0]?.operationId ?? "");
   const [pathParamsJson, setPathParamsJson] = useState("{}");
   const [bodyJson, setBodyJson] = useState("{}");
+
+  const [appId, setAppId] = useState("");
+  const [merchantCode, setMerchantCode] = useState("");
+  const [authCode, setAuthCode] = useState("");
+  const [authCodesCsv, setAuthCodesCsv] = useState("");
+  const [userId, setUserId] = useState("");
+  const [orderTitle, setOrderTitle] = useState("Demo TokaTribe");
+  const [orderAmountValue, setOrderAmountValue] = useState("500");
+  const [paymentId, setPaymentId] = useState("");
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [refundAmountValue, setRefundAmountValue] = useState("500");
+  const [refundId, setRefundId] = useState("");
+
   const [message, setMessage] = useState("");
   const [loadingAction, setLoadingAction] = useState("");
   const [lastResult, setLastResult] = useState<ApiResult | null>(null);
@@ -95,6 +122,14 @@ export default function DemoPage() {
     return { ok: true, headers };
   }
 
+  function isValidAppId(value: string) {
+    return value.trim().length === 16;
+  }
+
+  function isValidMerchantCode(value: string) {
+    return value.trim().length === 5;
+  }
+
   function onChangeOperation(nextOperationId: string) {
     setOperationId(nextOperationId);
     setMessage("");
@@ -138,41 +173,65 @@ export default function DemoPage() {
     return { path, missing };
   }
 
+  function getResultData(payload: unknown): Record<string, unknown> | null {
+    if (!payload || typeof payload !== "object") return null;
+    const maybeData = (payload as { data?: unknown }).data;
+    if (!maybeData || typeof maybeData !== "object") return null;
+    return maybeData as Record<string, unknown>;
+  }
+
   async function callApi(action: string, path: string, options: RequestInit = {}) {
     setLoadingAction(action);
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     try {
+      const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+      if (!normalizedBaseUrl) {
+        const invalidResult: ApiResult = {
+          action,
+          ok: false,
+          payload: { message: "La URL base no es válida." },
+        };
+        setLastResult(invalidResult);
+        return invalidResult;
+      }
+
       const controller = new AbortController();
       timeoutId = setTimeout(() => controller.abort(), 20000);
 
-      const response = await fetch(`${baseUrl}${path}`, {
+      const response = await fetch(`${normalizedBaseUrl}${path}`, {
         ...options,
         signal: controller.signal,
       });
-      let payload: unknown;
 
+      let payload: unknown;
       try {
         payload = await response.json();
       } catch {
         payload = await response.text();
       }
 
-      setLastResult({
+      const result: ApiResult = {
         action,
         ok: response.ok,
         status: response.status,
         payload,
-      });
+      };
+
+      setLastResult(result);
+      return result;
     } catch (error) {
-      setLastResult({
+      const result: ApiResult = {
         action,
         ok: false,
         payload: {
           message: "No se pudo conectar con la API. Revisa CORS, red, timeout o URL base.",
           error: error instanceof Error ? error.message : String(error),
         },
-      });
+      };
+
+      setLastResult(result);
+      return result;
     } finally {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -181,16 +240,10 @@ export default function DemoPage() {
     }
   }
 
-  function onExecuteOperation(event: FormEvent) {
+  async function onExecuteOperation(event: FormEvent) {
     event.preventDefault();
 
     if (!selectedOperation) return;
-
-    const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
-    if (!normalizedBaseUrl) {
-      setMessage("La URL base no es válida. Debe iniciar con http:// o https://");
-      return;
-    }
 
     if (selectedOperation.secured && !token.trim()) {
       setMessage("Esta operación requiere JWT. Ingresa token antes de ejecutar.");
@@ -233,21 +286,308 @@ export default function DemoPage() {
 
     setMessage("");
 
-    setBaseUrl(normalizedBaseUrl);
-
-    callApi(`OpenAPI ${selectedOperation.method} ${selectedOperation.path}`, resolved.path, {
+    await callApi(`OpenAPI ${selectedOperation.method} ${selectedOperation.path}`, resolved.path, {
       method: selectedOperation.method,
       headers,
       body: selectedOperation.hasBody ? JSON.stringify(parsedBody) : undefined,
     });
   }
 
+  function getBridge(): BridgeApi | null {
+    if (typeof window === "undefined") return null;
+    const maybeBridge = (window as Window & { AlipayJSBridge?: BridgeApi }).AlipayJSBridge;
+    return maybeBridge ?? null;
+  }
+
+  async function onGetDigitalIdentityCode(event: FormEvent) {
+    event.preventDefault();
+    const bridge = getBridge();
+
+    if (!bridge) {
+      setMessage("AlipayJSBridge no está disponible en este navegador. Ejecuta dentro de mini app.");
+      return;
+    }
+
+    setLoadingAction("Bridge auth code");
+
+    try {
+      const result = await new Promise<BridgePayload>((resolve) => {
+        bridge.call(
+          "getUserDigitalIdentityAuthCode",
+          {
+            usage: "Autenticar usuario en TokaTribe",
+            scopes: ["USER_ID", "USER_AVATAR", "USER_NICKNAME"],
+          },
+          (response) => resolve(response),
+        );
+      });
+
+      const code = result.authCode ?? result.authcode;
+      if (code) {
+        setAuthCode(String(code));
+        setMessage("Auth code obtenido desde JSBridge.");
+      } else {
+        setMessage("No se obtuvo authCode del JSBridge.");
+      }
+    } finally {
+      setLoadingAction("");
+    }
+  }
+
+  async function onLegacyAuthenticate(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId)) {
+      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
+      return;
+    }
+
+    if (!authCode.trim()) {
+      setMessage("Ingresa un authCode antes de autenticar.");
+      return;
+    }
+
+    setMessage("");
+
+    const result = await callApi("Legacy POST /v1/user/authenticate", "/v1/user/authenticate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+      },
+      body: JSON.stringify({ authcode: authCode.trim() }),
+    });
+
+    const data = getResultData(result.payload);
+    const nextToken = data?.accessToken;
+    const nextUserId = data?.userId;
+
+    if (typeof nextToken === "string") {
+      setToken(nextToken);
+    }
+
+    if (typeof nextUserId === "string") {
+      setUserId(nextUserId);
+    }
+  }
+
+  async function onLegacyUserInfo(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId)) {
+      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
+      return;
+    }
+
+    if (!token.trim()) {
+      setMessage("Se requiere JWT para consultar /v1/user/info.");
+      return;
+    }
+
+    const authCodes = authCodesCsv
+      .split(",")
+      .map((code) => code.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+
+    if (authCodes.length === 0) {
+      setMessage("Ingresa al menos un authCode en authCodes CSV.");
+      return;
+    }
+
+    setMessage("");
+
+    await callApi("Legacy POST /v1/user/info", "/v1/user/info", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+        Authorization: `Bearer ${token.trim()}`,
+      },
+      body: JSON.stringify({ authCodes }),
+    });
+  }
+
+  async function onLegacyCreatePayment(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId)) {
+      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
+      return;
+    }
+
+    if (!isValidMerchantCode(merchantCode)) {
+      setMessage("Alipay-MerchantCode debe tener exactamente 5 caracteres.");
+      return;
+    }
+
+    if (!token.trim() || !userId.trim()) {
+      setMessage("Se requiere JWT y userId para crear pago.");
+      return;
+    }
+
+    setMessage("");
+
+    const result = await callApi("Legacy POST /v1/payment/create", "/v1/payment/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+        Authorization: `Bearer ${token.trim()}`,
+        "Alipay-MerchantCode": merchantCode.trim(),
+      },
+      body: JSON.stringify({
+        userId: userId.trim(),
+        orderTitle: orderTitle.trim() || "Demo TokaTribe",
+        orderAmount: {
+          value: orderAmountValue.trim() || "500",
+          currency: "MXN",
+        },
+      }),
+    });
+
+    const data = getResultData(result.payload);
+    const nextPaymentId = data?.paymentId;
+    const nextPaymentUrl = data?.paymentUrl;
+
+    if (typeof nextPaymentId === "string") {
+      setPaymentId(nextPaymentId);
+    }
+
+    if (typeof nextPaymentUrl === "string") {
+      setPaymentUrl(nextPaymentUrl);
+    }
+  }
+
+  async function onLegacyPaymentInquiry(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId) || !token.trim() || !paymentId.trim()) {
+      setMessage("Se requiere X-App-Id válido, JWT y paymentId para inquiry.");
+      return;
+    }
+
+    setMessage("");
+
+    await callApi("Legacy POST /v1/payment/inquiry", "/v1/payment/inquiry", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+        Authorization: `Bearer ${token.trim()}`,
+      },
+      body: JSON.stringify({ paymentId: paymentId.trim() }),
+    });
+  }
+
+  async function onLegacyPaymentClose(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId) || !token.trim() || !paymentId.trim()) {
+      setMessage("Se requiere X-App-Id válido, JWT y paymentId para close.");
+      return;
+    }
+
+    setMessage("");
+
+    await callApi("Legacy POST /v1/payment/close", "/v1/payment/close", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+        Authorization: `Bearer ${token.trim()}`,
+      },
+      body: JSON.stringify({ paymentId: paymentId.trim() }),
+    });
+  }
+
+  async function onLegacyRefundCreate(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId) || !token.trim() || !paymentId.trim() || !userId.trim()) {
+      setMessage("Se requiere X-App-Id válido, JWT, userId y paymentId para refund.");
+      return;
+    }
+
+    if (!isValidMerchantCode(merchantCode)) {
+      setMessage("Alipay-MerchantCode debe tener exactamente 5 caracteres.");
+      return;
+    }
+
+    setMessage("");
+
+    const result = await callApi("Legacy POST /v1/payment/refund", "/v1/payment/refund", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+        Authorization: `Bearer ${token.trim()}`,
+        "Alipay-MerchantCode": merchantCode.trim(),
+      },
+      body: JSON.stringify({
+        userId: userId.trim(),
+        paymentId: paymentId.trim(),
+        refundAmount: {
+          value: refundAmountValue.trim() || "500",
+          currency: "MXN",
+        },
+      }),
+    });
+
+    const data = getResultData(result.payload);
+    const nextRefundId = data?.refundId;
+
+    if (typeof nextRefundId === "string") {
+      setRefundId(nextRefundId);
+    }
+  }
+
+  async function onLegacyRefundInquiry(event: FormEvent) {
+    event.preventDefault();
+
+    if (!isValidAppId(appId) || !token.trim() || !refundId.trim()) {
+      setMessage("Se requiere X-App-Id válido, JWT y refundId para inquiry-refund.");
+      return;
+    }
+
+    setMessage("");
+
+    await callApi("Legacy POST /v1/payment/inquiry-refund", "/v1/payment/inquiry-refund", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId.trim(),
+        Authorization: `Bearer ${token.trim()}`,
+      },
+      body: JSON.stringify({ refundId: refundId.trim() }),
+    });
+  }
+
+  async function onOpenPaymentInBridge(event: FormEvent) {
+    event.preventDefault();
+
+    if (!paymentUrl.trim()) {
+      setMessage("No hay paymentUrl para abrir.");
+      return;
+    }
+
+    const bridge = getBridge();
+    if (bridge) {
+      bridge.call("pay", { paymentUrl: paymentUrl.trim() });
+      setMessage("Flujo de pago enviado al bridge.");
+      return;
+    }
+
+    window.open(paymentUrl.trim(), "_blank", "noopener,noreferrer");
+    setMessage("Bridge no disponible: se abrió paymentUrl en nueva pestaña.");
+  }
+
   return (
     <main className="demo-page">
       <header className="demo-header">
         <div>
-          <h1>Swagger Runner</h1>
-          <p>Esta vista usa exclusivamente el OpenAPI integrado como fuente de verdad.</p>
+          <h1>Runner Integral API</h1>
+          <p>Incluye pruebas Swagger y flujo legacy de autenticación Toka para validar extremo a extremo.</p>
         </div>
         <Link href="/" className="demo-back-link">Volver a landing</Link>
       </header>
@@ -263,14 +603,14 @@ export default function DemoPage() {
       </section>
 
       <section className="demo-panel">
-        <h2>Configuración</h2>
+        <h2>Configuración común</h2>
         <div className="demo-grid">
           <label>
             URL base API
             <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://api.tu-dominio.com" />
           </label>
           <label>
-            JWT (opcional si la operación es pública)
+            JWT
             <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="Bearer token" />
           </label>
           <label>
@@ -281,7 +621,69 @@ export default function DemoPage() {
       </section>
 
       <section className="demo-panel">
-        <h2>Ejecutor OpenAPI</h2>
+        <h2>Flujo legacy Toka auth y pagos</h2>
+        <div className="demo-grid">
+          <label>
+            X-App-Id (16)
+            <input value={appId} onChange={(e) => setAppId(e.target.value)} placeholder="xxxxxxxxxxxxxxxx" />
+          </label>
+          <label>
+            MerchantCode (5)
+            <input value={merchantCode} onChange={(e) => setMerchantCode(e.target.value)} placeholder="xxxxx" />
+          </label>
+          <label>
+            User ID
+            <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="0000000000000000" />
+          </label>
+          <label>
+            Auth code
+            <input value={authCode} onChange={(e) => setAuthCode(e.target.value)} placeholder="QZvGrF" />
+          </label>
+          <label>
+            AuthCodes CSV (max 5)
+            <input value={authCodesCsv} onChange={(e) => setAuthCodesCsv(e.target.value)} placeholder="rNAeg7,IfDTCP" />
+          </label>
+          <label>
+            Order title
+            <input value={orderTitle} onChange={(e) => setOrderTitle(e.target.value)} placeholder="Demo TokaTribe" />
+          </label>
+          <label>
+            Order amount MXN
+            <input value={orderAmountValue} onChange={(e) => setOrderAmountValue(e.target.value)} placeholder="500" />
+          </label>
+          <label>
+            Payment ID
+            <input value={paymentId} onChange={(e) => setPaymentId(e.target.value)} placeholder="paymentId" />
+          </label>
+          <label>
+            Payment URL
+            <input value={paymentUrl} onChange={(e) => setPaymentUrl(e.target.value)} placeholder="https://..." />
+          </label>
+          <label>
+            Refund amount MXN
+            <input value={refundAmountValue} onChange={(e) => setRefundAmountValue(e.target.value)} placeholder="500" />
+          </label>
+          <label>
+            Refund ID
+            <input value={refundId} onChange={(e) => setRefundId(e.target.value)} placeholder="refundId" />
+          </label>
+        </div>
+
+        <div className="demo-actions demo-actions--buttons">
+          <form onSubmit={onGetDigitalIdentityCode}><button type="submit" disabled={loadingAction === "Bridge auth code"}>Obtener auth code desde bridge</button></form>
+          <form onSubmit={onLegacyAuthenticate}><button type="submit" disabled={loadingAction === "Legacy POST /v1/user/authenticate"}>POST /v1/user/authenticate</button></form>
+          <form onSubmit={onLegacyUserInfo}><button type="submit" disabled={loadingAction === "Legacy POST /v1/user/info"}>POST /v1/user/info</button></form>
+          <form onSubmit={onLegacyCreatePayment}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/create"}>POST /v1/payment/create</button></form>
+          <form onSubmit={onOpenPaymentInBridge}><button type="submit">Abrir paymentUrl en pay</button></form>
+          <form onSubmit={onLegacyPaymentInquiry}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/inquiry"}>POST /v1/payment/inquiry</button></form>
+          <form onSubmit={onLegacyPaymentClose}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/close"}>POST /v1/payment/close</button></form>
+          <form onSubmit={onLegacyRefundCreate}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/refund"}>POST /v1/payment/refund</button></form>
+          <form onSubmit={onLegacyRefundInquiry}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/inquiry-refund"}>POST /v1/payment/inquiry-refund</button></form>
+        </div>
+      </section>
+
+      <section className="demo-panel">
+        <h2>Ejecutor OpenAPI (Swagger)</h2>
         <form className="demo-actions" onSubmit={onExecuteOperation}>
           <div className="demo-grid">
             <label>
