@@ -16,8 +16,8 @@ import {
 export const FIGMA_ASSETS = {
   // Landing Mobile & Desktop
   landing: {
-    hero: "http://localhost:3845/assets/5472da31c82a2fa3019d5f1f16ee3cef28ff3950.png",
-    background: "http://localhost:3845/assets/0dd1e1027c794c131365f6a2e5950a975f62a72e.png",
+    hero: "/images/ajolotes_1.png",
+    background: "/images/Background_azul.png",
     playIcon: "http://localhost:3845/assets/4809826f163ef1bb59e982553d6f6179d2d22541.svg",
     teamIcon: "http://localhost:3845/assets/e2c20a5240252560bd355876e07efa8bfadcbbc7.svg",
     rewardIcon: "http://localhost:3845/assets/4878926560b244bce4461799d083356583efd18d.svg",
