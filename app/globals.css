@@ -2905,6 +2905,16 @@ img {
   top: -8px;
   width: 128px;
   opacity: 0.95;
+  z-index: 0;
+}
+
+.fig-tribe-hero-top,
+.fig-tribe-hero > p,
+.fig-tribe-hero-chip,
+.fig-tribe-hero > small,
+.fig-mobile-progress-track {
+  position: relative;
+  z-index: 1;
 }
 
 .fig-tribe-hero p {
@@ -4072,9 +4082,10 @@ img {
 
 .fig-retos-hero img {
   position: absolute;
-  right: -6px;
-  top: -5px;
-  width: 126px;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 155px;
   opacity: 0.95;
 }
 

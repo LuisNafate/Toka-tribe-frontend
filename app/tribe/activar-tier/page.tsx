@@ -43,7 +43,7 @@ export default function ActivarTierPage() {
       <section className="fig-tier-hero">
         <h1>Activa tu tier</h1>
         <p>Invierte en tu temporada y multiplica tus recompensas al cierre.</p>
-        <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
+        <img src="/images/ajolote_4.png" alt="Mascot" draggable="false" />
       </section>
 
       <section className="fig-tier-options">

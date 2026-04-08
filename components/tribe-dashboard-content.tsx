@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { FIGMA_ASSETS } from "@/lib/data";
 
 type TribeDashboardContentProps = {
   withoutTier?: boolean;
@@ -74,7 +73,7 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
             <h1>Axo Squad</h1>
             {withoutTier ? <small className="fig-tribe-hero-subtitle">Sigue jugando para desbloquear tu primer tier</small> : null}
           </div>
-          <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
+          <img src={withoutTier ? "/images/ajolote_4.png" : "/images/ajolote_2.png"} alt="Mascot" draggable="false" />
           <p>
             <strong>{pointsText}</strong> esta semana
           </p>

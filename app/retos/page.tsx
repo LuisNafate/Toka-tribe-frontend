@@ -74,7 +74,7 @@ export default function RetosPage() {
             <p>Axo Squad · 2,140 pts</p>
             <span className="fig-retos-racha"><Flame size={14} /> Racha: 3 días</span>
           </div>
-          <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
+          <img src="/images/ajolote_3.png" alt="Mascot" draggable="false" />
         </section>
 
         {/* Reto diario */}

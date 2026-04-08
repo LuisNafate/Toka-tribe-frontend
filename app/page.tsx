@@ -147,7 +147,7 @@ export default function LandingPage() {
               <div className="fig-mobile-tier">Plata</div>
               <div className="fig-mobile-points">1,480 pts</div>
             </div>
-            <img className="fig-mobile-status-mascot" src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
+            <img className="fig-mobile-status-mascot" src="/images/ajolote_2.png" alt="Mascot" draggable="false" />
           </div>
 
           <div className="fig-mobile-progress-labels">
