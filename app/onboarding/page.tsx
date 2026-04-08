@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { AppShell } from "@/components/app-shell";
+import BottomNav from "@/components/BottomNav";
 
 function OnboardingContent() {
   return (
@@ -109,12 +110,7 @@ export default function OnboardingPage() {
 
         <OnboardingContent />
 
-        <nav className="fig-mobile-bottom-nav">
-          <Link href="/dashboard" className="active">INICIO</Link>
-          <Link href="/tribe">SQUAD</Link>
-          <Link href="/retos">RETOS</Link>
-          <Link href="/perfil">PERFIL</Link>
-        </nav>
+        <BottomNav active="inicio" />
       </main>
     </>
   );

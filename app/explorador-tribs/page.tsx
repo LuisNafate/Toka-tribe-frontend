@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
 import Link from "next/link";
+import BottomNav from "@/components/BottomNav";
 import { AppShell } from "@/components/app-shell";
 
 const tiers = ["Todos", "Bronce", "Plata", "Oro", "Diamante"];
@@ -167,12 +168,7 @@ export default function ExplorerPage() {
       <main className="fig-mobile-explorer fig-responsive-page fig-mobile-only">
         {content}
 
-        <nav className="fig-mobile-bottom-nav">
-          <Link href="/dashboard" className="active">INICIO</Link>
-          <Link href="/tribe">SQUAD</Link>
-          <Link href="/retos">RETOS</Link>
-          <Link href="/perfil">PERFIL</Link>
-        </nav>
+        <BottomNav active="inicio" />
       </main>
     </>
   );
