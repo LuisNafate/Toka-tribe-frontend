@@ -44,6 +44,10 @@ type BridgeApi = {
   ) => void;
 };
 
+type MiniApi = {
+  getAuthCode?: (payload: Record<string, unknown>, callback?: (response: unknown) => void) => void;
+};
+
 const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_TOKA_API_BASE_URL ?? "http://talentland-toka.eastus2.cloudapp.azure.com";
 const DEFAULT_APP_ID = process.env.NEXT_PUBLIC_TOKA_APP_ID ?? "";
 const DEFAULT_MERCHANT_CODE = process.env.NEXT_PUBLIC_TOKA_MERCHANT_CODE ?? "";
@@ -77,6 +81,7 @@ export default function DemoPage() {
   const [refundAmountValue, setRefundAmountValue] = useState("500");
   const [refundId, setRefundId] = useState("");
   const [realUserProfile, setRealUserProfile] = useState<RealUserProfile | null>(null);
+  const [bridgeDiagnostics, setBridgeDiagnostics] = useState<string>("");
 
   const [message, setMessage] = useState("");
   const [loadingAction, setLoadingAction] = useState("");
@@ -360,6 +365,36 @@ export default function DemoPage() {
     return maybeBridge ?? null;
   }
 
+  function getMiniApi(namespace: "my" | "ap"): MiniApi | null {
+    if (typeof window === "undefined") return null;
+    const candidate = (window as unknown as Record<string, unknown>)[namespace];
+    if (!candidate || typeof candidate !== "object") {
+      return null;
+    }
+    return candidate as MiniApi;
+  }
+
+  async function waitForBridgeReady(timeoutMs = 4000): Promise<void> {
+    if (getBridge()) return;
+    if (typeof window === "undefined") return;
+
+    await new Promise<void>((resolve) => {
+      let settled = false;
+
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeoutId);
+        window.removeEventListener("AlipayJSBridgeReady", onReady as EventListener);
+        resolve();
+      };
+
+      const onReady = () => done();
+      const timeoutId = window.setTimeout(done, timeoutMs);
+      window.addEventListener("AlipayJSBridgeReady", onReady as EventListener, { once: true });
+    });
+  }
+
   function extractAuthCodeFromPayload(payload: unknown): string | null {
     if (!payload || typeof payload !== "object") {
       return null;
@@ -423,6 +458,36 @@ export default function DemoPage() {
     });
   }
 
+  async function callMiniApiGetAuthCode(api: MiniApi, payload: Record<string, unknown>): Promise<unknown> {
+    return await new Promise((resolve) => {
+      if (!api.getAuthCode) {
+        resolve(null);
+        return;
+      }
+
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        resolve(null);
+      }, 4500);
+
+      try {
+        api.getAuthCode(payload, (response) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          resolve(response);
+        });
+      } catch {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeoutId);
+        resolve(null);
+      }
+    });
+  }
+
   async function onGetDigitalIdentityCode(event: FormEvent) {
     event.preventDefault();
     const code = await getDigitalIdentityCodeFromBridge();
@@ -435,15 +500,47 @@ export default function DemoPage() {
   }
 
   async function getDigitalIdentityCodeFromBridge(): Promise<string | null> {
-    const bridge = getBridge();
+    await waitForBridgeReady();
 
-    if (!bridge) {
+    const bridge = getBridge();
+    const myApi = getMiniApi("my");
+    const apApi = getMiniApi("ap");
+
+    if (!bridge && !myApi && !apApi) {
+      setBridgeDiagnostics("No se detectó bridge/my/ap en este contenedor.");
       return null;
     }
 
     setLoadingAction("Bridge auth code");
+    setBridgeDiagnostics("");
 
     try {
+      const diagnostics: string[] = [];
+
+      const miniApiAttempts: Array<{ source: "my" | "ap"; api: MiniApi | null; payload: Record<string, unknown> }> = [
+        { source: "my", api: myApi, payload: { scopes: "auth_user" } },
+        { source: "my", api: myApi, payload: { scopes: ["auth_user"] } },
+        { source: "ap", api: apApi, payload: { scopes: "auth_user" } },
+        { source: "ap", api: apApi, payload: { scopes: ["auth_user"] } },
+      ];
+
+      for (const attempt of miniApiAttempts) {
+        if (!attempt.api?.getAuthCode) continue;
+        const response = await callMiniApiGetAuthCode(attempt.api, attempt.payload);
+        const code = extractAuthCodeFromPayload(response);
+        diagnostics.push(`${attempt.source}.getAuthCode -> ${code ? "ok" : "sin authCode"}`);
+        if (!code) continue;
+
+        setAuthCode(code);
+        setBridgeDiagnostics(diagnostics.join(" | "));
+        return code;
+      }
+
+      if (!bridge) {
+        setBridgeDiagnostics(diagnostics.join(" | ") || "Bridge no disponible.");
+        return null;
+      }
+
       const attempts: Array<{ method: string; payload: Record<string, unknown> }> = [
         {
           method: "getUserDigitalIdentityAuthCode",
@@ -465,17 +562,26 @@ export default function DemoPage() {
             scopes: "auth_user",
           },
         },
+        {
+          method: "getAuthCode",
+          payload: {
+            scopes: ["auth_user"],
+          },
+        },
       ];
 
       for (const attempt of attempts) {
         const response = await callBridgeMethod(bridge, attempt.method, attempt.payload);
         const code = extractAuthCodeFromPayload(response);
+        diagnostics.push(`bridge.${attempt.method} -> ${code ? "ok" : "sin authCode"}`);
         if (!code) continue;
 
         setAuthCode(code);
+        setBridgeDiagnostics(diagnostics.join(" | "));
         return code;
       }
 
+      setBridgeDiagnostics(diagnostics.join(" | ") || "Bridge respondió sin authCode.");
       return null;
     } finally {
       setLoadingAction("");
@@ -954,6 +1060,9 @@ export default function DemoPage() {
 
         <div style={{ marginTop: 14 }}>
           <h3 style={{ margin: "0 0 8px" }}>Datos reales del usuario</h3>
+          {bridgeDiagnostics && (
+            <p className="subtle" style={{ marginBottom: 8 }}><strong>Diagnóstico bridge:</strong> {bridgeDiagnostics}</p>
+          )}
           {realUserProfile ? (
             <div className="demo-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
               <div><strong>Verificación:</strong> {realUserProfile.fullName ?? realUserProfile.nickName ?? realUserProfile.userId ?? "-"}</div>
