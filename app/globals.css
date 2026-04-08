@@ -5300,3 +5300,534 @@ img {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TOKA TRIVIA — GAME SCREEN
+   ═══════════════════════════════════════════════════════════════ */
+
+.fig-trivia-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 390px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+  background: #eef2ff;
+  box-sizing: border-box;
+}
+
+.fig-trivia-layout--loading {
+  align-items: center;
+  justify-content: center;
+}
+
+.fig-trivia-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(74, 119, 227, 0.2);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: trivia-spin 0.7s linear infinite;
+}
+
+@keyframes trivia-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Top bar ── */
+.fig-trivia-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.fig-trivia-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #dbe4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.fig-trivia-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+.fig-trivia-score-pill {
+  background: var(--topbar-navy);
+  border-radius: 999px;
+  padding: 7px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.fig-trivia-score-pill span {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.6);
+  line-height: 1;
+}
+
+.fig-trivia-score-pill strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  font-family: var(--font-manrope), sans-serif;
+}
+
+/* ── Progress + Timer row ── */
+.fig-trivia-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fig-trivia-meta-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fig-trivia-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fig-trivia-progress-labels span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.fig-trivia-pct {
+  color: var(--brand) !important;
+  font-weight: 700 !important;
+}
+
+.fig-trivia-bar {
+  height: 7px;
+  background: rgba(74, 119, 227, 0.14);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fig-trivia-bar-fill {
+  height: 100%;
+  background: #22c55e;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* ── Circular timer (larger, teal) ── */
+.fig-trivia-timer-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.fig-trivia-timer-ring {
+  width: 60px;
+  height: 60px;
+  transform: rotate(-90deg);
+}
+
+.fig-trivia-timer-bg {
+  fill: none;
+  stroke: rgba(20, 184, 166, 0.18);
+  stroke-width: 4;
+}
+
+.fig-trivia-timer-arc {
+  fill: none;
+  stroke: #14b8a6;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s linear, stroke 0.2s;
+}
+
+.fig-trivia-timer-arc--urgent {
+  stroke: #ef4444;
+}
+
+.fig-trivia-timer-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  font-family: var(--font-manrope), sans-serif;
+}
+
+.fig-trivia-timer-num--urgent {
+  color: #ef4444;
+}
+
+/* ── Question card ── */
+.fig-trivia-question-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 22px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fig-trivia-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fig-trivia-megaphone {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.fig-trivia-pts-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f97316;
+  color: #fff;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.fig-trivia-category {
+  display: inline-flex;
+  align-self: flex-start;
+  background: var(--surface-muted);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.fig-trivia-question-text {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: var(--text);
+  font-family: var(--font-manrope), sans-serif;
+  text-align: center;
+}
+
+/* ── Options ── */
+.fig-trivia-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fig-trivia-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.fig-trivia-option:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.fig-trivia-option:disabled {
+  cursor: default;
+}
+
+.fig-trivia-option--correct {
+  background: #f0fdf4;
+  border-color: #22c55e;
+}
+
+.fig-trivia-option--incorrect {
+  background: #fff1f2;
+  border-color: #ef4444;
+}
+
+/* Option labels — periwinkle default */
+.fig-trivia-option-label {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #e8edff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #5565e8;
+  transition: background 0.15s, color 0.15s;
+}
+
+.fig-trivia-option-label--correct {
+  background: #22c55e;
+  color: #fff;
+}
+
+.fig-trivia-option-label--incorrect {
+  background: #ef4444;
+  color: #fff;
+}
+
+.fig-trivia-option-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+/* ── Feedback hint ── */
+.fig-trivia-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+
+.fig-trivia-hint p {
+  margin: 0;
+  flex: 1;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.fig-trivia-hint img {
+  width: 72px;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOKA TRIVIA — RESULTS SCREEN
+   ═══════════════════════════════════════════════════════════════ */
+
+.fig-trivia-result {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 390px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+  background: var(--bg);
+  box-sizing: border-box;
+}
+
+.fig-trivia-result--empty {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+  color: var(--muted);
+}
+
+/* ── Hero ── */
+.fig-trivia-result-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 10px 0 4px;
+}
+
+.fig-trivia-result-mascot {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+.fig-trivia-result-hero h1 {
+  margin: 0;
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.fig-trivia-result-accuracy {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ── Detail cards ── */
+.fig-trivia-result-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fig-trivia-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fig-trivia-result-row span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.fig-trivia-result-row strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.fig-trivia-result-row--total {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  margin-top: 0;
+}
+
+.fig-trivia-result-row--total span {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.fig-trivia-result-row--total strong {
+  font-size: 1.1rem;
+  color: var(--brand);
+}
+
+.fig-trivia-result-multiplier {
+  color: var(--accent-strong) !important;
+}
+
+/* ── Coupon ── */
+.fig-trivia-coupon {
+  background: linear-gradient(118deg, var(--hero-blue) 0%, var(--brand-2) 100%);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  color: #fff;
+}
+
+.fig-trivia-coupon--locked {
+  background: var(--surface-muted);
+  text-align: center;
+}
+
+.fig-trivia-coupon--locked p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.fig-trivia-coupon-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fig-trivia-coupon-label {
+  margin: 0 0 2px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fig-trivia-coupon-discount {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: var(--font-manrope), sans-serif;
+}
+
+.fig-trivia-coupon-code {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.7;
+  letter-spacing: 0.06em;
+}
+
+/* ── Action buttons ── */
+.fig-trivia-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.fig-trivia-result-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.fig-trivia-result-btn:active {
+  opacity: 0.85;
+}
+
+.fig-trivia-result-btn--primary {
+  background: var(--brand);
+  color: #fff;
+}
+
+.fig-trivia-result-btn--ghost {
+  background: var(--surface);
+  color: var(--brand);
+  border: 2px solid var(--line);
+}
+

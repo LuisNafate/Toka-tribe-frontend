@@ -118,7 +118,7 @@ export default function RetosPage() {
                 <h3>Toka Trivia</h3>
                 <p><span className="fig-retos-pts-inline">+40 pts</span> <span className="fig-retos-available">● DISPONIBLE</span></p>
               </div>
-              <button type="button" className="fig-retos-btn fig-retos-btn--navy">Jugar</button>
+              <Link href="/retos/trivia/1" className="fig-retos-btn fig-retos-btn--navy">Jugar</Link>
             </article>
             <article>
               <div className="fig-retos-weekly-icon fig-retos-weekly-icon--purple">
