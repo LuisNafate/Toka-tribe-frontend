@@ -3500,6 +3500,65 @@ img {
   }
 }
 
+@media (max-width: 767px) {
+  .demo-page {
+    padding: 16px 12px 28px;
+    gap: 12px;
+  }
+
+  .demo-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .demo-header h1 {
+    font-size: 1.35rem;
+  }
+
+  .demo-header p {
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+
+  .demo-back-link {
+    width: 100%;
+    text-align: center;
+  }
+
+  .demo-panel {
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .demo-panel h2 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+
+  .demo-page input,
+  .demo-page button {
+    min-height: 44px;
+    font-size: 0.95rem;
+  }
+
+  .demo-inline-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .demo-inline-form input,
+  .demo-inline-form button,
+  .demo-actions > form > button {
+    width: 100%;
+  }
+
+  .demo-panel pre {
+    font-size: 0.75rem;
+    max-height: 48vh;
+  }
+}
+
 @media (min-width: 768px) {
   .fig-desktop-only {
     display: block;
