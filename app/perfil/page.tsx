@@ -1,7 +1,7 @@
 import { ShieldCheck, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, SectionHeader } from "@/components/common";
-import { profileHighlights } from "@/lib/data";
+import { FIGMA_ASSETS, profileHighlights } from "@/lib/data";
 
 export default function PerfilPage() {
   return (
@@ -10,7 +10,12 @@ export default function PerfilPage() {
         <Panel>
           <SectionHeader eyebrow="Jugador" title="Andrea" description="Miembro activo de Axo Squad" />
           <div className="inline-row" style={{ alignItems: "center" }}>
-            <div className="avatar avatar--lg">AN</div>
+            <img
+              src={FIGMA_ASSETS.dashboard.userPic}
+              alt="Andrea"
+              className="avatar avatar--lg"
+              style={{ objectFit: "cover" }}
+            />
             <div>
               <div className="item-title">Nivel Plata</div>
               <div className="subtle">Participación constante y racha de equipo activa.</div>
@@ -34,7 +39,7 @@ export default function PerfilPage() {
               <Sparkles size={18} />
             </div>
             <h3>Single Sign-On Toka</h3>
-            <p>Acceso directo, sin registro adicional, con wallet y progreso sincronizados.</p>
+            <p>Acceso directo, sin registro adicional, con progreso sincronizado en todo el ecosistema.</p>
           </Panel>
 
           <Panel>
