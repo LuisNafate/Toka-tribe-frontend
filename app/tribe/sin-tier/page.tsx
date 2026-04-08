@@ -17,6 +17,7 @@ export default function TribeSinTierPage() {
             <span className="fig-mobile-menu">☰</span>
             <strong>TokaTribe</strong>
           </div>
+          <img src={"http://localhost:3845/assets/339b32c23261ca4d6bee3f2fbd560b8fc7ba98a3.png"} alt="Perfil" />
         </header>
 
         <TribeDashboardContent withoutTier />

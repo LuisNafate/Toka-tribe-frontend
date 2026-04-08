@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
 
 type TribeDashboardContentProps = {
@@ -41,9 +45,25 @@ const members: Member[] = [
 ];
 
 export function TribeDashboardContent({ withoutTier = false }: TribeDashboardContentProps) {
+  const [feedback, setFeedback] = useState<{ tone: "info" | "ok" | "warn"; text: string } | null>(null);
+
   const tierText = withoutTier ? "Sin Tier" : "PLATA";
   const pointsText = withoutTier ? "1,640 pts" : "2,140 pts";
   const statusText = withoutTier ? "Tu tribe aun no tiene tier asignado" : "Multiplicador x1,3 activo";
+
+  const tierActivationLabel = useMemo(() => {
+    if (!withoutTier) {
+      return "Tu membresía está activa y acumulando multiplicador.";
+    }
+
+    return "Membresía crítica: activa un tier para desbloquear multiplicador y recompensas de temporada.";
+  }, [withoutTier]);
+
+  const feedbackToneClass = feedback?.tone === "ok"
+    ? "fig-tribe-feedback--ok"
+    : feedback?.tone === "warn"
+      ? "fig-tribe-feedback--warn"
+      : "fig-tribe-feedback--info";
 
   return (
     <>
@@ -65,6 +85,13 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
           <small>{withoutTier ? "Suma 360 pts para entrar a Bronce" : "A 120 pts de ascender · 92%"}</small>
         </section>
 
+        {withoutTier ? (
+          <Link href="/tribe/activar-tier" className="fig-tribe-redirect-cta">
+            <span>Activa tu Tier esta temprada</span>
+            <ChevronRight size={10} strokeWidth={3} />
+          </Link>
+        ) : null}
+
         <section className="fig-tribe-stats">
           <article className="wide">
             <p>Racha de la Tribe</p>
@@ -85,7 +112,13 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
         <section className="fig-tribe-members">
           <div className="fig-tribe-section-head">
             <h2>Tu Tribe (7/10)</h2>
-            <button type="button" className="fig-tribe-link-btn">Ver todos</button>
+            <button
+              type="button"
+              className="fig-tribe-link-btn"
+              onClick={() => setFeedback({ tone: "info", text: "Vista completa de miembros habilitada para la próxima iteración." })}
+            >
+              Ver todos
+            </button>
           </div>
           <div className="fig-tribe-members-card">
             {members.map((member) => (
@@ -107,7 +140,12 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
                 <strong>{member.pts}</strong>
               </article>
             ))}
-            <button type="button">Invitar miembro</button>
+            <button
+              type="button"
+              onClick={() => setFeedback({ tone: "ok", text: "Invitación enviada. Te avisaremos cuando el miembro acepte." })}
+            >
+              Invitar miembro
+            </button>
           </div>
         </section>
 
@@ -137,9 +175,11 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
         </section>
       </div>
 
-      <Link href="/retos" className="fig-tribe-play-btn fig-tribe-play-btn--responsive">
-        Jugar reto de hoy
-      </Link>
+      {feedback ? (
+        <section className={`fig-tribe-feedback ${feedbackToneClass}`} role="status" aria-live="polite">
+          <p>{feedback.text}</p>
+        </section>
+      ) : null}
     </>
   );
 }

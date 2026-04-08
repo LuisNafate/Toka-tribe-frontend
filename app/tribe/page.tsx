@@ -3,12 +3,12 @@ import { AppShell } from "@/components/app-shell";
 import { TribeDashboardContent } from "@/components/tribe-dashboard-content";
 
 export default function TribePage() {
-  const content = <TribeDashboardContent />;
+  const content = <TribeDashboardContent withoutTier />;
 
   return (
     <>
       <div className="fig-desktop-only">
-        <AppShell title="Mi Tribe" subtitle="Rendimiento, miembros y actividad del equipo">
+        <AppShell title="Mi Tribe" subtitle="Membresía crítica activa: selecciona un tier para desbloquear beneficios">
           {content}
         </AppShell>
       </div>
@@ -19,6 +19,7 @@ export default function TribePage() {
             <span className="fig-mobile-menu">☰</span>
             <strong>TokaTribe</strong>
           </div>
+          <img src={"http://localhost:3845/assets/339b32c23261ca4d6bee3f2fbd560b8fc7ba98a3.png"} alt="Perfil" />
         </header>
 
         {content}
