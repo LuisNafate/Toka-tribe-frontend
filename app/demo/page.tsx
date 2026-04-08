@@ -400,12 +400,50 @@ export default function DemoPage() {
   }
 
   function extractAuthCodeFromPayload(payload: unknown): string | null {
-    if (!payload || typeof payload !== "object") {
+    let normalizedPayload = payload;
+
+    if (typeof normalizedPayload === "string") {
+      try {
+        normalizedPayload = JSON.parse(normalizedPayload);
+      } catch {
+        return null;
+      }
+    }
+
+    if (!normalizedPayload || typeof normalizedPayload !== "object") {
       return null;
     }
 
-    const queue: unknown[] = [payload];
+    const queue: unknown[] = [normalizedPayload];
     let depth = 0;
+
+    const keyCandidates = [
+      "authCode",
+      "authcode",
+      "auth_code",
+      "digitalIdentityAuthCode",
+      "digital_identity_auth_code",
+      "userAuthCode",
+      "user_auth_code",
+      "authorizationCode",
+      "authorization_code",
+    ];
+
+    const maybeAuthCode = (value: unknown): string | null => {
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+        if (/^[A-Za-z0-9_\-.]{4,256}$/.test(trimmed)) {
+          return trimmed;
+        }
+      }
+
+      if (Array.isArray(value) && value.length > 0) {
+        return maybeAuthCode(value[0]);
+      }
+
+      return null;
+    };
 
     while (queue.length > 0 && depth < 4) {
       const currentLevelCount = queue.length;
@@ -415,9 +453,11 @@ export default function DemoPage() {
         if (!item || typeof item !== "object") continue;
 
         const record = item as Record<string, unknown>;
-        const direct = record.authCode ?? record.authcode ?? record.auth_code;
-        if (typeof direct === "string" && direct.trim()) {
-          return direct.trim();
+        for (const key of keyCandidates) {
+          const extracted = maybeAuthCode(record[key]);
+          if (extracted) {
+            return extracted;
+          }
         }
 
         for (const value of Object.values(record)) {
@@ -431,6 +471,24 @@ export default function DemoPage() {
     }
 
     return null;
+  }
+
+  function summarizeBridgePayload(payload: unknown): string {
+    try {
+      if (payload == null) return "respuesta vacia";
+      if (typeof payload === "string") return `string(${payload.slice(0, 120)})`;
+      if (typeof payload !== "object") return typeof payload;
+
+      const record = payload as Record<string, unknown>;
+      const keys = Object.keys(record).slice(0, 8);
+      const status = [record.resultStatus, record.resultCode, record.error, record.errorMessage]
+        .filter((v) => typeof v === "string" || typeof v === "number")
+        .join("/");
+
+      return `keys:[${keys.join(",")}]${status ? ` status:${status}` : ""}`;
+    } catch {
+      return "sin resumen";
+    }
   }
 
   function extractUserProfileFromPayload(payload: unknown): RealUserProfile | null {
@@ -656,7 +714,7 @@ export default function DemoPage() {
         if (!attempt.api?.getAuthCode) continue;
         const response = await callMiniApiGetAuthCode(attempt.api, attempt.payload);
         const code = extractAuthCodeFromPayload(response);
-        diagnostics.push(`${attempt.source}.getAuthCode -> ${code ? "ok" : "sin authCode"}`);
+        diagnostics.push(`${attempt.source}.getAuthCode -> ${code ? "ok" : "sin authCode"} (${summarizeBridgePayload(response)})`);
         if (!code) continue;
 
         setAuthCode(code);
@@ -701,7 +759,7 @@ export default function DemoPage() {
       for (const attempt of attempts) {
         const response = await callBridgeMethod(bridge, attempt.method, attempt.payload);
         const code = extractAuthCodeFromPayload(response);
-        diagnostics.push(`bridge.${attempt.method} -> ${code ? "ok" : "sin authCode"}`);
+        diagnostics.push(`bridge.${attempt.method} -> ${code ? "ok" : "sin authCode"} (${summarizeBridgePayload(response)})`);
         if (!code) continue;
 
         setAuthCode(code);
