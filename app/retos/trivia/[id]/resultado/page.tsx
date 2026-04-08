@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trophy, Users, Zap, Tag } from "lucide-react";
 import type { TriviaResult } from "@/types/trivia";
+import { getSessionToken } from "@/services/auth.service";
 
 const RESULT_KEY = "toka_trivia_result";
 
@@ -31,9 +32,18 @@ export default function TriviaResultadoPage({
   useEffect(() => {
     if (!result || posted) return;
     setPosted(true);
-    fetch("/api/game-sessions", {
+    const token = getSessionToken();
+    if (!token) return;
+
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
+    if (!apiBase) return;
+
+    fetch(`${apiBase}/game-sessions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         gameType: "trivia",
         sessionId: params.id,

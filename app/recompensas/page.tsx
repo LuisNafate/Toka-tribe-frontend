@@ -13,7 +13,7 @@ export default function RecompensasPage() {
         <AppShell title="Recompensas" subtitle="Wallet, canjes y beneficios del ecosistema" headerBadge={<AppPointsBadge />}>
           <div className="workspace__grid">
         <Panel>
-          <SectionHeader eyebrow="Wallet Toka" title="$1,240 balance disponible" description="Tus recompensas pasan por la wallet simulada y quedan listas para canje." />
+          <SectionHeader eyebrow="Wallet Toka" title="$1,240 balance disponible" description="Tus recompensas se acreditan en tu wallet y quedan listas para canje." />
           <div className="metric-grid">
             <article className="metric-card"><div className="metric-card__icon"><Wallet size={18} /></div><div className="metric-card__value">$1,240</div><div className="metric-card__label">Saldo actual</div></article>
             <article className="metric-card"><div className="metric-card__icon"><Gift size={18} /></div><div className="metric-card__value">4</div><div className="metric-card__label">Recompensas listas</div></article>

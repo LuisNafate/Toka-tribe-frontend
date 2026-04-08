@@ -3,6 +3,7 @@ import { FIGMA_ASSETS } from "@/lib/data";
 import { AppShell } from "@/components/app-shell";
 import BottomNav from "@/components/BottomNav";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
+import { TokaLoginButton } from "@/components/toka-login-button";
 
 function OnboardingContent() {
   return (
@@ -13,9 +14,9 @@ function OnboardingContent() {
           <span className="fig-mobile-kicker">MINI APP DENTRO DEL ECOSISTEMA TOKA</span>
           <h1>Bienvenido a tu Tribe</h1>
           <div className="fig-mobile-hero-cta">
-            <Link href="/dashboard" className="fig-pill-btn fig-pill-btn--primary">
+            <TokaLoginButton className="fig-pill-btn fig-pill-btn--primary">
               Entrar con Toka
-            </Link>
+            </TokaLoginButton>
             <Link href="/" className="fig-pill-btn fig-pill-btn--light">
               Conocer la dinámica
             </Link>
@@ -104,9 +105,9 @@ export default function OnboardingPage() {
             <MobileHamburgerMenu />
             <strong>TokaTribe</strong>
           </div>
-          <Link href="/dashboard" className="fig-mobile-enter-btn">
+          <TokaLoginButton className="fig-mobile-enter-btn">
             Entrar
-          </Link>
+          </TokaLoginButton>
         </header>
 
         <OnboardingContent />

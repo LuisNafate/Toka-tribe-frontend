@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Gamepad2, Medal, Menu, Trophy, Users } from "lucide-react";
 import { FIGMA_ASSETS } from "@/lib/data";
+import { TokaLoginButton } from "@/components/toka-login-button";
 
 export default function LandingPage() {
   return (
@@ -17,8 +18,7 @@ export default function LandingPage() {
             <Link href="#">Recompensas</Link>
           </nav>
           <div className="fig-home-topbar-actions">
-            <Link href="/demo" className="fig-home-demo-btn">Ver demo</Link>
-            <Link href="/dashboard">Entrar con Toka</Link>
+            <TokaLoginButton>Entrar con Toka</TokaLoginButton>
           </div>
         </header>
 
@@ -36,7 +36,7 @@ export default function LandingPage() {
             </div>
 
             <div className="fig-home-cta-row">
-              <Link href="/dashboard" className="primary">Entrar con Toka</Link>
+              <TokaLoginButton className="primary">Entrar con Toka</TokaLoginButton>
               <Link href="/onboarding" className="secondary">Conocer la dinámica</Link>
             </div>
           </div>
@@ -100,8 +100,7 @@ export default function LandingPage() {
             <strong>TokaTribe</strong>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Link href="/demo" className="fig-mobile-enter-btn">Demo</Link>
-            <Link href="/dashboard" className="fig-mobile-enter-btn">Entrar</Link>
+            <TokaLoginButton className="fig-mobile-enter-btn">Entrar</TokaLoginButton>
           </div>
         </header>
 
@@ -110,7 +109,7 @@ export default function LandingPage() {
           <span className="fig-mobile-kicker">MINI APP DENTRO DEL ECOSISTEMA TOKA</span>
           <h1>Bienvenido a tu Tribe</h1>
           <div className="fig-mobile-hero-cta">
-            <Link href="/dashboard" className="fig-pill-btn fig-pill-btn--primary">Entrar con Toka</Link>
+            <TokaLoginButton className="fig-pill-btn fig-pill-btn--primary">Entrar con Toka</TokaLoginButton>
             <Link href="/onboarding" className="fig-pill-btn fig-pill-btn--light">Conocer la dinámica</Link>
           </div>
         </section>
