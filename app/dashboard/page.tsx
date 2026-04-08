@@ -1,5 +1,6 @@
 import { ArrowRight, CircleCheckBig, Clock3, Trophy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { AppPointsBadge } from "@/components/app-points-badge";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
 import {
   dailyChallenge,
@@ -33,7 +34,7 @@ const leaderboardData = [
 
 export default function DashboardPage() {
   return (
-    <AppShell title="Home" subtitle="Tu dashboard de retos y actividad" headerBadge={<div className="balance-pill">1,480 pts</div>}>
+    <AppShell title="Home" subtitle="Tu dashboard de retos y actividad" headerBadge={<AppPointsBadge />}>
       <div className="workspace__grid fig-dashboard-main-grid">
         {/* RETO DE HOY - PROMINENTE */}
         <Panel className="fig-panel-featured">

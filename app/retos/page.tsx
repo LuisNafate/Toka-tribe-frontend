@@ -1,6 +1,7 @@
-import { AlertTriangle, Brain, Clock, Flame, Menu, Sparkles, TimerReset, TrendingUp, Trophy, Zap } from "lucide-react";
+import { AlertTriangle, Brain, Clock, Flame, Gamepad2, Menu, Sparkles, TimerReset, TrendingUp, Trophy, Zap } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { AppPointsBadge } from "@/components/app-points-badge";
 import BottomNav from "@/components/BottomNav";
 import { Panel, SectionHeader } from "@/components/common";
 import { challengeCards, FIGMA_ASSETS } from "@/lib/data";
@@ -9,7 +10,12 @@ export default function RetosPage() {
   const desktopContent = (
     <div className="workspace__grid">
       <Panel>
-        <SectionHeader eyebrow="Disponible ahora" title="Retos de hoy" description="Las acciones correctas suben el score de la Tribe al instante." action={<span className="badge">2 disponibles</span>} />
+        <SectionHeader
+          eyebrow="Disponible ahora"
+          title="Retos de hoy"
+          description="Las acciones correctas suben el score de la Tribe al instante. Snake Tribe suma puntos a tu progreso con cada manzana."
+          action={<Link href="/retos/serpiente" className="badge">Snake Tribe</Link>}
+        />
         <div className="challenge-grid">
           {challengeCards.map((item) => (
             <article key={item.title} className={`challenge-card ${item.dark ? "challenge-card--dark" : ""}`}>
@@ -49,7 +55,7 @@ export default function RetosPage() {
   return (
     <>
       <div className="fig-desktop-only">
-        <AppShell title="Retos" subtitle="Catálogo diario de juegos, bonificaciones y power-ups">
+        <AppShell title="Retos" subtitle="Catálogo diario de juegos, bonificaciones y power-ups" headerBadge={<AppPointsBadge />}>
           {desktopContent}
         </AppShell>
       </div>
@@ -86,13 +92,13 @@ export default function RetosPage() {
           <article className="fig-retos-daily-card">
             <div className="fig-retos-daily-card__top">
               <div>
-                <h2>Trivia Rápida</h2>
-                <p className="fig-retos-pts"><Zap size={14} /> +15 pts</p>
+                <h2>Snake Tribe</h2>
+                <p className="fig-retos-pts"><Zap size={14} /> +15 pts por manzana</p>
               </div>
-              <div className="fig-retos-quiz-icon"><Brain size={22} color="#2a55b9" /></div>
+              <div className="fig-retos-quiz-icon"><Gamepad2 size={22} color="#2a55b9" /></div>
             </div>
-            <div className="fig-retos-alert"><AlertTriangle size={13} /> ¡Juega hoy para no perder tu racha!</div>
-            <Link href="/retos" className="fig-retos-play">JUGAR AHORA</Link>
+            <div className="fig-retos-alert"><AlertTriangle size={13} /> Cada captura suma puntos a la app y a tu progreso semanal.</div>
+            <Link href="/retos/serpiente" className="fig-retos-play">JUGAR AHORA</Link>
           </article>
         </section>
 
