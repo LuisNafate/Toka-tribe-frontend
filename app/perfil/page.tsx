@@ -86,8 +86,8 @@ export default function PerfilPage() {
             </div>
             <div className="fig-perfil-stat-divider" />
             <div className="fig-perfil-stat">
-              <span className="fig-perfil-stat-label">TRIBES</span>
-              <span className="fig-perfil-stat-value">3</span>
+              <span className="fig-perfil-stat-label">TRIBE</span>
+              <span className="fig-perfil-stat-value" style={{ fontSize: "0.75rem" }}>Axo Squad</span>
             </div>
           </div>
         </header>

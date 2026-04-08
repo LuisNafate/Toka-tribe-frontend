@@ -231,28 +231,27 @@ export default function LeaderboardPage() {
           ))}
         </section>
 
-        {/* Fixed bottom: status bar + nav stacked together */}
-        <div className="fig-lb-bottom-fixed">
-          <div className="fig-lb-footer">
-            <div className="fig-lb-footer-top">
-              <div className="fig-lb-footer-main-row">
-                <span className="fig-lb-footer-eyebrow">TU POSICIÓN</span>
-                <Link href="/tribe" className="fig-lb-footer-link">Ver tu Squad →</Link>
-              </div>
-              <p className="fig-lb-footer-main">
-                #{userTribe.rank} {userTribe.name} · {userTribe.pts.toLocaleString()} pts
-              </p>
+        {/* Status bar — fixed above the BottomNav */}
+        <div className="fig-lb-footer">
+          <div className="fig-lb-footer-top">
+            <div className="fig-lb-footer-main-row">
+              <span className="fig-lb-footer-eyebrow">TU POSICIÓN</span>
+              <Link href="/tribe" className="fig-lb-footer-link">Ver tu Squad →</Link>
             </div>
-            <div className="fig-lb-footer-meta">
-              <span>A {ptsNeeded} pts del #1 · {teamAbove.name}</span>
-              <span>Progreso {progressPct}%</span>
-            </div>
-            <div className="fig-lb-footer-bar">
-              <div style={{ width: `${progressPct}%` }} />
-            </div>
+            <p className="fig-lb-footer-main">
+              #{userTribe.rank} {userTribe.name} · {userTribe.pts.toLocaleString()} pts
+            </p>
           </div>
-          <BottomNav />
+          <div className="fig-lb-footer-meta">
+            <span>A {ptsNeeded} pts del #1 · {teamAbove.name}</span>
+            <span>Progreso {progressPct}%</span>
+          </div>
+          <div className="fig-lb-footer-bar">
+            <div style={{ width: `${progressPct}%` }} />
+          </div>
         </div>
+
+        <BottomNav />
       </main>
     </>
   );

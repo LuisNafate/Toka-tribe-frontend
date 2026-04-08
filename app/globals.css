@@ -2728,17 +2728,19 @@ img {
 }
 
 .fig-mobile-bottom-nav {
-  position: sticky;
+  position: fixed;
   bottom: 12px;
-  margin-top: 24px;
+  left: 12px;
+  right: 12px;
+  z-index: 100;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   padding: 10px 8px;
-  box-shadow: 0 -6px 22px rgba(42, 85, 185, 0.14);
+  box-shadow: 0 4px 24px rgba(42, 85, 185, 0.18);
 }
 
 .fig-mobile-bottom-nav a {
@@ -6620,7 +6622,7 @@ img {
   flex-direction: column;
   min-height: 100dvh;
   background: #f0f2f8;
-  padding-bottom: 200px; /* footer (~100px) + bottom nav (~80px) + breathing room */
+  padding-bottom: 260px; /* status bar (~100px) + bottom nav (~88px) + breathing room */
 }
 
 /* Header */
@@ -6956,8 +6958,13 @@ img {
   border-top: 1px solid #e8edf5;
 }
 
-/* Status bar */
+/* Status bar — sits above the fixed BottomNav */
 .fig-lb-footer {
+  position: fixed;
+  bottom: 88px; /* nav height ~64px + bottom offset 12px + gap 12px */
+  left: 0;
+  right: 0;
+  z-index: 90;
   padding: 12px 20px 14px;
   background: #fff;
   border-top: 1px solid #e8edf5;
