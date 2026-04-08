@@ -31,7 +31,7 @@ type BridgeApi = {
   ) => void;
 };
 
-const DEFAULT_BASE_URL = "http://talentland-toka.eastus2.cloudapp.azure.com";
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_TOKA_API_BASE_URL ?? "http://talentland-toka.eastus2.cloudapp.azure.com";
 const SWAGGER_OPERATIONS = getApiOperations();
 const SWAGGER_STATS = getApiStats();
 const SWAGGER_TAGS = ["all", ...getApiTags()];
