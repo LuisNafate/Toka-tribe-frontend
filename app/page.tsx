@@ -99,7 +99,10 @@ export default function LandingPage() {
             <span className="fig-mobile-menu">✦</span>
             <strong>TokaTribe</strong>
           </div>
-          <Link href="/dashboard" className="fig-mobile-enter-btn">Entrar</Link>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link href="/demo" className="fig-mobile-enter-btn">Demo</Link>
+            <Link href="/dashboard" className="fig-mobile-enter-btn">Entrar</Link>
+          </div>
         </header>
 
         <section className="fig-mobile-hero">
@@ -108,6 +111,7 @@ export default function LandingPage() {
           <h1>Bienvenido a tu Tribe</h1>
           <div className="fig-mobile-hero-cta">
             <Link href="/dashboard" className="fig-pill-btn fig-pill-btn--primary">Entrar con Toka</Link>
+            <Link href="/demo" className="fig-pill-btn fig-pill-btn--primary">Ver demo API</Link>
             <Link href="/onboarding" className="fig-pill-btn fig-pill-btn--light">Conocer la dinámica</Link>
           </div>
         </section>

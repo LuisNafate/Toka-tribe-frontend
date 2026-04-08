@@ -17,6 +17,18 @@ type ApiResult = {
   payload: unknown;
 };
 
+type RealUserProfile = {
+  userId?: string;
+  nickName?: string;
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  mobilePhone?: string;
+  email?: string;
+  kycState?: string;
+};
+
 type BridgePayload = {
   authCode?: string;
   authcode?: string;
@@ -59,6 +71,7 @@ export default function DemoPage() {
   const [paymentUrl, setPaymentUrl] = useState("");
   const [refundAmountValue, setRefundAmountValue] = useState("500");
   const [refundId, setRefundId] = useState("");
+  const [realUserProfile, setRealUserProfile] = useState<RealUserProfile | null>(null);
 
   const [message, setMessage] = useState("");
   const [loadingAction, setLoadingAction] = useState("");
@@ -411,6 +424,7 @@ export default function DemoPage() {
 
     if (typeof nextUserId === "string") {
       setUserId(nextUserId);
+      setRealUserProfile((prev) => ({ ...prev, userId: nextUserId }));
     }
   }
 
@@ -440,7 +454,7 @@ export default function DemoPage() {
 
     setMessage("");
 
-    await callApi("Legacy POST /v1/user/info", "/v1/user/info", {
+    const result = await callApi("Legacy POST /v1/user/info", "/v1/user/info", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -449,6 +463,21 @@ export default function DemoPage() {
       },
       body: JSON.stringify({ authCodes }),
     });
+
+    const data = getResultData(result.payload);
+    if (data) {
+      setRealUserProfile({
+        userId: typeof data.userId === "string" ? data.userId : userId || undefined,
+        nickName: typeof data.nickName === "string" ? data.nickName : undefined,
+        fullName: typeof data.fullName === "string" ? data.fullName : undefined,
+        firstName: typeof data.firstName === "string" ? data.firstName : undefined,
+        lastName: typeof data.lastName === "string" ? data.lastName : undefined,
+        avatar: typeof data.avatar === "string" ? data.avatar : undefined,
+        mobilePhone: typeof data.mobilePhone === "string" ? data.mobilePhone : undefined,
+        email: typeof data.email === "string" ? data.email : undefined,
+        kycState: typeof data.kycState === "string" ? data.kycState : undefined,
+      });
+    }
   }
 
   async function onLegacyCreatePayment(event: FormEvent) {
@@ -732,6 +761,24 @@ export default function DemoPage() {
           <form onSubmit={onLegacyPaymentClose}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/close"}>POST /v1/payment/close</button></form>
           <form onSubmit={onLegacyRefundCreate}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/refund"}>POST /v1/payment/refund</button></form>
           <form onSubmit={onLegacyRefundInquiry}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/inquiry-refund"}>POST /v1/payment/inquiry-refund</button></form>
+        </div>
+
+        <div style={{ marginTop: 14 }}>
+          <h3 style={{ margin: "0 0 8px" }}>Datos reales del usuario</h3>
+          {realUserProfile ? (
+            <div className="demo-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+              <div><strong>User ID:</strong> {realUserProfile.userId ?? "-"}</div>
+              <div><strong>Nickname:</strong> {realUserProfile.nickName ?? "-"}</div>
+              <div><strong>Nombre:</strong> {realUserProfile.fullName ?? realUserProfile.firstName ?? "-"}</div>
+              <div><strong>Apellido:</strong> {realUserProfile.lastName ?? "-"}</div>
+              <div><strong>Teléfono:</strong> {realUserProfile.mobilePhone ?? "-"}</div>
+              <div><strong>Email:</strong> {realUserProfile.email ?? "-"}</div>
+              <div><strong>KYC:</strong> {realUserProfile.kycState ?? "-"}</div>
+              <div><strong>Avatar:</strong> {realUserProfile.avatar ? "Disponible" : "-"}</div>
+            </div>
+          ) : (
+            <p className="subtle">Aún no hay datos. Ejecuta authenticate y luego /v1/user/info.</p>
+          )}
         </div>
       </section>
 
