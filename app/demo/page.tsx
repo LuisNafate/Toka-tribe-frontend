@@ -18,6 +18,14 @@ export default function DemoPage() {
   const [authCode, setAuthCode] = useState("");
   const [token, setToken] = useState("");
   const [authCodesCsv, setAuthCodesCsv] = useState("");
+  const [merchantCode, setMerchantCode] = useState("");
+  const [userId, setUserId] = useState("");
+  const [orderTitle, setOrderTitle] = useState("Demo TokaTribe");
+  const [orderAmountValue, setOrderAmountValue] = useState("500");
+  const [paymentId, setPaymentId] = useState("");
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [refundAmountValue, setRefundAmountValue] = useState("500");
+  const [refundId, setRefundId] = useState("");
   const [loadingAction, setLoadingAction] = useState("");
   const [lastResult, setLastResult] = useState<ApiResult | null>(null);
 
@@ -41,8 +49,22 @@ export default function DemoPage() {
       };
 
       if (action === "Autenticar" && response.ok && typeof payload === "object" && payload) {
-        const maybeToken = (payload as { data?: { accessToken?: string } }).data?.accessToken;
+        const data = (payload as { data?: { accessToken?: string; userId?: string } }).data;
+        const maybeToken = data?.accessToken;
+        const maybeUserId = data?.userId;
         if (maybeToken) setToken(maybeToken);
+        if (maybeUserId) setUserId(maybeUserId);
+      }
+
+      if (action === "Crear pago" && response.ok && typeof payload === "object" && payload) {
+        const data = (payload as { data?: { paymentId?: string; paymentUrl?: string } }).data;
+        if (data?.paymentId) setPaymentId(data.paymentId);
+        if (data?.paymentUrl) setPaymentUrl(data.paymentUrl);
+      }
+
+      if (action === "Solicitar refund" && response.ok && typeof payload === "object" && payload) {
+        const maybeRefundId = (payload as { data?: { refundId?: string } }).data?.refundId;
+        if (maybeRefundId) setRefundId(maybeRefundId);
       }
 
       setLastResult(result);
@@ -95,6 +117,101 @@ export default function DemoPage() {
     });
   }
 
+  function onPaymentCreate(e: FormEvent) {
+    e.preventDefault();
+    callApi("Crear pago", "/v1/payment/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId,
+        Authorization: `Bearer ${token}`,
+        "Alipay-MerchantCode": merchantCode,
+      },
+      body: JSON.stringify({
+        userId,
+        orderTitle,
+        orderAmount: {
+          value: orderAmountValue,
+          currency: "MXN",
+        },
+      }),
+    });
+  }
+
+  function onPaymentInquiry(e: FormEvent) {
+    e.preventDefault();
+    callApi("Consultar pago", "/v1/payment/inquiry", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ paymentId }),
+    });
+  }
+
+  function onPaymentClose(e: FormEvent) {
+    e.preventDefault();
+    callApi("Cerrar pago", "/v1/payment/close", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ paymentId }),
+    });
+  }
+
+  function onRefundCreate(e: FormEvent) {
+    e.preventDefault();
+    callApi("Solicitar refund", "/v1/payment/refund", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId,
+        Authorization: `Bearer ${token}`,
+        "Alipay-MerchantCode": merchantCode,
+      },
+      body: JSON.stringify({
+        userId,
+        paymentId,
+        refundAmount: {
+          value: refundAmountValue,
+          currency: "MXN",
+        },
+      }),
+    });
+  }
+
+  function onRefundInquiry(e: FormEvent) {
+    e.preventDefault();
+    callApi("Consultar refund", "/v1/payment/inquiry-refund", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Id": appId,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ refundId }),
+    });
+  }
+
+  function onOpenPaymentUrl(e: FormEvent) {
+    e.preventDefault();
+    if (!paymentUrl) return;
+
+    if (typeof window !== "undefined" && (window as typeof window & { AlipayJSBridge?: { call: (method: string, payload: unknown) => void } }).AlipayJSBridge) {
+      (window as typeof window & { AlipayJSBridge: { call: (method: string, payload: unknown) => void } }).AlipayJSBridge.call("pay", {
+        paymentUrl,
+      });
+      return;
+    }
+
+    window.open(paymentUrl, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <main className="demo-page">
       <header className="demo-header">
@@ -119,6 +236,14 @@ export default function DemoPage() {
           <label>
             Bearer token
             <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="JWT token" />
+          </label>
+          <label>
+            Merchant Code (5 chars)
+            <input value={merchantCode} onChange={(e) => setMerchantCode(e.target.value)} placeholder="xxxxx" />
+          </label>
+          <label>
+            User ID
+            <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="userId" />
           </label>
         </div>
       </section>
@@ -145,6 +270,52 @@ export default function DemoPage() {
             />
             <button type="submit" disabled={!appId || !token || !authCodesCsv || loadingAction === "User info"}>
               {loadingAction === "User info" ? "Consultando..." : "POST /v1/user/info"}
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <section className="demo-panel">
+        <h2>Simulador de pagos</h2>
+        <div className="demo-actions">
+          <form onSubmit={onPaymentCreate} className="demo-inline-form">
+            <input value={orderTitle} onChange={(e) => setOrderTitle(e.target.value)} placeholder="orderTitle" />
+            <input value={orderAmountValue} onChange={(e) => setOrderAmountValue(e.target.value)} placeholder="monto MXN" />
+            <button type="submit" disabled={!appId || !token || !merchantCode || !userId || loadingAction === "Crear pago"}>
+              {loadingAction === "Crear pago" ? "Creando..." : "POST /v1/payment/create"}
+            </button>
+          </form>
+
+          <form onSubmit={onOpenPaymentUrl} className="demo-inline-form">
+            <input value={paymentUrl} onChange={(e) => setPaymentUrl(e.target.value)} placeholder="paymentUrl devuelto por create" />
+            <button type="submit" disabled={!paymentUrl}>Abrir flujo de pago</button>
+          </form>
+
+          <form onSubmit={onPaymentInquiry} className="demo-inline-form">
+            <input value={paymentId} onChange={(e) => setPaymentId(e.target.value)} placeholder="paymentId" />
+            <button type="submit" disabled={!appId || !token || !paymentId || loadingAction === "Consultar pago"}>
+              {loadingAction === "Consultar pago" ? "Consultando..." : "POST /v1/payment/inquiry"}
+            </button>
+          </form>
+
+          <form onSubmit={onPaymentClose} className="demo-inline-form">
+            <input value={paymentId} onChange={(e) => setPaymentId(e.target.value)} placeholder="paymentId" />
+            <button type="submit" disabled={!appId || !token || !paymentId || loadingAction === "Cerrar pago"}>
+              {loadingAction === "Cerrar pago" ? "Cerrando..." : "POST /v1/payment/close"}
+            </button>
+          </form>
+
+          <form onSubmit={onRefundCreate} className="demo-inline-form">
+            <input value={refundAmountValue} onChange={(e) => setRefundAmountValue(e.target.value)} placeholder="refund MXN" />
+            <button type="submit" disabled={!appId || !token || !merchantCode || !userId || !paymentId || loadingAction === "Solicitar refund"}>
+              {loadingAction === "Solicitar refund" ? "Solicitando..." : "POST /v1/payment/refund"}
+            </button>
+          </form>
+
+          <form onSubmit={onRefundInquiry} className="demo-inline-form">
+            <input value={refundId} onChange={(e) => setRefundId(e.target.value)} placeholder="refundId" />
+            <button type="submit" disabled={!appId || !token || !refundId || loadingAction === "Consultar refund"}>
+              {loadingAction === "Consultar refund" ? "Consultando..." : "POST /v1/payment/inquiry-refund"}
             </button>
           </form>
         </div>
