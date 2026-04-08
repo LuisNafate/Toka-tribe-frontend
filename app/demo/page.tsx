@@ -427,13 +427,15 @@ export default function DemoPage() {
       "user_auth_code",
       "authorizationCode",
       "authorization_code",
+      "result",
+      "code",
     ];
 
     const maybeAuthCode = (value: unknown): string | null => {
       if (typeof value === "string") {
         const trimmed = value.trim();
         if (!trimmed) return null;
-        if (/^[A-Za-z0-9_\-.]{4,256}$/.test(trimmed)) {
+        if (/^\S{4,512}$/.test(trimmed)) {
           return trimmed;
         }
       }
@@ -453,6 +455,18 @@ export default function DemoPage() {
         if (!item || typeof item !== "object") continue;
 
         const record = item as Record<string, unknown>;
+
+        // Many bridge implementations return success in resultCode=10000 and
+        // carry the auth code in `result` instead of `authCode`.
+        const successCode = record.resultCode ?? record.result_code ?? record.code;
+        const isSuccess = successCode === 10000 || successCode === "10000";
+        if (isSuccess) {
+          const fromResult = maybeAuthCode(record.result);
+          if (fromResult) {
+            return fromResult;
+          }
+        }
+
         for (const key of keyCandidates) {
           const extracted = maybeAuthCode(record[key]);
           if (extracted) {
@@ -706,8 +720,12 @@ export default function DemoPage() {
       const miniApiAttempts: Array<{ source: "my" | "ap"; api: MiniApi | null; payload: Record<string, unknown> }> = [
         { source: "my", api: myApi, payload: { scopes: "auth_user" } },
         { source: "my", api: myApi, payload: { scopes: ["auth_user"] } },
+        { source: "my", api: myApi, payload: { scopeNicks: ["auth_user"] } },
+        { source: "my", api: myApi, payload: { scopeNicks: ["auth_base"] } },
         { source: "ap", api: apApi, payload: { scopes: "auth_user" } },
         { source: "ap", api: apApi, payload: { scopes: ["auth_user"] } },
+        { source: "ap", api: apApi, payload: { scopeNicks: ["auth_user"] } },
+        { source: "ap", api: apApi, payload: { scopeNicks: ["auth_base"] } },
       ];
 
       for (const attempt of miniApiAttempts) {
@@ -739,6 +757,13 @@ export default function DemoPage() {
           method: "getUserDigitalIdentityAuthCode",
           payload: {
             usage: "Autenticar usuario en TokaTribe",
+            scopeNicks: ["USER_ID", "USER_AVATAR", "USER_NICKNAME"],
+          },
+        },
+        {
+          method: "getUserDigitalIdentityAuthCode",
+          payload: {
+            usage: "Autenticar usuario en TokaTribe",
             scopes: "USER_ID,USER_AVATAR,USER_NICKNAME",
           },
         },
@@ -752,6 +777,18 @@ export default function DemoPage() {
           method: "getAuthCode",
           payload: {
             scopes: ["auth_user"],
+          },
+        },
+        {
+          method: "getAuthCode",
+          payload: {
+            scopeNicks: ["auth_user"],
+          },
+        },
+        {
+          method: "getAuthCode",
+          payload: {
+            scopeNicks: ["auth_base"],
           },
         },
       ];
