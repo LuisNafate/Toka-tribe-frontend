@@ -838,11 +838,13 @@ export default function DemoPage() {
 
   async function authenticateWithCode(code: string) {
     const effectiveAppId = getEffectiveAppId();
+    const effectiveMerchantCode = merchantCode.trim() || DEFAULT_MERCHANT_CODE.trim();
     const result = await callApi("Legacy POST /v1/user/authenticate", "/v1/user/authenticate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-App-Id": effectiveAppId,
+        ...(effectiveMerchantCode ? { "Alipay-MerchantCode": effectiveMerchantCode } : {}),
       },
       body: JSON.stringify({ authcode: code.trim() }),
     });
