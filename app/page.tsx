@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Gamepad2, Medal, Users } from "lucide-react";
+import { Gamepad2, Home, Medal, Menu, Trophy, User, Users } from "lucide-react";
 import { FIGMA_ASSETS } from "@/lib/data";
 
 export default function LandingPage() {
@@ -96,7 +96,7 @@ export default function LandingPage() {
       <main className="fig-mobile-home fig-mobile-only">
         <header className="fig-mobile-topbar">
           <div className="fig-mobile-topbar__left">
-            <span className="fig-mobile-menu">✦</span>
+            <span className="fig-mobile-menu"><Menu size={20} /></span>
             <strong>TokaTribe</strong>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -111,23 +111,22 @@ export default function LandingPage() {
           <h1>Bienvenido a tu Tribe</h1>
           <div className="fig-mobile-hero-cta">
             <Link href="/dashboard" className="fig-pill-btn fig-pill-btn--primary">Entrar con Toka</Link>
-            <Link href="/demo" className="fig-pill-btn fig-pill-btn--primary">Ver demo API</Link>
             <Link href="/onboarding" className="fig-pill-btn fig-pill-btn--light">Conocer la dinámica</Link>
           </div>
         </section>
 
         <section className="fig-mobile-quick-actions">
           <article>
-            <img src={FIGMA_ASSETS.landing.playIcon} alt="Juega retos" />
-            <span>Juega retos</span>
+            <div className="fig-mobile-quick-icon"><Gamepad2 size={20} color="#2a55b9" /></div>
+            <span>JUEGA RETOS</span>
           </article>
           <article>
-            <img src={FIGMA_ASSETS.landing.teamIcon} alt="Compite en equipo" />
-            <span>Compite en equipo</span>
+            <div className="fig-mobile-quick-icon"><Users size={20} color="#2a55b9" /></div>
+            <span>COMPITE EN EQUIPO</span>
           </article>
           <article>
-            <img src={FIGMA_ASSETS.landing.rewardIcon} alt="Gana recompensas" />
-            <span>Gana recompensas</span>
+            <div className="fig-mobile-quick-icon"><Trophy size={20} color="#2a55b9" /></div>
+            <span>GANA RECOMPENSAS</span>
           </article>
         </section>
 
@@ -161,27 +160,39 @@ export default function LandingPage() {
         <section className="fig-mobile-ecosystem">
           <h3>Explora el Ecosistema</h3>
           <article>
-            <img src={FIGMA_ASSETS.landing.settingsIcon} alt="Tu Tribe importa" />
+            <div className="fig-mobile-eco-icon"><Users size={18} color="#2a55b9" /></div>
             <h4>Tu Tribe importa</h4>
             <p>Colabora con tu equipo para desbloquear niveles exclusivos y bonos semanales.</p>
           </article>
           <article>
-            <img src={FIGMA_ASSETS.landing.teamIcon} alt="Todo en una temporada" />
+            <div className="fig-mobile-eco-icon"><Gamepad2 size={18} color="#2a55b9" /></div>
             <h4>Todo en una temporada</h4>
-            <p>Cada periodo define nuevos retos, metas de división y premios para tu squad.</p>
+            <p>Cada 30 días el tablero se reinicia. ¡Nuevos retos te esperan cada mes!</p>
           </article>
           <article>
-            <img src={FIGMA_ASSETS.landing.rewardIcon} alt="Recompensas dentro de Toka" />
+            <div className="fig-mobile-eco-icon"><Medal size={18} color="#2a55b9" /></div>
             <h4>Recompensas dentro de Toka</h4>
-            <p>Convierte rendimiento semanal en beneficios reales para ti y tu equipo.</p>
+            <p>Canjea tus puntos por beneficios reales en todo el ecosistema de aplicaciones.</p>
           </article>
         </section>
 
         <nav className="fig-mobile-bottom-nav">
-          <Link href="/dashboard" className="active">INICIO</Link>
-          <Link href="/tribe">SQUAD</Link>
-          <Link href="/retos">RETOS</Link>
-          <Link href="/perfil">PERFIL</Link>
+          <Link href="/dashboard" className="active">
+            <span className="fig-mobile-nav-icon"><Home size={20} /></span>
+            <span>INICIO</span>
+          </Link>
+          <Link href="/tribe">
+            <span className="fig-mobile-nav-icon"><Users size={20} /></span>
+            <span>SQUAD</span>
+          </Link>
+          <Link href="/retos">
+            <span className="fig-mobile-nav-icon"><Gamepad2 size={20} /></span>
+            <span>RETOS</span>
+          </Link>
+          <Link href="/perfil">
+            <span className="fig-mobile-nav-icon"><User size={20} /></span>
+            <span>PERFIL</span>
+          </Link>
         </nav>
       </main>
     </>
