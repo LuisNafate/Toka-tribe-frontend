@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import BottomNav from "@/components/BottomNav";
 import { TribeDashboardContent } from "@/components/tribe-dashboard-content";
 
 export default function TribeSinTierPage() {
@@ -22,12 +23,7 @@ export default function TribeSinTierPage() {
 
         <TribeDashboardContent withoutTier />
 
-        <nav className="fig-mobile-bottom-nav">
-          <Link href="/dashboard">INICIO</Link>
-          <Link href="/tribe" className="active">SQUAD</Link>
-          <Link href="/retos">RETOS</Link>
-          <Link href="/perfil">PERFIL</Link>
-        </nav>
+        <BottomNav active="squad" />
       </main>
     </>
   );

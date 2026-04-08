@@ -1,6 +1,7 @@
 import { Flame, Sparkles, TimerReset, Zap } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import BottomNav from "@/components/BottomNav";
 import { Panel, SectionHeader } from "@/components/common";
 import { challengeCards, dailyChallenge, FIGMA_ASSETS, weeklyChallenges } from "@/lib/data";
 
@@ -106,12 +107,7 @@ export default function RetosPage() {
           </div>
         </section>
 
-        <nav className="fig-mobile-bottom-nav">
-          <Link href="/dashboard">INICIO</Link>
-          <Link href="/tribe">SQUAD</Link>
-          <Link href="/retos" className="active">RETOS</Link>
-          <Link href="/perfil">PERFIL</Link>
-        </nav>
+        <BottomNav active="retos" />
       </main>
     </>
   );

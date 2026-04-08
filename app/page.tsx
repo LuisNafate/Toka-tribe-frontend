@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Gamepad2, Home, Medal, Menu, Trophy, User, Users } from "lucide-react";
+import { Gamepad2, Medal, Menu, Trophy, Users } from "lucide-react";
 import { FIGMA_ASSETS } from "@/lib/data";
 
 export default function LandingPage() {
@@ -176,24 +176,6 @@ export default function LandingPage() {
           </article>
         </section>
 
-        <nav className="fig-mobile-bottom-nav">
-          <Link href="/dashboard" className="active">
-            <span className="fig-mobile-nav-icon"><Home size={20} /></span>
-            <span>INICIO</span>
-          </Link>
-          <Link href="/tribe">
-            <span className="fig-mobile-nav-icon"><Users size={20} /></span>
-            <span>SQUAD</span>
-          </Link>
-          <Link href="/retos">
-            <span className="fig-mobile-nav-icon"><Gamepad2 size={20} /></span>
-            <span>RETOS</span>
-          </Link>
-          <Link href="/perfil">
-            <span className="fig-mobile-nav-icon"><User size={20} /></span>
-            <span>PERFIL</span>
-          </Link>
-        </nav>
       </main>
     </>
   );

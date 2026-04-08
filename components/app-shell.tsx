@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Bell, Menu, Plus, Settings, Sparkles } from "lucide-react";
 import { navItems } from "@/lib/data";
+import BottomNav from "@/components/BottomNav";
 
 type AppShellProps = {
   title: string;
@@ -18,16 +19,6 @@ type AppShellProps = {
 export function AppShell({ title, subtitle, children, aside, headerBadge }: AppShellProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const mobileNavItems = navItems.filter((item) =>
-    ["/dashboard", "/tribe", "/leaderboard", "/retos"].includes(item.href)
-  );
-  const mobileLabelMap: Record<string, string> = {
-    "/dashboard": "Inicio",
-    "/tribe": "Tribe",
-    "/leaderboard": "Tabla",
-    "/retos": "Retos",
-  };
-
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [pathname]);
@@ -150,19 +141,7 @@ export function AppShell({ title, subtitle, children, aside, headerBadge }: AppS
         )}
       </div>
 
-      <nav className="bottom-nav" aria-label="Navegación móvil">
-        {mobileNavItems.map((item) => {
-          const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-
-          return (
-            <Link key={item.href} href={item.href} className="bottom-nav__link" data-active={active ? "true" : "false"}>
-              <Icon size={16} />
-              <span>{mobileLabelMap[item.href] ?? item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <BottomNav />
 
       <button
         type="button"
