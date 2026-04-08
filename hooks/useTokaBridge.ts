@@ -65,12 +65,23 @@ export function useTokaBridge() {
     setIsLoading(true);
 
     try {
+      const normalizedScopes = (Array.isArray(scopes) ? scopes : [])
+        .map((scope) => String(scope).trim())
+        .filter((scope): scope is TokaAuthScope => scope.length > 0) as TokaAuthScope[];
+
+      if (normalizedScopes.length === 0) {
+        throw new Error("No hay scopes configurados para solicitar authCode.");
+      }
+
       const authCode = await new Promise<string>((resolve, reject) => {
         window.AlipayJSBridge?.call(
           method,
           {
             appId,
-            scopes,
+            // Algunos entornos H5 requieren usage y ciertos bridges usan distintos nombres.
+            usage: "Autenticación de usuario en TokaTribe",
+            scopes: normalizedScopes,
+            scopeNicks: normalizedScopes,
           },
           (response: TokaBridgeResponse) => {
             const hasError =
