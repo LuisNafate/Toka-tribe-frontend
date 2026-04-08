@@ -2977,6 +2977,8 @@ img {
 
 .fig-tribe-hero-top span {
   display: inline-flex;
+  align-items: center;
+  gap: 5px;
   border-radius: 999px;
   padding: 4px 10px;
   background: rgba(255, 255, 255, 0.24);
@@ -3024,6 +3026,9 @@ img {
 }
 
 .fig-tribe-hero small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.68rem;
 }
 
@@ -3121,50 +3126,96 @@ img {
 
 .fig-tribe-stats {
   margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.fig-tribe-stats article {
+/* Racha — full-width card */
+.fig-tribe-stat-racha {
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  padding: 14px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.fig-tribe-stats article.wide {
-  grid-column: 1 / -1;
-}
-
-.fig-tribe-stats p {
+.fig-tribe-stat-racha p {
   margin: 0;
   color: #454655;
   font-size: 0.76rem;
   font-weight: 700;
 }
 
-.fig-tribe-stats h3 {
+.fig-tribe-stat-racha h3 {
   margin: 4px 0 0;
   font-family: var(--font-manrope), sans-serif;
-  font-size: 1.6rem;
+  font-size: 1.7rem;
+}
+
+.fig-tribe-stat-zap {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+/* RETOS + RANKING side by side */
+.fig-tribe-stat-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.fig-tribe-stat-pair article {
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fig-tribe-stat-pair p {
+  margin: 0;
+  color: #454655;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.fig-tribe-stat-pair h3 {
+  margin: 2px 0 0;
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.fig-tribe-stat-icon {
+  color: var(--muted-2);
 }
 
 .fig-tribe-activity {
   margin-top: 14px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .fig-tribe-activity article {
-  border-radius: 20px;
+  border-radius: 16px;
   background: #fff;
   border: 1px solid rgba(3, 29, 190, 0.06);
-  padding: 14px;
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.fig-tribe-activity article > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
 }
 
 .fig-tribe-activity article.highlight {
@@ -3173,29 +3224,87 @@ img {
 
 .fig-tribe-activity strong {
   color: #181c20;
+  font-size: 0.88rem;
+}
+
+.fig-tribe-activity article > div:nth-child(2) > div {
+  font-size: 0.88rem;
+  color: var(--text);
 }
 
 .fig-tribe-activity p {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   color: #2a55b9;
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 .fig-tribe-activity span {
   white-space: nowrap;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #6b7280;
+  margin-left: auto;
 }
 
-.fig-tribe-play-btn {
-  display: block;
-  text-align: center;
+/* Activity icon circles */
+.fig-tribe-activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.fig-tribe-activity-icon--navy {
+  background: #1c2e6e;
+}
+
+.fig-tribe-activity-icon--teal {
+  background: #0d9488;
+}
+
+.fig-tribe-activity-icon--blue {
+  background: var(--brand);
+}
+
+/* Invite button */
+.fig-tribe-invite-btn {
+  border: 0;
+  background: transparent;
+  color: #031dbe;
+  font-weight: 700;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Play CTA */
+.fig-tribe-play-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  font-weight: 700;
+  font-size: 0.95rem;
   text-decoration: none;
-  margin-top: 14px;
-  background: #426dcd;
-  color: #dbeafe;
-  padding: 14px 20px;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+
+.fig-tribe-play-cta:active {
+  opacity: 0.85;
 }
 
 .fig-tribe-tier-cta {
@@ -4117,15 +4226,31 @@ img {
 
 .fig-member-tier-chip {
   border-radius: 5px;
-  background: rgba(107, 102, 88, 0.7);
-  color: rgba(255, 255, 255, 0.82);
+  background: rgba(107, 102, 88, 0.18);
+  color: var(--muted);
   font-size: 0.56rem;
   font-weight: 700;
   padding: 2px 6px;
 }
 
 .fig-member-tier-chip--none {
-  background: rgba(153, 156, 162, 0.55);
+  background: rgba(153, 156, 162, 0.22);
+  color: var(--muted);
+}
+
+.fig-member-tier-chip--oro {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.fig-member-tier-chip--plata {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.fig-member-pts-top {
+  color: var(--brand);
+  font-weight: 800;
 }
 
 .fig-tribe-hero-subtitle {

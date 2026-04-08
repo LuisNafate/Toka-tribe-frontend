@@ -153,35 +153,6 @@ export default function RetosPage() {
           </div>
         </section>
 
-        {/* Tribe en la división */}
-        <section className="fig-retos-division">
-          <div className="fig-retos-division__head">
-            <h3>Tu Tribe en la división</h3>
-            <Trophy size={18} color="#2a55b9" />
-          </div>
-          <div className="fig-retos-division__list">
-            <div className="fig-retos-division__row">
-              <span className="fig-retos-rank">1.</span>
-              <span className="fig-retos-team">Los Titanes</span>
-              <span className="fig-retos-score">2,450 pts</span>
-            </div>
-            <div className="fig-retos-division__row fig-retos-division__row--highlight">
-              <span className="fig-retos-rank">2.</span>
-              <span className="fig-retos-team">Axo Squad</span>
-              <div className="fig-retos-score-group">
-                <span className="fig-retos-score">2,140 pts</span>
-                <span className="fig-retos-you">TU EQUIPO</span>
-              </div>
-            </div>
-            <div className="fig-retos-division__row">
-              <span className="fig-retos-rank">3.</span>
-              <span className="fig-retos-team">Cyber Runners</span>
-              <span className="fig-retos-score">1,980 pts</span>
-            </div>
-          </div>
-          <Link href="/leaderboard" className="fig-retos-division__link">Ver tabla completa →</Link>
-        </section>
-
         <BottomNav active="retos" />
       </main>
     </>

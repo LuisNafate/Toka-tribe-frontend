@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { BarChart3, Brain, ChevronRight, Gamepad2, Medal, PlayCircle, TrendingUp, UserPlus, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type TribeDashboardContentProps = {
@@ -15,6 +15,7 @@ type Member = {
   avatar: string;
   top?: boolean;
   tierLabel?: string;
+  tierVariant?: "oro" | "plata";
   noTier?: boolean;
 };
 
@@ -26,6 +27,7 @@ const members: Member[] = [
     avatar: "http://localhost:3845/assets/9f93a0889bfd14e518b986a7a998c6d22eff79dc.png",
     top: true,
     tierLabel: "Oro",
+    tierVariant: "oro",
   },
   {
     name: "Jeshua",
@@ -33,6 +35,7 @@ const members: Member[] = [
     pts: "+320 pts",
     avatar: "http://localhost:3845/assets/b0bd42ef8ce8629861e4e063ca86a7450cb7d934.png",
     tierLabel: "Plata",
+    tierVariant: "plata",
   },
   {
     name: "Nafa",
@@ -54,7 +57,6 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
     if (!withoutTier) {
       return "Tu membresía está activa y acumulando multiplicador.";
     }
-
     return "Membresía crítica: activa un tier para desbloquear multiplicador y recompensas de temporada.";
   }, [withoutTier]);
 
@@ -69,7 +71,10 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
       <div className="fig-tribe-responsive-top">
         <section className="fig-tribe-hero">
           <div className="fig-tribe-hero-top">
-            <span>{tierText}</span>
+            <span>
+              <Medal size={11} />
+              {tierText}
+            </span>
             <h1>Axo Squad</h1>
             {withoutTier ? <small className="fig-tribe-hero-subtitle">Sigue jugando para desbloquear tu primer tier</small> : null}
           </div>
@@ -81,7 +86,10 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
           <div className="fig-mobile-progress-track">
             <div style={{ width: withoutTier ? "61%" : "92%" }} />
           </div>
-          <small>{withoutTier ? "Suma 360 pts para entrar a Bronce" : "A 120 pts de ascender · 92%"}</small>
+          <small>
+            <TrendingUp size={11} />
+            {withoutTier ? "Suma 360 pts para entrar a Bronce" : "A 120 pts de ascender · 92%"}
+          </small>
         </section>
 
         {withoutTier ? (
@@ -91,19 +99,27 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
           </Link>
         ) : null}
 
+        {/* Stats */}
         <section className="fig-tribe-stats">
-          <article className="wide">
-            <p>Racha de la Tribe</p>
-            <h3>5 dias 🔥</h3>
+          <article className="fig-tribe-stat-racha">
+            <div>
+              <p>Racha de la Tribe</p>
+              <h3>5 días 🔥</h3>
+            </div>
+            <Zap size={34} className="fig-tribe-stat-zap" fill="currentColor" />
           </article>
-          <article>
-            <p>RETOS</p>
-            <h3>3/4 jugados</h3>
-          </article>
-          <article>
-            <p>RANKING</p>
-            <h3>{withoutTier ? "Sin división" : "#4 en Plata"}</h3>
-          </article>
+          <div className="fig-tribe-stat-pair">
+            <article>
+              <Gamepad2 size={17} className="fig-tribe-stat-icon" />
+              <p>RETOS</p>
+              <h3>3/4 jugados</h3>
+            </article>
+            <article>
+              <BarChart3 size={17} className="fig-tribe-stat-icon" />
+              <p>RANKING</p>
+              <h3>{withoutTier ? "Sin división" : "#4 en Plata"}</h3>
+            </article>
+          </div>
         </section>
       </div>
 
@@ -129,6 +145,10 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
                       <h3>{member.name}</h3>
                       {member.noTier ? (
                         <span className="fig-member-tier-chip fig-member-tier-chip--none">(Sin Tier)</span>
+                      ) : member.tierVariant === "oro" ? (
+                        <span className="fig-member-tier-chip fig-member-tier-chip--oro">{member.tierLabel}</span>
+                      ) : member.tierVariant === "plata" ? (
+                        <span className="fig-member-tier-chip fig-member-tier-chip--plata">{member.tierLabel}</span>
                       ) : member.tierLabel ? (
                         <span className="fig-member-tier-chip">{member.tierLabel}</span>
                       ) : null}
@@ -136,13 +156,15 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
                     <p>{member.note}</p>
                   </div>
                 </div>
-                <strong>{member.pts}</strong>
+                <strong className={member.top ? "fig-member-pts-top" : ""}>{member.pts}</strong>
               </article>
             ))}
             <button
               type="button"
+              className="fig-tribe-invite-btn"
               onClick={() => setFeedback({ tone: "ok", text: "Invitación enviada. Te avisaremos cuando el miembro acepte." })}
             >
+              <UserPlus size={15} />
               Invitar miembro
             </button>
           </div>
@@ -151,27 +173,41 @@ export function TribeDashboardContent({ withoutTier = false }: TribeDashboardCon
         <section className="fig-tribe-activity">
           <h2>Actividad reciente</h2>
           <article>
+            <div className="fig-tribe-activity-icon fig-tribe-activity-icon--navy">
+              <Brain size={16} />
+            </div>
             <div>
-              <strong>Alix</strong> completó Toka Trivia
+              <div><strong>Alix</strong> completó Toka Trivia</div>
               <p>+40 pts</p>
             </div>
             <span>hace 2h</span>
           </article>
           <article>
+            <div className="fig-tribe-activity-icon fig-tribe-activity-icon--teal">
+              <Zap size={16} />
+            </div>
             <div>
-              <strong>Jeshua</strong> completó Reflejos Tribe
+              <div><strong>Jeshua</strong> completó Reflejos Tribe</div>
               <p>+25 pts</p>
             </div>
             <span>Ayer</span>
           </article>
           <article className="highlight">
+            <div className="fig-tribe-activity-icon fig-tribe-activity-icon--blue">
+              <TrendingUp size={16} />
+            </div>
             <div>
-              <strong>Tribe ascendió a Plata</strong>
+              <div><strong>Tribe ascendió a Plata</strong></div>
               <p>Nueva división desbloqueada</p>
             </div>
             <span>hace 3 días</span>
           </article>
         </section>
+
+        <Link href="/retos" className="fig-tribe-play-cta">
+          <PlayCircle size={18} />
+          Jugar reto de hoy
+        </Link>
       </div>
 
       {feedback ? (
