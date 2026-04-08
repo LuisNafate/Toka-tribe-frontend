@@ -2365,6 +2365,99 @@ img {
   color: #1e40af;
 }
 
+.body-sidebar-locked {
+  overflow: hidden;
+}
+
+.fig-mobile-menu-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fig-mobile-menu-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: min(84vw, 320px);
+  background: var(--surface);
+  box-shadow: var(--shadow-strong);
+  z-index: 90;
+  transform: translateX(-105%);
+  transition: transform 0.22s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.fig-mobile-menu-drawer.is-open {
+  transform: translateX(0);
+}
+
+.fig-mobile-menu-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.fig-mobile-menu-drawer__head button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fig-mobile-menu-drawer__nav {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.fig-mobile-menu-drawer__nav a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.fig-mobile-menu-drawer__nav a.active {
+  background: var(--surface-soft);
+  color: var(--brand);
+}
+
+.fig-mobile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  background: rgba(15, 23, 42, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 80;
+}
+
+.fig-mobile-menu-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .fig-mobile-menu {
   font-size: 16px;
   color: #2a55b9;
@@ -4255,6 +4348,196 @@ img {
   gap: 6px;
 }
 
+/* ===== SHARED UNIFIED MOBILE LAYOUT ===== */
+
+.fig-mobile-recompensas,
+.fig-mobile-perfil,
+.fig-mobile-settings,
+.fig-mobile-temporada {
+  min-height: 100vh;
+  margin: 0 auto;
+  max-width: 420px;
+  background: #f4f6fb;
+  padding: 12px 12px 96px;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.fig-unified-section,
+.fig-perfil-main,
+.fig-settings-main,
+.fig-temporada-main {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.fig-unified-card {
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  padding: 14px;
+}
+
+.fig-unified-card--soft {
+  background: linear-gradient(180deg, #f8fbff 0%, #edf3ff 100%);
+  border: 1px solid rgba(74, 119, 227, 0.12);
+}
+
+.fig-unified-card--dark {
+  background: linear-gradient(120deg, #2a55b9 12%, #5d89e4 82%);
+  border: 1px solid rgba(93, 137, 228, 0.25);
+  color: #fff;
+}
+
+.fig-unified-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.fig-unified-head strong {
+  font-size: 1.04rem;
+}
+
+.fig-unified-head span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5f6b80;
+}
+
+.fig-unified-card h3 {
+  margin: 10px 0 6px;
+  font-size: 1.02rem;
+  color: #0b1f36;
+}
+
+.fig-unified-card p {
+  margin: 0;
+  color: #3d4a5f;
+  line-height: 1.32;
+}
+
+.fig-unified-card--dark .fig-unified-head span,
+.fig-unified-card--dark h3,
+.fig-unified-card--dark p {
+  color: #fff;
+}
+
+.fig-unified-badge {
+  border-radius: 999px;
+  background: rgba(42, 85, 185, 0.1);
+  color: #2a55b9;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+}
+
+.fig-small-text {
+  font-size: 0.9rem;
+}
+
+.fig-status-pill,
+.fig-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.fig-status-pill,
+.fig-pill-badge--active {
+  background: rgba(42, 85, 185, 0.12);
+  color: #2a55b9;
+}
+
+.fig-pill-badge--edit {
+  background: rgba(254, 198, 25, 0.2);
+  color: #8a5a00;
+}
+
+.fig-setting-row,
+.fig-setting-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fig-perfil-topbar,
+.fig-settings-topbar,
+.fig-temporada-topbar {
+  margin-bottom: 10px;
+}
+
+.fig-perfil-brand,
+.fig-settings-brand,
+.fig-temporada-brand {
+  color: #1e40af;
+  font-size: 1.1rem;
+}
+
+.fig-perfil-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 2px solid #2f4ed0;
+  object-fit: cover;
+}
+
+.fig-perfil-hero,
+.fig-settings-hero,
+.fig-temporada-hero {
+  border-radius: 24px;
+  background: linear-gradient(118deg, #2a55b9 32%, #5d89e4 75%);
+  padding: 16px;
+  color: #fff;
+}
+
+.fig-perfil-hero h1,
+.fig-settings-hero h1,
+.fig-temporada-hero h2 {
+  margin: 0;
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.fig-perfil-subtitle,
+.fig-settings-hero p,
+.fig-temporada-hero p {
+  margin: 8px 0 0;
+  color: #dfe0ff;
+  font-weight: 700;
+}
+
+.fig-temporada-hero__badge {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.16);
+  padding: 10px 12px;
+}
+
+.fig-timeline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.fig-timeline-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+
 /* Weekly cards rediseño */
 .fig-retos-weekly-list article {
   display: flex;
@@ -5730,55 +6013,125 @@ img {
   z-index: 0;
 }
 
-/* ── Detail cards ── */
-.fig-trivia-result-card {
+/* ── Score breakdown card ── */
+.fig-trivia-result-breakdown {
   background: var(--surface);
   border-radius: var(--radius-md);
-  padding: 16px 18px;
+  padding: 18px 18px 16px;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.fig-trivia-result-row {
+.fig-trivia-result-breakdown-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.fig-trivia-result-row span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.88rem;
-  color: var(--muted);
+.fig-trivia-result-breakdown-top > span:first-child {
+  font-size: 0.82rem;
   font-weight: 600;
+  color: var(--muted);
 }
 
-.fig-trivia-result-row strong {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.fig-trivia-result-row--total {
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
-}
-
-.fig-trivia-result-row--total span {
-  color: var(--text);
+.fig-trivia-tier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fef3c7;
+  color: #b45309;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
-.fig-trivia-result-row--total strong {
-  font-size: 1.1rem;
-  color: var(--brand);
+.fig-trivia-result-pts-big {
+  margin: 0;
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--accent-strong);
+  line-height: 1.1;
 }
 
-.fig-trivia-result-multiplier {
-  color: var(--accent-strong) !important;
+.fig-trivia-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 2px 0;
+}
+
+.fig-trivia-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fig-trivia-breakdown-row span {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.fig-trivia-breakdown-row strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.fig-trivia-multiplier-val {
+  color: var(--brand) !important;
+}
+
+.fig-trivia-breakdown-row--total span {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.fig-trivia-breakdown-row--total strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--brand) !important;
+}
+
+/* ── Racha ── */
+.fig-trivia-racha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+
+.fig-trivia-racha--lost {
+  background: #fff1f2;
+}
+
+.fig-trivia-racha--ok {
+  background: #f0fdf4;
+}
+
+.fig-trivia-racha-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.fig-trivia-racha-title {
+  margin: 0 0 2px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.fig-trivia-racha-sub {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 /* ── Coupon ── */
@@ -5787,18 +6140,6 @@ img {
   border-radius: var(--radius-md);
   padding: 16px 18px;
   color: #fff;
-}
-
-.fig-trivia-coupon--locked {
-  background: var(--surface-muted);
-  text-align: center;
-}
-
-.fig-trivia-coupon--locked p {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--muted);
-  font-weight: 600;
 }
 
 .fig-trivia-coupon-inner {

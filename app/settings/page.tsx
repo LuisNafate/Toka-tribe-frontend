@@ -134,7 +134,7 @@ export default function SettingsPage() {
           </article>
         </div>
 
-        <BottomNav active="settings" />
+        <BottomNav active="perfil" />
       </main>
     </>
   );

@@ -155,7 +155,7 @@ export default function TemporadaPage() {
           </article>
         </div>
 
-        <BottomNav active="temporada" />
+        <BottomNav active="retos" />
       </main>
     </>
   );
