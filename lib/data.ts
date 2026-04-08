@@ -48,7 +48,7 @@ export const FIGMA_ASSETS = {
     ],
   },
   
-  // Legacy references (for backward compatibility)
+  // Alias de compatibilidad para vistas UI reutilizadas
   heroImage: "http://localhost:3845/assets/5472da31c82a2fa3019d5f1f16ee3cef28ff3950.png",
   heroBackground: "http://localhost:3845/assets/0dd1e1027c794c131365f6a2e5950a975f62a72e.png",
   playIcon: "http://localhost:3845/assets/4809826f163ef1bb59e982553d6f6179d2d22541.svg",
