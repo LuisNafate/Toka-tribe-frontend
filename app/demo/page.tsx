@@ -530,6 +530,14 @@ export default function DemoPage() {
     }
   }
 
+  function isMerchantOnboardingError(payload: unknown): boolean {
+    if (!payload || typeof payload !== "object") return false;
+
+    const record = payload as Record<string, unknown>;
+    const message = typeof record.message === "string" ? record.message.toLowerCase() : "";
+    return message.includes("20040003") || message.includes("merchant does not onboard");
+  }
+
   function extractUserProfileFromPayload(payload: unknown): RealUserProfile | null {
     if (!payload || typeof payload !== "object") {
       return null;
@@ -707,6 +715,31 @@ export default function DemoPage() {
         ...profile,
       }));
       setBridgeDiagnostics((prev) => [prev, `${attempt.source}.${attempt.method} -> perfil ok`].filter(Boolean).join(" | "));
+      return true;
+    }
+
+    return false;
+  }
+
+  async function tryLoadProfileFromBridgeCall(): Promise<boolean> {
+    await waitForBridgeReady();
+    const bridge = getBridge();
+    if (!bridge) return false;
+
+    const attempts: Array<{ method: string; payload: Record<string, unknown> }> = [
+      { method: "getOpenUserInfo", payload: {} },
+      { method: "getAuthUserInfo", payload: {} },
+      { method: "getUserInfo", payload: {} },
+      { method: "getUserInfo", payload: { scopes: ["USER_ID", "USER_AVATAR", "USER_NICKNAME"] } },
+    ];
+
+    for (const attempt of attempts) {
+      const response = await callBridgeMethod(bridge, attempt.method, attempt.payload);
+      const profile = extractUserProfileFromPayload(response);
+      if (!profile) continue;
+
+      setRealUserProfile((prev) => ({ ...prev, ...profile }));
+      setBridgeDiagnostics((prev) => [prev, `bridge.${attempt.method} -> perfil ok`].filter(Boolean).join(" | "));
       return true;
     }
 
@@ -989,6 +1022,14 @@ export default function DemoPage() {
 
     const authResult = await authenticateWithCode(code);
     if (!authResult.ok) {
+      if (isMerchantOnboardingError(authResult.payload)) {
+        const fromBridgeCall = await tryLoadProfileFromBridgeCall();
+        if (fromBridgeCall) {
+          setMessage("Merchant no onboarded para authenticate, pero se cargó perfil desde bridge.");
+          return;
+        }
+      }
+
       const hasProfileFallback = await tryLoadProfileFromMiniApi();
       if (hasProfileFallback) {
         setMessage("Authenticate falló, pero se cargó perfil básico desde bridge.");
