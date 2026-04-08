@@ -435,9 +435,26 @@ export default function DemoPage() {
       if (typeof value === "string") {
         const trimmed = value.trim();
         if (!trimmed) return null;
-        if (/^\S{4,512}$/.test(trimmed)) {
-          return trimmed;
-        }
+
+        const lower = trimmed.toLowerCase();
+        const blockedValues = new Set([
+          "success",
+          "ok",
+          "true",
+          "false",
+          "null",
+          "undefined",
+          "unknown",
+          "10000",
+        ]);
+        if (blockedValues.has(lower)) return null;
+
+        // authCode esperado: token no vacío, no solo numérico, con letras al menos.
+        if (!/^\S{4,512}$/.test(trimmed)) return null;
+        if (/^\d+$/.test(trimmed)) return null;
+        if (!/[A-Za-z]/.test(trimmed)) return null;
+
+        return trimmed;
       }
 
       if (Array.isArray(value) && value.length > 0) {
@@ -923,6 +940,12 @@ export default function DemoPage() {
 
     const authResult = await authenticateWithCode(code);
     if (!authResult.ok) {
+      const hasProfileFallback = await tryLoadProfileFromMiniApi();
+      if (hasProfileFallback) {
+        setMessage("Authenticate falló, pero se cargó perfil básico desde bridge.");
+        return;
+      }
+
       setMessage("Falló authenticate automático. Revisa la última respuesta.");
       return;
     }
