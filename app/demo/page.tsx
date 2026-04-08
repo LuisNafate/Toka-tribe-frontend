@@ -57,6 +57,7 @@ const FALLBACK_TOKA_APP_ID = "3500020265479238";
 const DEFAULT_APP_ID = (process.env.NEXT_PUBLIC_TOKA_APP_ID ?? "").trim().length === 16
   ? (process.env.NEXT_PUBLIC_TOKA_APP_ID ?? "").trim()
   : FALLBACK_TOKA_APP_ID;
+const LEGACY_TOKA_APP_ID = FALLBACK_TOKA_APP_ID;
 const DEFAULT_MERCHANT_CODE = process.env.NEXT_PUBLIC_TOKA_MERCHANT_CODE ?? "";
 const DEFAULT_TEST_AUTH_CODE = process.env.NEXT_PUBLIC_TOKA_TEST_AUTH_CODE ?? "";
 const SWAGGER_OPERATIONS = getApiOperations();
@@ -158,10 +159,7 @@ export default function DemoPage() {
   }
 
   function getEffectiveAppId(): string {
-    const current = appId.trim();
-    if (isValidAppId(current)) return current;
-    if (isValidAppId(DEFAULT_APP_ID)) return DEFAULT_APP_ID;
-    return "";
+    return LEGACY_TOKA_APP_ID;
   }
 
   function isValidMerchantCode(value: string) {
@@ -963,7 +961,7 @@ export default function DemoPage() {
         return;
       }
 
-      setMessage("Falló authenticate automático. Revisa la última respuesta.");
+      setMessage(`Falló authenticate automático con X-App-Id ${getEffectiveAppId()}. Revisa la última respuesta.`);
       return;
     }
 
