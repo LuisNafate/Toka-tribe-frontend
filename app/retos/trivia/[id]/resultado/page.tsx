@@ -2,17 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Medal } from "lucide-react";
+import { Trophy, Users, Zap, Tag } from "lucide-react";
 import type { TriviaResult } from "@/types/trivia";
 
 const RESULT_KEY = "toka_trivia_result";
-
-function getTierLabel(multiplier: number): string {
-  if (multiplier >= 2.0) return "Tier Oro";
-  if (multiplier >= 1.5) return "Tier Plata";
-  if (multiplier >= 1.2) return "Tier Bronce";
-  return "Sin Tier";
-}
 
 function getHeroMessage(accuracy: number): string {
   if (accuracy >= 80) return "¡Bien jugado!";
@@ -64,14 +57,13 @@ export default function TriviaResultadoPage({
 
   const { baseScore, finalScore, multiplier, correctCount, totalQuestions, coupon } = result;
   const accuracy = Math.round((correctCount / totalQuestions) * 100);
-  const tierLabel = getTierLabel(multiplier);
   const heroMessage = getHeroMessage(accuracy);
-  const streakLost = accuracy < 50;
+  const tribeContribution = Math.round(finalScore * 0.3);
 
   return (
     <main className="fig-trivia-result">
 
-      {/* ── Hero card ── */}
+      {/* ── Hero card con gradiente ── */}
       <section className="fig-trivia-result-hero-card">
         <div className="fig-trivia-result-hero-text">
           <span className="fig-trivia-result-hero-subtitle">AXO SQUAD · TOKA TRIVIA</span>
@@ -90,74 +82,46 @@ export default function TriviaResultadoPage({
       </section>
 
       {/* ── Score breakdown ── */}
-      <section className="fig-trivia-result-breakdown">
-        <div className="fig-trivia-result-breakdown-top">
-          <span>Puntos ganados</span>
-          <span className="fig-trivia-tier-pill">
-            <Medal size={11} />
-            {tierLabel}
-          </span>
+      <section className="fig-trivia-result-card">
+        <div className="fig-trivia-result-row">
+          <span><Zap size={15} />Puntaje base</span>
+          <strong>{baseScore} pts</strong>
         </div>
-
-        <p className="fig-trivia-result-pts-big">+{finalScore.toLocaleString()} pts</p>
-
-        <hr className="fig-trivia-divider" />
-
-        <div className="fig-trivia-breakdown-row">
-          <span>Base score</span>
-          <strong>{baseScore.toLocaleString()} pts</strong>
+        <div className="fig-trivia-result-row">
+          <span><Trophy size={15} />Multiplicador tier</span>
+          <strong className="fig-trivia-result-multiplier">×{multiplier.toFixed(1)}</strong>
         </div>
-        <div className="fig-trivia-breakdown-row">
-          <span>Multiplicador</span>
-          <strong className="fig-trivia-multiplier-val">×{multiplier.toFixed(1)} Tier</strong>
-        </div>
-
-        <hr className="fig-trivia-divider" />
-
-        <div className="fig-trivia-breakdown-row fig-trivia-breakdown-row--total">
-          <span>Total Final</span>
-          <strong>{finalScore.toLocaleString()} pts al Tribe</strong>
+        <div className="fig-trivia-result-row fig-trivia-result-row--total">
+          <span>Puntaje final</span>
+          <strong>{finalScore} pts</strong>
         </div>
       </section>
 
-      {/* ── Racha ── */}
-      {streakLost ? (
-        <section className="fig-trivia-racha fig-trivia-racha--lost">
-          <span className="fig-trivia-racha-icon">💔</span>
-          <div>
-            <p className="fig-trivia-racha-title">Racha perdida</p>
-            <p className="fig-trivia-racha-sub">
-              Jugaste tarde · Tu racha terminó
-            </p>
-          </div>
-        </section>
-      ) : (
-        <section className="fig-trivia-racha fig-trivia-racha--ok">
-          <span className="fig-trivia-racha-icon">🔥</span>
-          <div>
-            <p className="fig-trivia-racha-title">¡Racha activa!</p>
-            <p className="fig-trivia-racha-sub">
-              {correctCount}/{totalQuestions} correctas · {accuracy}%
-            </p>
-          </div>
-        </section>
-      )}
+      {/* ── Tribe contribution ── */}
+      <section className="fig-trivia-result-card">
+        <div className="fig-trivia-result-row">
+          <span><Users size={15} />Aportación a tu Tribe</span>
+          <strong>+{tribeContribution} pts</strong>
+        </div>
+      </section>
 
       {/* ── Cupón ── */}
       {coupon ? (
         <section className="fig-trivia-coupon">
           <div className="fig-trivia-coupon-inner">
-            <span className="fig-trivia-coupon-emoji">🎟</span>
+            <Tag size={18} />
             <div>
               <p className="fig-trivia-coupon-label">¡Cupón desbloqueado!</p>
-              <p className="fig-trivia-coupon-discount">
-                {coupon.discount} en {coupon.store}
-              </p>
+              <p className="fig-trivia-coupon-discount">{coupon.discount} en {coupon.store}</p>
               <p className="fig-trivia-coupon-code">{coupon.code}</p>
             </div>
           </div>
         </section>
-      ) : null}
+      ) : (
+        <section className="fig-trivia-coupon fig-trivia-coupon--locked">
+          <p>Alcanza 500 pts para desbloquear tu primer cupón</p>
+        </section>
+      )}
 
       {/* ── Actions ── */}
       <div className="fig-trivia-result-actions">
