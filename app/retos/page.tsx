@@ -1,4 +1,4 @@
-import { Flame, Sparkles, TimerReset, Zap } from "lucide-react";
+import { AlertTriangle, Clock, Flame, Menu, Sparkles, TimerReset, TrendingUp, Trophy, Zap } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import BottomNav from "@/components/BottomNav";
@@ -55,56 +55,124 @@ export default function RetosPage() {
       </div>
 
       <main className="fig-mobile-retos fig-mobile-only">
+
+        {/* Header */}
         <header className="fig-mobile-topbar fig-retos-topbar">
           <div className="fig-mobile-topbar__left">
-            <span className="fig-mobile-menu" aria-hidden="true">
-              <Sparkles size={14} />
-            </span>
-            <strong>TokaTribe</strong>
+            <span className="fig-mobile-menu"><Menu size={20} /></span>
+            <strong className="fig-retos-brand">TokaTribe</strong>
           </div>
-          <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" />
+          <div className="fig-retos-avatar">
+            <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" />
+          </div>
         </header>
 
+        {/* Hero */}
         <section className="fig-retos-hero">
-          <div>
+          <div className="fig-retos-hero__content">
             <h1>¿Listo para jugar?</h1>
             <p>Axo Squad · 2,140 pts</p>
-            <span className="inline-row" style={{ gap: 6 }}><Flame size={14} />Racha: 3 días</span>
+            <span className="fig-retos-racha"><Flame size={14} /> Racha: 3 días</span>
           </div>
           <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
         </section>
 
+        {/* Reto diario */}
         <section className="fig-retos-daily">
           <div className="fig-retos-section-head">
             <strong>RETO DIARIO</strong>
-            <span>Cierra en 4h 32m</span>
+            <span className="fig-retos-timer"><Clock size={13} /> Cierra en 4h 32m</span>
           </div>
-
           <article className="fig-retos-daily-card">
-            <h2>{dailyChallenge.title}</h2>
-            <p>{dailyChallenge.points}</p>
-            <div className="fig-retos-alert">¡Juega hoy para no perder tu racha!</div>
-            <Link href="/retos" className="fig-retos-play">Jugar ahora</Link>
+            <div className="fig-retos-daily-card__top">
+              <div>
+                <h2>Trivia Rápida</h2>
+                <p className="fig-retos-pts"><Zap size={14} /> +15 pts</p>
+              </div>
+              <div className="fig-retos-quiz-icon">📋</div>
+            </div>
+            <div className="fig-retos-alert"><AlertTriangle size={13} /> ¡Juega hoy para no perder tu racha!</div>
+            <Link href="/retos" className="fig-retos-play">JUGAR AHORA</Link>
           </article>
         </section>
 
+        {/* Esta semana */}
         <section className="fig-retos-weekly">
           <div className="fig-retos-section-head">
             <strong>ESTA SEMANA</strong>
             <span>Cierra en 2 días 14h</span>
           </div>
-
           <div className="fig-retos-weekly-list">
-            {weeklyChallenges.map((challenge) => (
-              <article key={challenge.title}>
-                <div>
-                  <h3>{challenge.title}</h3>
-                  <p>{challenge.points} · Disponible</p>
-                </div>
-                <button type="button">Jugar</button>
-              </article>
-            ))}
+            <article>
+              <div className="fig-retos-weekly-icon fig-retos-weekly-icon--teal">
+                <Sparkles size={18} />
+              </div>
+              <div className="fig-retos-weekly-info">
+                <h3>Toka Trivia</h3>
+                <p><span className="fig-retos-pts-inline">+40 pts</span> <span className="fig-retos-available">● DISPONIBLE</span></p>
+              </div>
+              <button type="button" className="fig-retos-btn fig-retos-btn--navy">Jugar</button>
+            </article>
+            <article>
+              <div className="fig-retos-weekly-icon fig-retos-weekly-icon--purple">
+                <Zap size={18} />
+              </div>
+              <div className="fig-retos-weekly-info">
+                <h3>Reflejos Tribe</h3>
+                <p><span className="fig-retos-pts-inline">+25 pts</span></p>
+                <p className="fig-retos-playing"><span className="fig-retos-dot" />2 jugando ahora</p>
+              </div>
+              <button type="button" className="fig-retos-btn fig-retos-btn--yellow">Unirse</button>
+            </article>
           </div>
+        </section>
+
+        {/* Aportación semanal */}
+        <section className="fig-retos-aportacion">
+          <div className="fig-retos-aportacion__head">
+            <h3>Tu aportación esta semana</h3>
+            <TrendingUp size={18} color="#2a55b9" />
+          </div>
+          <div className="fig-retos-aportacion__labels">
+            <span>480 pts</span>
+            <span>1,000 pts meta</span>
+          </div>
+          <div className="fig-retos-progress">
+            <div style={{ width: "48%" }} />
+          </div>
+          <div className="fig-retos-multiplier">
+            <Sparkles size={14} color="#2a55b9" />
+            <span>Multiplicador 1.3x activo · se aplica a tu próximo reto</span>
+          </div>
+        </section>
+
+        {/* Tribe en la división */}
+        <section className="fig-retos-division">
+          <div className="fig-retos-division__head">
+            <h3>Tu Tribe en la división</h3>
+            <Trophy size={18} color="#2a55b9" />
+          </div>
+          <div className="fig-retos-division__list">
+            <div className="fig-retos-division__row">
+              <span className="fig-retos-rank">1.</span>
+              <span className="fig-retos-team">Los Titanes</span>
+              <span className="fig-retos-score">2,450 pts</span>
+            </div>
+            <div className="fig-retos-division__row fig-retos-division__row--highlight">
+              <span className="fig-retos-rank">2.</span>
+              <span className="fig-retos-team">Axo Squad</span>
+              <div className="fig-retos-score-group">
+                <span className="fig-retos-score">2,140 pts</span>
+                <span className="fig-retos-you">TU EQUIPO</span>
+              </div>
+            </div>
+            <div className="fig-retos-division__row">
+              <span className="fig-retos-rank">3.</span>
+              <span className="fig-retos-team">Cyber Runners</span>
+              <span className="fig-retos-score">1,980 pts</span>
+            </div>
+          </div>
+          <Link href="/leaderboard" className="fig-retos-division__link">Ver tabla completa →</Link>
         </section>
 
         <BottomNav active="retos" />
