@@ -1,4 +1,5 @@
-import { ShieldCheck, Sparkles, User } from "lucide-react";
+import { CheckCircle2, Flame, LayoutList, ShieldCheck, Sparkles, Star, Trophy, User } from "lucide-react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Panel, SectionHeader } from "@/components/common";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
@@ -8,15 +9,16 @@ import { FIGMA_ASSETS, profileHighlights } from "@/lib/data";
 export default function PerfilPage() {
   return (
     <>
+      {/* ── Desktop (unchanged) ── */}
       <div className="fig-desktop-only">
         <AppShell title="Perfil" subtitle="Identidad, progreso y configuración personal">
           <div className="workspace__grid">
             <Panel>
-              <SectionHeader eyebrow="Jugador" title="Andrea" description="Miembro activo de Axo Squad" />
+              <SectionHeader eyebrow="Jugador" title="Alix" description="Miembro activo de Axo Squad" />
               <div className="inline-row" style={{ alignItems: "center" }}>
                 <img
                   src={FIGMA_ASSETS.dashboard.userPic}
-                  alt="Andrea"
+                  alt="Alix"
                   className="avatar avatar--lg"
                   style={{ objectFit: "cover" }}
                 />
@@ -35,7 +37,6 @@ export default function PerfilPage() {
                 ))}
               </div>
             </Panel>
-
             <div className="dashboard-side">
               <Panel className="muted-card">
                 <div className="inline-row" style={{ justifyContent: "space-between" }}>
@@ -45,7 +46,6 @@ export default function PerfilPage() {
                 <h3>Single Sign-On Toka</h3>
                 <p>Acceso directo, sin registro adicional, con progreso sincronizado en todo el ecosistema.</p>
               </Panel>
-
               <Panel>
                 <SectionHeader eyebrow="Preferencias" title="Visibilidad y alertas" description="Controla tu experiencia dentro de TokaTribe." />
                 <div className="stack stack--tight">
@@ -58,71 +58,116 @@ export default function PerfilPage() {
         </AppShell>
       </div>
 
-      <main className="fig-mobile-perfil fig-responsive-page fig-mobile-only">
-        <header className="fig-mobile-topbar fig-perfil-topbar">
-          <div className="fig-mobile-topbar__left">
+      {/* ── Mobile ── */}
+      <main className="fig-perfil-page fig-mobile-only">
+
+        {/* Hero header — blue gradient */}
+        <header className="fig-perfil-hero">
+          <div className="fig-perfil-hero-top">
             <MobileHamburgerMenu />
-            <strong className="fig-perfil-brand">Perfil</strong>
           </div>
-          <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" className="fig-perfil-avatar" />
+          <div className="fig-perfil-avatar-wrap">
+            <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" className="fig-perfil-avatar" />
+          </div>
+          <h1 className="fig-perfil-name">Alix</h1>
+          <div className="fig-perfil-chips">
+            <span className="fig-perfil-chip fig-perfil-chip--plata">PLATA</span>
+            <span className="fig-perfil-chip fig-perfil-chip--free">FREE</span>
+          </div>
+          <div className="fig-perfil-stats-row">
+            <div className="fig-perfil-stat">
+              <span className="fig-perfil-stat-label">TOTAL PTS</span>
+              <span className="fig-perfil-stat-value">4,820</span>
+            </div>
+            <div className="fig-perfil-stat-divider" />
+            <div className="fig-perfil-stat">
+              <span className="fig-perfil-stat-label">RACHA MAX</span>
+              <span className="fig-perfil-stat-value">12 días</span>
+            </div>
+            <div className="fig-perfil-stat-divider" />
+            <div className="fig-perfil-stat">
+              <span className="fig-perfil-stat-label">TRIBES</span>
+              <span className="fig-perfil-stat-value">3</span>
+            </div>
+          </div>
         </header>
 
-        <section className="fig-perfil-hero">
-          <div className="fig-perfil-hero__content">
-            <h1>Andrea</h1>
-            <p className="fig-perfil-subtitle">Nivel Plata • Axo Squad</p>
+        <div className="fig-perfil-body">
+
+          {/* Mi mascota */}
+          <article className="fig-perfil-card fig-perfil-mascota-card">
+            <div className="fig-perfil-card-head">
+              <p className="fig-perfil-card-title">Mi mascota</p>
+              <Link href="/perfil/mascota" className="fig-perfil-link">Personalizar →</Link>
+            </div>
+            <div className="fig-perfil-mascota-body">
+              <img src="/images/mascota.png" alt="Mascota Toky" className="fig-perfil-mascota-img" />
+              <p className="fig-perfil-mascota-name">Toky</p>
+              <div className="fig-perfil-mascota-items">
+                <button type="button" className="fig-perfil-item-btn" disabled>
+                  <div className="fig-perfil-item-icon">
+                    <User size={18} color="#b0b8c9" />
+                  </div>
+                  <span>HAT</span>
+                </button>
+                <button type="button" className="fig-perfil-item-btn" disabled>
+                  <div className="fig-perfil-item-icon">
+                    <User size={18} color="#b0b8c9" />
+                  </div>
+                  <span>SHIRT</span>
+                </button>
+                <button type="button" className="fig-perfil-item-btn" disabled>
+                  <div className="fig-perfil-item-icon">
+                    <Star size={18} color="#b0b8c9" />
+                  </div>
+                  <span>ACCESSORY</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
+          {/* Temporada activa */}
+          <article className="fig-perfil-card">
+            <div className="fig-perfil-card-head">
+              <div>
+                <p className="fig-perfil-card-title">Temporada activa: Axo Squad</p>
+                <span className="fig-perfil-division-label">DIVISIÓN PLATA</span>
+              </div>
+              <Trophy size={18} color="#4a77e3" />
+            </div>
+            <div className="fig-perfil-progress-labels">
+              <span>1,300 pts</span>
+              <span>META: 2,000 PTS</span>
+            </div>
+            <div className="fig-perfil-progress">
+              <div style={{ width: "65%" }} />
+            </div>
+          </article>
+
+          {/* Stats 2×2 */}
+          <div className="fig-perfil-stats-grid">
+            <article className="fig-perfil-stat-card">
+              <CheckCircle2 size={20} className="fig-perfil-stat-icon fig-perfil-stat-icon--blue" />
+              <span className="fig-perfil-stat-card-label">RETOS COMPLETADOS</span>
+              <span className="fig-perfil-stat-card-value">128</span>
+            </article>
+            <article className="fig-perfil-stat-card">
+              <Flame size={20} className="fig-perfil-stat-icon fig-perfil-stat-icon--orange" />
+              <span className="fig-perfil-stat-card-label">RACHA ACTUAL</span>
+              <span className="fig-perfil-stat-card-value">5 días</span>
+            </article>
+            <article className="fig-perfil-stat-card">
+              <LayoutList size={20} className="fig-perfil-stat-icon fig-perfil-stat-icon--teal" />
+              <span className="fig-perfil-stat-card-label">TEMPORADAS</span>
+              <span className="fig-perfil-stat-card-value">4</span>
+            </article>
+            <article className="fig-perfil-stat-card">
+              <Star size={20} className="fig-perfil-stat-icon fig-perfil-stat-icon--purple" />
+              <span className="fig-perfil-stat-card-label">MEJOR POSICIÓN</span>
+              <span className="fig-perfil-stat-card-value">#12</span>
+            </article>
           </div>
-        </section>
 
-        <div className="fig-perfil-main">
-          <article className="fig-unified-card">
-            <div className="fig-unified-head">
-              <strong>Identidad</strong>
-              <User size={16} />
-            </div>
-            <div className="fig-perfil-row">
-              <img src={FIGMA_ASSETS.dashboard.userPic} alt="Andrea" style={{ width: 48, height: 48, borderRadius: 12 }} />
-              <div>
-                <h3 style={{ margin: 0 }}>Andrea</h3>
-                <p style={{ margin: 0, fontSize: 12, color: "#666" }}>Miembro activo de Axo Squad</p>
-              </div>
-            </div>
-            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e9ecf1" }}>
-              <p style={{ fontSize: 12, color: "#666", margin: 0 }}>Participación constante y racha de equipo activa.</p>
-            </div>
-          </article>
-
-          <article className="fig-unified-card fig-unified-card--soft">
-            <div className="fig-unified-head">
-              <strong>Autenticación</strong>
-              <Sparkles size={16} style={{ color: "#5ef6e6" }} />
-            </div>
-            <h3>Single Sign-On</h3>
-            <p className="fig-small-text">Acceso directo sin registro adicional. Progreso sincronizado en todo el ecosistema Toka.</p>
-            <div style={{ marginTop: 8 }}>
-              <span className="fig-status-pill">Conectado</span>
-            </div>
-          </article>
-
-          <article className="fig-unified-card">
-            <div className="fig-unified-head">
-              <strong>Preferencias</strong>
-            </div>
-            <div className="fig-setting-item">
-              <div>
-                <h4 style={{ margin: "0 0 4px" }}>Perfil visible</h4>
-                <p style={{ margin: 0, fontSize: 12, color: "#666" }}>Los miembros pueden ver tu avatar</p>
-              </div>
-              <span className="fig-pill-badge fig-pill-badge--active">Activo</span>
-            </div>
-            <div className="fig-setting-item" style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e9ecf1" }}>
-              <div>
-                <h4 style={{ margin: "0 0 4px" }}>Alertas de temporada</h4>
-                <p style={{ margin: 0, fontSize: 12, color: "#666" }}>Recibe recordatorios de cierre</p>
-              </div>
-              <span className="fig-pill-badge fig-pill-badge--active">Activo</span>
-            </div>
-          </article>
         </div>
 
         <BottomNav active="perfil" />
