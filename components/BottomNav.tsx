@@ -24,7 +24,7 @@ export default function BottomNav({ active }: { active?: NavTab }) {
   }
 
   return (
-    <nav className="fig-mobile-bottom-nav">
+    <nav className="fig-mobile-bottom-nav" style={{ gridTemplateColumns: `repeat(${NAV_ITEMS.length}, 1fr)` }}>
       {NAV_ITEMS.map((item) => (
         <Link key={item.tab} href={item.href} className={isActive(item) ? "active" : ""}>
           <span className="fig-mobile-nav-icon">{item.icon}</span>

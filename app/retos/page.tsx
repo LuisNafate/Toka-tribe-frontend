@@ -61,7 +61,7 @@ export default function RetosPage() {
         </AppShell>
       </div>
 
-      <main className="fig-mobile-retos fig-mobile-only">
+      <main className="fig-mobile-retos fig-responsive-page fig-mobile-only">
 
         {/* Header */}
         <header className="fig-mobile-topbar fig-retos-topbar">
