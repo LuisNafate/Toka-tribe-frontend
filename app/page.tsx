@@ -16,7 +16,7 @@ export default function LandingPage() {
           <Link href="#">Recompensas</Link>
         </nav>
         <div className="fig-home-topbar-actions">
-          <button type="button">Ver demo</button>
+          <Link href="/demo" className="fig-home-demo-btn">Ver demo</Link>
           <Link href="/dashboard">Entrar con Toka</Link>
         </div>
       </header>
