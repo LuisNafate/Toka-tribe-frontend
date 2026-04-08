@@ -140,11 +140,11 @@ export default function DemoPage() {
   }
 
   function isValidAppId(value: string) {
-    return value.trim().length === 16;
+    return value.trim().length >= 16;
   }
 
   function isValidMerchantCode(value: string) {
-    return value.trim().length === 5;
+    return value.trim().length >= 5;
   }
 
   function onChangeOperation(nextOperationId: string) {
@@ -484,7 +484,7 @@ export default function DemoPage() {
     event.preventDefault();
 
     if (!isValidAppId(appId)) {
-      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
+      setMessage("X-App-Id debe tener al menos 16 caracteres.");
       return;
     }
 
@@ -502,7 +502,7 @@ export default function DemoPage() {
     event.preventDefault();
 
     if (!isValidAppId(appId)) {
-      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
+      setMessage("X-App-Id debe tener al menos 16 caracteres.");
       return;
     }
 
@@ -531,7 +531,7 @@ export default function DemoPage() {
     event.preventDefault();
 
     if (!isValidAppId(appId)) {
-      setMessage("Configura un X-App-Id válido (16 caracteres) para ejecutar automático.");
+      setMessage("Configura un X-App-Id válido (16+ caracteres) para ejecutar automático.");
       return;
     }
 
@@ -581,12 +581,12 @@ export default function DemoPage() {
     event.preventDefault();
 
     if (!isValidAppId(appId)) {
-      setMessage("X-App-Id debe tener exactamente 16 caracteres.");
+      setMessage("X-App-Id debe tener al menos 16 caracteres.");
       return;
     }
 
     if (!isValidMerchantCode(merchantCode)) {
-      setMessage("Alipay-MerchantCode debe tener exactamente 5 caracteres.");
+      setMessage("Alipay-MerchantCode debe tener al menos 5 caracteres.");
       return;
     }
 
@@ -679,7 +679,7 @@ export default function DemoPage() {
     }
 
     if (!isValidMerchantCode(merchantCode)) {
-      setMessage("Alipay-MerchantCode debe tener exactamente 5 caracteres.");
+      setMessage("Alipay-MerchantCode debe tener al menos 5 caracteres.");
       return;
     }
 
@@ -803,12 +803,12 @@ export default function DemoPage() {
         <h2>Flujo legacy Toka auth y pagos</h2>
         <div className="demo-grid">
           <label>
-            X-App-Id (16)
-            <input value={appId} onChange={(e) => setAppId(e.target.value)} placeholder="xxxxxxxxxxxxxxxx" />
+            X-App-Id (min 16)
+            <input value={appId} onChange={(e) => setAppId(e.target.value)} placeholder="d2f08cef270c438f..." />
           </label>
           <label>
-            MerchantCode (5)
-            <input value={merchantCode} onChange={(e) => setMerchantCode(e.target.value)} placeholder="xxxxx" />
+            MerchantCode (min 5)
+            <input value={merchantCode} onChange={(e) => setMerchantCode(e.target.value)} placeholder="301002382605" />
           </label>
           <label>
             User ID
