@@ -32,6 +32,7 @@ type RealUserProfile = {
 type BridgePayload = {
   authCode?: string;
   authcode?: string;
+  auth_code?: string;
   [key: string]: unknown;
 };
 
@@ -359,39 +360,78 @@ export default function DemoPage() {
     return maybeBridge ?? null;
   }
 
+  function extractAuthCodeFromPayload(payload: unknown): string | null {
+    if (!payload || typeof payload !== "object") {
+      return null;
+    }
+
+    const queue: unknown[] = [payload];
+    let depth = 0;
+
+    while (queue.length > 0 && depth < 4) {
+      const currentLevelCount = queue.length;
+
+      for (let i = 0; i < currentLevelCount; i += 1) {
+        const item = queue.shift();
+        if (!item || typeof item !== "object") continue;
+
+        const record = item as Record<string, unknown>;
+        const direct = record.authCode ?? record.authcode ?? record.auth_code;
+        if (typeof direct === "string" && direct.trim()) {
+          return direct.trim();
+        }
+
+        for (const value of Object.values(record)) {
+          if (value && typeof value === "object") {
+            queue.push(value);
+          }
+        }
+      }
+
+      depth += 1;
+    }
+
+    return null;
+  }
+
+  async function callBridgeMethod(
+    bridge: BridgeApi,
+    method: string,
+    payload: Record<string, unknown>,
+  ): Promise<unknown> {
+    return await new Promise((resolve) => {
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        resolve(null);
+      }, 4500);
+
+      try {
+        bridge.call(method, payload, (response) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          resolve(response);
+        });
+      } catch {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeoutId);
+        resolve(null);
+      }
+    });
+  }
+
   async function onGetDigitalIdentityCode(event: FormEvent) {
     event.preventDefault();
-    const bridge = getBridge();
-
-    if (!bridge) {
-      setMessage("AlipayJSBridge no está disponible en este navegador. Ejecuta dentro de mini app.");
+    const code = await getDigitalIdentityCodeFromBridge();
+    if (code) {
+      setMessage("Auth code obtenido desde JSBridge.");
       return;
     }
 
-    setLoadingAction("Bridge auth code");
-
-    try {
-      const result = await new Promise<BridgePayload>((resolve) => {
-        bridge.call(
-          "getUserDigitalIdentityAuthCode",
-          {
-            usage: "Autenticar usuario en TokaTribe",
-            scopes: ["USER_ID", "USER_AVATAR", "USER_NICKNAME"],
-          },
-          (response) => resolve(response),
-        );
-      });
-
-      const code = result.authCode ?? result.authcode;
-      if (code) {
-        setAuthCode(String(code));
-        setMessage("Auth code obtenido desde JSBridge.");
-      } else {
-        setMessage("No se obtuvo authCode del JSBridge.");
-      }
-    } finally {
-      setLoadingAction("");
-    }
+    setMessage("No se obtuvo authCode del bridge en este intento.");
   }
 
   async function getDigitalIdentityCodeFromBridge(): Promise<string | null> {
@@ -404,23 +444,39 @@ export default function DemoPage() {
     setLoadingAction("Bridge auth code");
 
     try {
-      const result = await new Promise<BridgePayload>((resolve) => {
-        bridge.call(
-          "getUserDigitalIdentityAuthCode",
-          {
+      const attempts: Array<{ method: string; payload: Record<string, unknown> }> = [
+        {
+          method: "getUserDigitalIdentityAuthCode",
+          payload: {
             usage: "Autenticar usuario en TokaTribe",
             scopes: ["USER_ID", "USER_AVATAR", "USER_NICKNAME"],
           },
-          (response) => resolve(response),
-        );
-      });
+        },
+        {
+          method: "getUserDigitalIdentityAuthCode",
+          payload: {
+            usage: "Autenticar usuario en TokaTribe",
+            scopes: "USER_ID,USER_AVATAR,USER_NICKNAME",
+          },
+        },
+        {
+          method: "getAuthCode",
+          payload: {
+            scopes: "auth_user",
+          },
+        },
+      ];
 
-      const code = result.authCode ?? result.authcode;
-      if (!code) return null;
+      for (const attempt of attempts) {
+        const response = await callBridgeMethod(bridge, attempt.method, attempt.payload);
+        const code = extractAuthCodeFromPayload(response);
+        if (!code) continue;
 
-      const normalizedCode = String(code);
-      setAuthCode(normalizedCode);
-      return normalizedCode;
+        setAuthCode(code);
+        return code;
+      }
+
+      return null;
     } finally {
       setLoadingAction("");
     }
@@ -523,7 +579,7 @@ export default function DemoPage() {
 
     if (!code) {
       if (!options?.silentNoBridge) {
-        setMessage("No hay authCode. Obtén uno por bridge o define NEXT_PUBLIC_TOKA_TEST_AUTH_CODE.");
+        setMessage("No se pudo obtener authCode automáticamente desde el bridge.");
       }
       return;
     }
@@ -838,23 +894,23 @@ export default function DemoPage() {
         <div className="demo-grid">
           <label>
             X-App-Id (min 16)
-            <input value={appId} onChange={(e) => setAppId(e.target.value)} placeholder="d2f08cef270c438f..." />
+            <input value={appId} readOnly placeholder="d2f08cef270c438f..." />
           </label>
           <label>
             MerchantCode (min 5)
-            <input value={merchantCode} onChange={(e) => setMerchantCode(e.target.value)} placeholder="301002382605" />
+            <input value={merchantCode} readOnly placeholder="301002382605" />
           </label>
           <label>
             User ID
-            <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="0000000000000000" />
+            <input value={userId} readOnly placeholder="0000000000000000" />
           </label>
           <label>
             Auth code
-            <input value={authCode} onChange={(e) => setAuthCode(e.target.value)} placeholder="QZvGrF" />
+            <input value={authCode} readOnly placeholder="QZvGrF" />
           </label>
           <label>
             AuthCodes CSV (max 5)
-            <input value={authCodesCsv} onChange={(e) => setAuthCodesCsv(e.target.value)} placeholder="rNAeg7,IfDTCP" />
+            <input value={authCodesCsv} readOnly placeholder="rNAeg7,IfDTCP" />
           </label>
           <label>
             Order title
@@ -882,11 +938,12 @@ export default function DemoPage() {
           </label>
         </div>
 
+        <p className="subtle" style={{ marginTop: 10 }}>
+          Identidad automática activa: al abrir esta vista en miniapp se intenta obtener authCode y cargar perfil sin intervención.
+        </p>
+
         <div className="demo-actions demo-actions--buttons">
-          <form onSubmit={onAutoCompleteAndRunDemo}><button type="submit" disabled={loadingAction !== ""}>Autocompletar y probar demo</button></form>
-          <form onSubmit={onGetDigitalIdentityCode}><button type="submit" disabled={loadingAction === "Bridge auth code"}>Obtener auth code desde bridge</button></form>
-          <form onSubmit={onLegacyAuthenticate}><button type="submit" disabled={loadingAction === "Legacy POST /v1/user/authenticate"}>POST /v1/user/authenticate</button></form>
-          <form onSubmit={onLegacyUserInfo}><button type="submit" disabled={loadingAction === "Legacy POST /v1/user/info"}>POST /v1/user/info</button></form>
+          <form onSubmit={onAutoCompleteAndRunDemo}><button type="submit" disabled={loadingAction !== ""}>Reintentar carga automática</button></form>
           <form onSubmit={onLegacyCreatePayment}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/create"}>POST /v1/payment/create</button></form>
           <form onSubmit={onOpenPaymentInBridge}><button type="submit">Abrir paymentUrl en pay</button></form>
           <form onSubmit={onLegacyPaymentInquiry}><button type="submit" disabled={loadingAction === "Legacy POST /v1/payment/inquiry"}>POST /v1/payment/inquiry</button></form>
@@ -899,6 +956,7 @@ export default function DemoPage() {
           <h3 style={{ margin: "0 0 8px" }}>Datos reales del usuario</h3>
           {realUserProfile ? (
             <div className="demo-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+              <div><strong>Verificación:</strong> {realUserProfile.fullName ?? realUserProfile.nickName ?? realUserProfile.userId ?? "-"}</div>
               <div><strong>User ID:</strong> {realUserProfile.userId ?? "-"}</div>
               <div><strong>Nickname:</strong> {realUserProfile.nickName ?? "-"}</div>
               <div><strong>Nombre:</strong> {realUserProfile.fullName ?? realUserProfile.firstName ?? "-"}</div>
@@ -909,7 +967,7 @@ export default function DemoPage() {
               <div><strong>Avatar:</strong> {realUserProfile.avatar ? "Disponible" : "-"}</div>
             </div>
           ) : (
-            <p className="subtle">Aún no hay datos. Ejecuta authenticate y luego /v1/user/info.</p>
+            <p className="subtle">Aún no hay datos. Si estás en miniapp, se cargarán automáticamente en unos segundos.</p>
           )}
         </div>
       </section>
