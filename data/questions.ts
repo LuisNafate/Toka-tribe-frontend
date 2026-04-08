@@ -1,0 +1,223 @@
+import type { Question } from "@/types/trivia";
+
+export const questions: Question[] = [
+  // ── CIENCIA ──────────────────────────────────────────────────────────
+  {
+    questionId: "q01",
+    text: "¿Cuántos planetas tiene nuestro sistema solar?",
+    category: "Ciencia",
+    options: [
+      { answerId: "a", text: "7" },
+      { answerId: "b", text: "8" },
+      { answerId: "c", text: "9" },
+      { answerId: "d", text: "10" },
+    ],
+    correctAnswerId: "b",
+    pointsBase: 10,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q02",
+    text: "¿Cuál es el elemento químico más abundante en el universo?",
+    category: "Ciencia",
+    options: [
+      { answerId: "a", text: "Oxígeno" },
+      { answerId: "b", text: "Helio" },
+      { answerId: "c", text: "Hidrógeno" },
+      { answerId: "d", text: "Carbono" },
+    ],
+    correctAnswerId: "c",
+    pointsBase: 12,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q03",
+    text: "¿Cuántos huesos tiene el cuerpo humano adulto?",
+    category: "Ciencia",
+    options: [
+      { answerId: "a", text: "186" },
+      { answerId: "b", text: "206" },
+      { answerId: "c", text: "226" },
+      { answerId: "d", text: "246" },
+    ],
+    correctAnswerId: "b",
+    pointsBase: 15,
+    timeBonusMax: 5,
+  },
+
+  // ── GEOGRAFÍA MÉXICO ─────────────────────────────────────────────────
+  {
+    questionId: "q04",
+    text: "¿Cuál es el estado más grande de México por superficie?",
+    category: "Geografía México",
+    options: [
+      { answerId: "a", text: "Chihuahua" },
+      { answerId: "b", text: "Sonora" },
+      { answerId: "c", text: "Coahuila" },
+      { answerId: "d", text: "Durango" },
+    ],
+    correctAnswerId: "a",
+    pointsBase: 15,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q05",
+    text: "¿Cuántos estados tiene la República Mexicana?",
+    category: "Geografía México",
+    options: [
+      { answerId: "a", text: "28" },
+      { answerId: "b", text: "30" },
+      { answerId: "c", text: "31" },
+      { answerId: "d", text: "32" },
+    ],
+    correctAnswerId: "d",
+    pointsBase: 10,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q06",
+    text: "¿Cuál es el volcán más alto de México?",
+    category: "Geografía México",
+    options: [
+      { answerId: "a", text: "Popocatépetl" },
+      { answerId: "b", text: "Iztaccíhuatl" },
+      { answerId: "c", text: "Pico de Orizaba" },
+      { answerId: "d", text: "Nevado de Toluca" },
+    ],
+    correctAnswerId: "c",
+    pointsBase: 18,
+    timeBonusMax: 5,
+  },
+
+  // ── HISTORIA ─────────────────────────────────────────────────────────
+  {
+    questionId: "q07",
+    text: "¿En qué año inició el movimiento de Independencia de México?",
+    category: "Historia",
+    options: [
+      { answerId: "a", text: "1808" },
+      { answerId: "b", text: "1810" },
+      { answerId: "c", text: "1812" },
+      { answerId: "d", text: "1821" },
+    ],
+    correctAnswerId: "b",
+    pointsBase: 10,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q08",
+    text: "¿Quién fue el primer presidente de México?",
+    category: "Historia",
+    options: [
+      { answerId: "a", text: "Benito Juárez" },
+      { answerId: "b", text: "Agustín de Iturbide" },
+      { answerId: "c", text: "Guadalupe Victoria" },
+      { answerId: "d", text: "Antonio López de Santa Anna" },
+    ],
+    correctAnswerId: "c",
+    pointsBase: 18,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q09",
+    text: "¿En qué año terminó la Segunda Guerra Mundial?",
+    category: "Historia",
+    options: [
+      { answerId: "a", text: "1943" },
+      { answerId: "b", text: "1944" },
+      { answerId: "c", text: "1945" },
+      { answerId: "d", text: "1946" },
+    ],
+    correctAnswerId: "c",
+    pointsBase: 10,
+    timeBonusMax: 5,
+  },
+
+  // ── ENTRETENIMIENTO ───────────────────────────────────────────────────
+  {
+    questionId: "q10",
+    text: "¿Cuántas Copas del Mundo de fútbol ha ganado Brasil?",
+    category: "Entretenimiento",
+    options: [
+      { answerId: "a", text: "4" },
+      { answerId: "b", text: "5" },
+      { answerId: "c", text: "6" },
+      { answerId: "d", text: "3" },
+    ],
+    correctAnswerId: "b",
+    pointsBase: 12,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q11",
+    text: "¿Quién escribió la novela 'Cien años de soledad'?",
+    category: "Entretenimiento",
+    options: [
+      { answerId: "a", text: "Mario Vargas Llosa" },
+      { answerId: "b", text: "Jorge Luis Borges" },
+      { answerId: "c", text: "Pablo Neruda" },
+      { answerId: "d", text: "Gabriel García Márquez" },
+    ],
+    correctAnswerId: "d",
+    pointsBase: 15,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q12",
+    text: "¿En qué país se originó el K-pop?",
+    category: "Entretenimiento",
+    options: [
+      { answerId: "a", text: "Japón" },
+      { answerId: "b", text: "China" },
+      { answerId: "c", text: "Corea del Sur" },
+      { answerId: "d", text: "Tailandia" },
+    ],
+    correctAnswerId: "c",
+    pointsBase: 10,
+    timeBonusMax: 5,
+  },
+
+  // ── FINANZAS PERSONALES ───────────────────────────────────────────────
+  {
+    questionId: "q13",
+    text: "¿Qué describe mejor el 'interés compuesto'?",
+    category: "Finanzas",
+    options: [
+      { answerId: "a", text: "Interés calculado solo sobre el capital inicial" },
+      { answerId: "b", text: "Interés que se genera sobre el capital más los intereses acumulados" },
+      { answerId: "c", text: "Un cargo fijo mensual independiente del saldo" },
+      { answerId: "d", text: "Descuento aplicado a deudas antiguas" },
+    ],
+    correctAnswerId: "b",
+    pointsBase: 20,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q14",
+    text: "¿Para qué sirve un fondo de emergencia?",
+    category: "Finanzas",
+    options: [
+      { answerId: "a", text: "Para invertir en bolsa cuando hay oportunidades" },
+      { answerId: "b", text: "Para cubrir gastos imprevistos sin endeudarse" },
+      { answerId: "c", text: "Para pagar vacaciones anuales" },
+      { answerId: "d", text: "Para financiar el retiro a largo plazo" },
+    ],
+    correctAnswerId: "b",
+    pointsBase: 15,
+    timeBonusMax: 5,
+  },
+  {
+    questionId: "q15",
+    text: "¿Qué significa 'diversificar' una cartera de inversión?",
+    category: "Finanzas",
+    options: [
+      { answerId: "a", text: "Concentrar todo el dinero en un solo activo seguro" },
+      { answerId: "b", text: "Retirar el dinero en efectivo para mayor seguridad" },
+      { answerId: "c", text: "Distribuir el dinero en distintos activos para reducir el riesgo" },
+      { answerId: "d", text: "Cambiar de banco cada año para obtener mejores tasas" },
+    ],
+    correctAnswerId: "c",
+    pointsBase: 20,
+    timeBonusMax: 5,
+  },
+];
