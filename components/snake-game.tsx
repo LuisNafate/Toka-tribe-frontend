@@ -14,7 +14,9 @@ import {
 import type { TouchEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
-import { formatAppPoints, useAppPoints } from "@/components/use-app-points";
+import { getSessionToken } from "@/services/auth.service";
+import { TokaApi } from "@/services/toka-api.service";
+import { formatAppPoints, refreshAppPointsFromBackend, useAppPoints } from "@/components/use-app-points";
 
 type Cell = { x: number; y: number };
 type Direction = { x: number; y: number };
@@ -90,6 +92,45 @@ export function SnakeGame() {
   const bestScoreRef = useRef(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
+  const syncSnakeScore = useCallback(async (applesEaten: number) => {
+    const token = getSessionToken();
+    if (!token) {
+      setLastReward("Puntos locales sumados. Inicia sesión para sincronizar partida.");
+      return;
+    }
+
+    const sessionPoints = applesEaten * CELL_POINTS;
+    if (sessionPoints <= 0) {
+      setLastReward("Partida cerrada sin puntaje para sincronizar.");
+      return;
+    }
+
+    setLastReward("Sincronizando partida Snake con backend...");
+
+    try {
+      await TokaApi.gameSessionsCreate({
+        gameType: "snake",
+        gameId: "snake",
+        challengeId: "snake-daily",
+        sessionId: `snake-${Date.now()}`,
+        score: sessionPoints,
+        correctCount: applesEaten,
+        totalQuestions: applesEaten,
+        metadata: {
+          applesEaten,
+          pointsPerApple: CELL_POINTS,
+          bestRun: bestScoreRef.current,
+        },
+      });
+
+      await refreshAppPointsFromBackend();
+      setLastReward(`Partida sincronizada: +${sessionPoints} pts backend`);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Error desconocido";
+      setLastReward(`No se pudo sincronizar Snake: ${detail}`);
+    }
+  }, []);
+
   useEffect(() => {
     const storedBest = loadBestScore();
     bestScoreRef.current = storedBest;
@@ -125,7 +166,8 @@ export function SnakeGame() {
     saveBestScore(nextBest);
     setStatus("game-over");
     setLastReward(finalScore > 0 ? `Partida cerrada con ${finalScore} manzanas` : "La partida terminó antes de sumar puntos");
-  }, []);
+    void syncSnakeScore(finalScore);
+  }, [syncSnakeScore]);
 
   const resetGame = useCallback((autostart = true) => {
     const nextSnake = createSnakeStart();
