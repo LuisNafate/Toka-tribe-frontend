@@ -94,7 +94,6 @@ export default function RecompensasPage() {
             </article>
           ))}
         </section>
-
         <BottomNav active="retos" />
       </main>
     </>
