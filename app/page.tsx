@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Gamepad2, Medal, Menu, Trophy, Users } from "lucide-react";
 import { FIGMA_ASSETS } from "@/lib/data";
-import BottomNav from "@/components/BottomNav";
 
 export default function LandingPage() {
   return (
@@ -177,7 +176,6 @@ export default function LandingPage() {
           </article>
         </section>
 
-        <BottomNav active="inicio" />
       </main>
     </>
   );
