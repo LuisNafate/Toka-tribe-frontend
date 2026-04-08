@@ -36,7 +36,7 @@ export default function LandingPage() {
             </div>
 
             <div className="fig-home-cta-row">
-              <TokaLoginButton className="primary">Entrar con Toka</TokaLoginButton>
+              <TokaLoginButton className="primary" showDiagnostics>Entrar con Toka</TokaLoginButton>
               <Link href="/onboarding" className="secondary">Conocer la dinámica</Link>
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function LandingPage() {
           <span className="fig-mobile-kicker">MINI APP DENTRO DEL ECOSISTEMA TOKA</span>
           <h1>Bienvenido a tu Tribe</h1>
           <div className="fig-mobile-hero-cta">
-            <TokaLoginButton className="fig-pill-btn fig-pill-btn--primary">Entrar con Toka</TokaLoginButton>
+            <TokaLoginButton className="fig-pill-btn fig-pill-btn--primary" showDiagnostics>Entrar con Toka</TokaLoginButton>
             <Link href="/onboarding" className="fig-pill-btn fig-pill-btn--light">Conocer la dinámica</Link>
           </div>
         </section>
