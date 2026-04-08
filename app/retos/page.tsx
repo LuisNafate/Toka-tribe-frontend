@@ -1,4 +1,4 @@
-import { TimerReset, Zap } from "lucide-react";
+import { Flame, Sparkles, TimerReset, Zap } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Panel, SectionHeader } from "@/components/common";
@@ -56,7 +56,9 @@ export default function RetosPage() {
       <main className="fig-mobile-retos fig-mobile-only">
         <header className="fig-mobile-topbar fig-retos-topbar">
           <div className="fig-mobile-topbar__left">
-            <span className="fig-mobile-menu">✦</span>
+            <span className="fig-mobile-menu" aria-hidden="true">
+              <Sparkles size={14} />
+            </span>
             <strong>TokaTribe</strong>
           </div>
           <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" />
@@ -66,7 +68,7 @@ export default function RetosPage() {
           <div>
             <h1>¿Listo para jugar?</h1>
             <p>Axo Squad · 2,140 pts</p>
-            <span>🔥 Racha: 3 días</span>
+            <span className="inline-row" style={{ gap: 6 }}><Flame size={14} />Racha: 3 días</span>
           </div>
           <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
         </section>

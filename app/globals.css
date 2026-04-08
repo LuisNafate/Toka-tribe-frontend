@@ -3838,9 +3838,252 @@ img {
   border-radius: 999px;
   background: #fec619;
   color: #fff;
+}
+
+/* Dashboard CSS Classes */
+.fig-panel-featured {
+  position: relative;
+  background: linear-gradient(180deg, #f8fbff 0%, #edf3ff 100%);
+  border: 1px solid rgba(74, 119, 227, 0.12);
+}
+
+.leaderboard-container {
+  display: grid;
+  gap: 10px;
+}
+
+.leaderboard-item {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f8f9fc;
+  transition: all 0.2s ease;
+}
+
+.leaderboard-item--highlight {
+  background: rgba(74, 119, 227, 0.12);
+  border: 1px solid rgba(94, 246, 230, 0.22);
+}
+
+.leaderboard-item__rank {
+  width: 30px;
   font-weight: 800;
-  letter-spacing: 0.03em;
-  padding: 13px 18px;
+  color: #29425f;
+  text-align: center;
+}
+
+.leaderboard-item__name {
+  font-weight: 800;
+  color: #0b1f36;
+}
+
+.leaderboard-item__score {
+  text-align: right;
+  font-weight: 800;
+  color: #004a78;
+}
+
+.reward-card {
+  padding: 20px;
+  border-radius: 24px;
+  background: #e1e3e4;
+  border: 2px dashed rgba(0, 106, 98, 0.3);
+}
+
+.reward-card__badge {
+  display: inline-block;
+  background: #3864c5;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.reward-card__title {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #001624;
+}
+
+.reward-card__description {
+  margin: 0 0 14px;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.reward-card__button {
+  background: linear-gradient(135deg, #2a55b9 0%, #5d89e4 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reward-card__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(42, 85, 185, 0.3);
+}
+
+.season-chart {
+  display: grid;
+  gap: 12px;
+}
+
+.season-chart__bars {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: flex-end;
+  gap: 8px;
+  height: 100px;
+}
+
+.season-chart__bar {
+  border-radius: 8px 8px 4px 4px;
+  background: #e7e8e9;
+  min-height: 10px;
+  transition: all 0.2s ease;
+}
+
+.season-chart__bar--active {
+  background: #5d89e4;
+  box-shadow: 0 4px 12px rgba(93, 137, 228, 0.3);
+}
+
+.season-chart__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.season-chart__label {
+  margin: 0;
+  font-weight: 800;
+  color: #0b1f36;
+}
+
+.season-chart__time {
+  margin: 0;
+  color: #506987;
+  font-size: 0.9rem;
+}
+
+.premium-challenge {
+  background: linear-gradient(180deg, #001624 0%, #0a3a52 100%);
+  color: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.premium-challenge__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.premium-challenge__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.premium-challenge__description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.9rem;
+}
+
+.premium-challenge__divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 6px 0;
+}
+
+.premium-challenge__reward {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #5ef6e6;
+}
+
+.activity-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(12, 35, 65, 0.08);
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+}
+
+.activity-row__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #006a62;
+  flex-shrink: 0;
+}
+
+.activity-row__content {
+  display: grid;
+  gap: 2px;
+}
+
+.activity-row__title {
+  margin: 0;
+  font-weight: 800;
+  color: #0b1f36;
+  font-size: 0.95rem;
+}
+
+.activity-row__description {
+  margin: 0;
+  color: #506987;
+  font-size: 0.82rem;
+}
+
+.activity-row__points {
+  text-align: right;
+  font-weight: 800;
+  color: #004a78;
+  font-size: 0.9rem;
+}
+
+.fig-dashboard-main-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+@media (max-width: 1080px) {
+  .fig-dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .fig-retos-weekly-list {

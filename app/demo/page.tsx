@@ -1,7 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
+import {
+  getApiOperations,
+  getApiStats,
+  getApiTags,
+  getRequestBodyTemplateBySchemaName,
+  tokaTribeOpenApi,
+} from "@/lib/api/openapi";
 
 type ApiResult = {
   action: string;
@@ -11,29 +18,139 @@ type ApiResult = {
 };
 
 const DEFAULT_BASE_URL = "http://talentland-toka.eastus2.cloudapp.azure.com";
+const SWAGGER_OPERATIONS = getApiOperations();
+const SWAGGER_STATS = getApiStats();
+const SWAGGER_TAGS = ["all", ...getApiTags()];
+const FORBIDDEN_HEADER_KEYS = new Set(["host", "content-length"]);
 
 export default function DemoPage() {
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
-  const [appId, setAppId] = useState("");
-  const [authCode, setAuthCode] = useState("");
   const [token, setToken] = useState("");
-  const [authCodesCsv, setAuthCodesCsv] = useState("");
-  const [merchantCode, setMerchantCode] = useState("");
-  const [userId, setUserId] = useState("");
-  const [orderTitle, setOrderTitle] = useState("Demo TokaTribe");
-  const [orderAmountValue, setOrderAmountValue] = useState("500");
-  const [paymentId, setPaymentId] = useState("");
-  const [paymentUrl, setPaymentUrl] = useState("");
-  const [refundAmountValue, setRefundAmountValue] = useState("500");
-  const [refundId, setRefundId] = useState("");
+  const [extraHeadersJson, setExtraHeadersJson] = useState("{}");
+  const [tagFilter, setTagFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [operationId, setOperationId] = useState(SWAGGER_OPERATIONS[0]?.operationId ?? "");
+  const [pathParamsJson, setPathParamsJson] = useState("{}");
+  const [bodyJson, setBodyJson] = useState("{}");
+  const [message, setMessage] = useState("");
   const [loadingAction, setLoadingAction] = useState("");
   const [lastResult, setLastResult] = useState<ApiResult | null>(null);
 
+  const filteredOperations = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return SWAGGER_OPERATIONS.filter((operation) => {
+      const matchesTag = tagFilter === "all" || operation.tag === tagFilter;
+      if (!matchesTag) return false;
+      if (!query) return true;
+
+      return (
+        operation.operationId.toLowerCase().includes(query)
+        || operation.path.toLowerCase().includes(query)
+        || operation.summary.toLowerCase().includes(query)
+      );
+    });
+  }, [search, tagFilter]);
+
+  const selectedOperation = useMemo(
+    () => filteredOperations.find((operation) => operation.operationId === operationId) ?? filteredOperations[0] ?? SWAGGER_OPERATIONS[0],
+    [filteredOperations, operationId],
+  );
+
+  function normalizeBaseUrl(urlValue: string): string | null {
+    try {
+      const parsed = new URL(urlValue);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        return null;
+      }
+      return parsed.toString().replace(/\/+$/, "");
+    } catch {
+      return null;
+    }
+  }
+
+  function parseSafeHeaders(raw: string): { ok: true; headers: Record<string, string> } | { ok: false; message: string } {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw || "{}");
+    } catch {
+      return { ok: false, message: "Headers JSON inválido." };
+    }
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return { ok: false, message: "Headers debe ser un objeto JSON." };
+    }
+
+    const headers: Record<string, string> = {};
+
+    for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+      const normalizedKey = key.trim();
+      if (!normalizedKey) continue;
+      if (FORBIDDEN_HEADER_KEYS.has(normalizedKey.toLowerCase())) {
+        continue;
+      }
+      headers[normalizedKey] = String(value);
+    }
+
+    return { ok: true, headers };
+  }
+
+  function onChangeOperation(nextOperationId: string) {
+    setOperationId(nextOperationId);
+    setMessage("");
+
+    const operation = SWAGGER_OPERATIONS.find((item) => item.operationId === nextOperationId);
+    if (!operation) return;
+
+    const pathParams: Record<string, string> = {};
+    for (const paramName of operation.pathParamNames) {
+      pathParams[paramName] = "";
+    }
+    setPathParamsJson(JSON.stringify(pathParams, null, 2));
+
+    if (operation.hasBody) {
+      setBodyJson(getRequestBodyTemplateBySchemaName(operation.requestSchemaName));
+    } else {
+      setBodyJson("{}");
+    }
+  }
+
+  function resolvePath(pathTemplate: string, rawPathParams: string) {
+    let pathParams: Record<string, string> = {};
+
+    try {
+      pathParams = JSON.parse(rawPathParams || "{}");
+    } catch {
+      return { path: pathTemplate, missing: ["pathParams JSON inválido"] };
+    }
+
+    const missing: string[] = [];
+
+    const path = pathTemplate.replace(/\{([^}]+)\}/g, (_, key: string) => {
+      const value = pathParams[key];
+      if (!value) {
+        missing.push(key);
+        return `{${key}}`;
+      }
+      return encodeURIComponent(value);
+    });
+
+    return { path, missing };
+  }
+
   async function callApi(action: string, path: string, options: RequestInit = {}) {
     setLoadingAction(action);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     try {
-      const response = await fetch(`${baseUrl}${path}`, options);
-      let payload: unknown = null;
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const response = await fetch(`${baseUrl}${path}`, {
+        ...options,
+        signal: controller.signal,
+      });
+      let payload: unknown;
 
       try {
         payload = await response.json();
@@ -41,284 +158,211 @@ export default function DemoPage() {
         payload = await response.text();
       }
 
-      const result: ApiResult = {
+      setLastResult({
         action,
         ok: response.ok,
         status: response.status,
         payload,
-      };
-
-      if (action === "Autenticar" && response.ok && typeof payload === "object" && payload) {
-        const data = (payload as { data?: { accessToken?: string; userId?: string } }).data;
-        const maybeToken = data?.accessToken;
-        const maybeUserId = data?.userId;
-        if (maybeToken) setToken(maybeToken);
-        if (maybeUserId) setUserId(maybeUserId);
-      }
-
-      if (action === "Crear pago" && response.ok && typeof payload === "object" && payload) {
-        const data = (payload as { data?: { paymentId?: string; paymentUrl?: string } }).data;
-        if (data?.paymentId) setPaymentId(data.paymentId);
-        if (data?.paymentUrl) setPaymentUrl(data.paymentUrl);
-      }
-
-      if (action === "Solicitar refund" && response.ok && typeof payload === "object" && payload) {
-        const maybeRefundId = (payload as { data?: { refundId?: string } }).data?.refundId;
-        if (maybeRefundId) setRefundId(maybeRefundId);
-      }
-
-      setLastResult(result);
+      });
     } catch (error) {
       setLastResult({
         action,
         ok: false,
         payload: {
-          message: "No se pudo conectar con la API. Revisa CORS, red o URL base.",
+          message: "No se pudo conectar con la API. Revisa CORS, red, timeout o URL base.",
           error: error instanceof Error ? error.message : String(error),
         },
       });
     } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       setLoadingAction("");
     }
   }
 
-  function onHealth(e: FormEvent) {
-    e.preventDefault();
-    callApi("Health", "/health", { method: "POST" });
-  }
+  function onExecuteOperation(event: FormEvent) {
+    event.preventDefault();
 
-  function onAuthenticate(e: FormEvent) {
-    e.preventDefault();
-    callApi("Autenticar", "/v1/user/authenticate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId,
-      },
-      body: JSON.stringify({ authcode: authCode }),
-    });
-  }
+    if (!selectedOperation) return;
 
-  function onUserInfo(e: FormEvent) {
-    e.preventDefault();
-    const authCodes = authCodesCsv
-      .split(",")
-      .map((code) => code.trim())
-      .filter(Boolean);
-
-    callApi("User info", "/v1/user/info", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId,
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ authCodes }),
-    });
-  }
-
-  function onPaymentCreate(e: FormEvent) {
-    e.preventDefault();
-    callApi("Crear pago", "/v1/payment/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId,
-        Authorization: `Bearer ${token}`,
-        "Alipay-MerchantCode": merchantCode,
-      },
-      body: JSON.stringify({
-        userId,
-        orderTitle,
-        orderAmount: {
-          value: orderAmountValue,
-          currency: "MXN",
-        },
-      }),
-    });
-  }
-
-  function onPaymentInquiry(e: FormEvent) {
-    e.preventDefault();
-    callApi("Consultar pago", "/v1/payment/inquiry", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId,
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ paymentId }),
-    });
-  }
-
-  function onPaymentClose(e: FormEvent) {
-    e.preventDefault();
-    callApi("Cerrar pago", "/v1/payment/close", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId,
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ paymentId }),
-    });
-  }
-
-  function onRefundCreate(e: FormEvent) {
-    e.preventDefault();
-    callApi("Solicitar refund", "/v1/payment/refund", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId,
-        Authorization: `Bearer ${token}`,
-        "Alipay-MerchantCode": merchantCode,
-      },
-      body: JSON.stringify({
-        userId,
-        paymentId,
-        refundAmount: {
-          value: refundAmountValue,
-          currency: "MXN",
-        },
-      }),
-    });
-  }
-
-  function onRefundInquiry(e: FormEvent) {
-    e.preventDefault();
-    callApi("Consultar refund", "/v1/payment/inquiry-refund", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-App-Id": appId,
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ refundId }),
-    });
-  }
-
-  function onOpenPaymentUrl(e: FormEvent) {
-    e.preventDefault();
-    if (!paymentUrl) return;
-
-    if (typeof window !== "undefined" && (window as typeof window & { AlipayJSBridge?: { call: (method: string, payload: unknown) => void } }).AlipayJSBridge) {
-      (window as typeof window & { AlipayJSBridge: { call: (method: string, payload: unknown) => void } }).AlipayJSBridge.call("pay", {
-        paymentUrl,
-      });
+    const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+    if (!normalizedBaseUrl) {
+      setMessage("La URL base no es válida. Debe iniciar con http:// o https://");
       return;
     }
 
-    window.open(paymentUrl, "_blank", "noopener,noreferrer");
+    if (selectedOperation.secured && !token.trim()) {
+      setMessage("Esta operación requiere JWT. Ingresa token antes de ejecutar.");
+      return;
+    }
+
+    const resolved = resolvePath(selectedOperation.path, pathParamsJson);
+    if (resolved.missing.length > 0) {
+      setMessage(`Faltan valores para: ${resolved.missing.join(", ")}`);
+      return;
+    }
+
+    const parsedHeadersResult = parseSafeHeaders(extraHeadersJson);
+    if (!parsedHeadersResult.ok) {
+      setMessage(parsedHeadersResult.message);
+      return;
+    }
+
+    let parsedBody: unknown = undefined;
+    if (selectedOperation.hasBody) {
+      try {
+        parsedBody = JSON.parse(bodyJson || "{}");
+      } catch {
+        setMessage("Body JSON inválido.");
+        return;
+      }
+    }
+
+    const headers: Record<string, string> = {
+      ...parsedHeadersResult.headers,
+    };
+
+    if (selectedOperation.hasBody) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    if (selectedOperation.secured && token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    setMessage("");
+
+    setBaseUrl(normalizedBaseUrl);
+
+    callApi(`OpenAPI ${selectedOperation.method} ${selectedOperation.path}`, resolved.path, {
+      method: selectedOperation.method,
+      headers,
+      body: selectedOperation.hasBody ? JSON.stringify(parsedBody) : undefined,
+    });
   }
 
   return (
     <main className="demo-page">
       <header className="demo-header">
         <div>
-          <h1>Demo Integración API</h1>
-          <p>Vista mínima para validar conectividad, autenticación y datos de usuario en schema v2.</p>
+          <h1>Swagger Runner</h1>
+          <p>Esta vista usa exclusivamente el OpenAPI integrado como fuente de verdad.</p>
         </div>
         <Link href="/" className="demo-back-link">Volver a landing</Link>
       </header>
+
+      <section className="demo-panel">
+        <h2>Resumen del contrato</h2>
+        <p>
+          <strong>{tokaTribeOpenApi.info?.title}</strong> v{tokaTribeOpenApi.info?.version} · OpenAPI {tokaTribeOpenApi.openapi}
+        </p>
+        <p>
+          Endpoints: {SWAGGER_STATS.endpointCount} · Operaciones: {SWAGGER_STATS.operationCount} · Tags: {SWAGGER_STATS.tagCount} · Seguras (JWT): {SWAGGER_STATS.securedCount}
+        </p>
+      </section>
 
       <section className="demo-panel">
         <h2>Configuración</h2>
         <div className="demo-grid">
           <label>
             URL base API
-            <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="http://..." />
+            <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://api.tu-dominio.com" />
           </label>
           <label>
-            X-App-Id (16 chars)
-            <input value={appId} onChange={(e) => setAppId(e.target.value)} placeholder="xxxxxxxxxxxxxxxx" />
+            JWT (opcional si la operación es pública)
+            <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="Bearer token" />
           </label>
           <label>
-            Bearer token
-            <input value={token} onChange={(e) => setToken(e.target.value)} placeholder="JWT token" />
-          </label>
-          <label>
-            Merchant Code (5 chars)
-            <input value={merchantCode} onChange={(e) => setMerchantCode(e.target.value)} placeholder="xxxxx" />
-          </label>
-          <label>
-            User ID
-            <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="userId" />
+            Headers extra JSON
+            <input value={extraHeadersJson} onChange={(e) => setExtraHeadersJson(e.target.value)} placeholder='{"X-App-Id":"abc"}' />
           </label>
         </div>
       </section>
 
       <section className="demo-panel">
-        <h2>Pruebas rápidas</h2>
-        <div className="demo-actions">
-          <form onSubmit={onHealth}>
-            <button type="submit" disabled={loadingAction === "Health"}>{loadingAction === "Health" ? "Probando..." : "POST /health"}</button>
-          </form>
+        <h2>Ejecutor OpenAPI</h2>
+        <form className="demo-actions" onSubmit={onExecuteOperation}>
+          <div className="demo-grid">
+            <label>
+              Filtrar por tag
+              <select value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
+                {SWAGGER_TAGS.map((tag) => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Buscar operación
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="operationId, ruta o resumen"
+              />
+            </label>
+            <label>
+              Resultados
+              <input value={String(filteredOperations.length)} readOnly />
+            </label>
+          </div>
 
-          <form onSubmit={onAuthenticate} className="demo-inline-form">
-            <input value={authCode} onChange={(e) => setAuthCode(e.target.value)} placeholder="authcode (ej. QZvGrF)" />
-            <button type="submit" disabled={!appId || !authCode || loadingAction === "Autenticar"}>
-              {loadingAction === "Autenticar" ? "Autenticando..." : "POST /v1/user/authenticate"}
-            </button>
-          </form>
+          <label>
+            Operación
+            <select value={selectedOperation?.operationId ?? ""} onChange={(e) => onChangeOperation(e.target.value)}>
+              {filteredOperations.map((operation) => (
+                <option key={operation.id} value={operation.operationId}>
+                  [{operation.tag}] {operation.method} {operation.path} - {operation.summary}
+                </option>
+              ))}
+            </select>
+          </label>
 
-          <form onSubmit={onUserInfo} className="demo-inline-form">
-            <input
-              value={authCodesCsv}
-              onChange={(e) => setAuthCodesCsv(e.target.value)}
-              placeholder="authCodes separados por coma"
+          <div className="demo-grid">
+            <label>
+              Método
+              <input value={selectedOperation?.method ?? ""} readOnly />
+            </label>
+            <label>
+              Ruta
+              <input value={selectedOperation?.path ?? ""} readOnly />
+            </label>
+            <label>
+              Seguridad
+              <input value={selectedOperation?.secured ? "JWT requerida" : "Pública"} readOnly />
+            </label>
+          </div>
+
+          <label>
+            Path params JSON
+            <textarea
+              value={pathParamsJson}
+              onChange={(e) => setPathParamsJson(e.target.value)}
+              rows={3}
+              placeholder='{"tribeId":"abc123"}'
             />
-            <button type="submit" disabled={!appId || !token || !authCodesCsv || loadingAction === "User info"}>
-              {loadingAction === "User info" ? "Consultando..." : "POST /v1/user/info"}
-            </button>
-          </form>
-        </div>
-      </section>
+          </label>
 
-      <section className="demo-panel">
-        <h2>Simulador de pagos</h2>
-        <div className="demo-actions">
-          <form onSubmit={onPaymentCreate} className="demo-inline-form">
-            <input value={orderTitle} onChange={(e) => setOrderTitle(e.target.value)} placeholder="orderTitle" />
-            <input value={orderAmountValue} onChange={(e) => setOrderAmountValue(e.target.value)} placeholder="monto MXN" />
-            <button type="submit" disabled={!appId || !token || !merchantCode || !userId || loadingAction === "Crear pago"}>
-              {loadingAction === "Crear pago" ? "Creando..." : "POST /v1/payment/create"}
-            </button>
-          </form>
+          <label>
+            Body JSON
+            <textarea
+              value={bodyJson}
+              onChange={(e) => setBodyJson(e.target.value)}
+              rows={8}
+              placeholder='{"authCode":"QZvGrF"}'
+              disabled={!selectedOperation?.hasBody}
+            />
+          </label>
 
-          <form onSubmit={onOpenPaymentUrl} className="demo-inline-form">
-            <input value={paymentUrl} onChange={(e) => setPaymentUrl(e.target.value)} placeholder="paymentUrl devuelto por create" />
-            <button type="submit" disabled={!paymentUrl}>Abrir flujo de pago</button>
-          </form>
+          <button type="submit" disabled={!selectedOperation || loadingAction.startsWith("OpenAPI")}>
+            {loadingAction.startsWith("OpenAPI") ? "Ejecutando..." : "Ejecutar operación"}
+          </button>
+        </form>
 
-          <form onSubmit={onPaymentInquiry} className="demo-inline-form">
-            <input value={paymentId} onChange={(e) => setPaymentId(e.target.value)} placeholder="paymentId" />
-            <button type="submit" disabled={!appId || !token || !paymentId || loadingAction === "Consultar pago"}>
-              {loadingAction === "Consultar pago" ? "Consultando..." : "POST /v1/payment/inquiry"}
-            </button>
-          </form>
+        {selectedOperation?.requestSchemaName ? (
+          <p>Schema request body: <strong>{selectedOperation.requestSchemaName}</strong></p>
+        ) : null}
 
-          <form onSubmit={onPaymentClose} className="demo-inline-form">
-            <input value={paymentId} onChange={(e) => setPaymentId(e.target.value)} placeholder="paymentId" />
-            <button type="submit" disabled={!appId || !token || !paymentId || loadingAction === "Cerrar pago"}>
-              {loadingAction === "Cerrar pago" ? "Cerrando..." : "POST /v1/payment/close"}
-            </button>
-          </form>
-
-          <form onSubmit={onRefundCreate} className="demo-inline-form">
-            <input value={refundAmountValue} onChange={(e) => setRefundAmountValue(e.target.value)} placeholder="refund MXN" />
-            <button type="submit" disabled={!appId || !token || !merchantCode || !userId || !paymentId || loadingAction === "Solicitar refund"}>
-              {loadingAction === "Solicitar refund" ? "Solicitando..." : "POST /v1/payment/refund"}
-            </button>
-          </form>
-
-          <form onSubmit={onRefundInquiry} className="demo-inline-form">
-            <input value={refundId} onChange={(e) => setRefundId(e.target.value)} placeholder="refundId" />
-            <button type="submit" disabled={!appId || !token || !refundId || loadingAction === "Consultar refund"}>
-              {loadingAction === "Consultar refund" ? "Consultando..." : "POST /v1/payment/inquiry-refund"}
-            </button>
-          </form>
-        </div>
+        {message ? <p style={{ color: "#b91c1c" }} role="alert" aria-live="polite">{message}</p> : null}
       </section>
 
       <section className="demo-panel">
@@ -332,7 +376,7 @@ export default function DemoPage() {
             <pre>{JSON.stringify(lastResult.payload, null, 2)}</pre>
           </>
         ) : (
-          <p>Ejecuta una prueba para ver resultados.</p>
+          <p>Ejecuta una operación para ver resultados.</p>
         )}
       </section>
     </main>

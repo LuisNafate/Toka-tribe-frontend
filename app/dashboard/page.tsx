@@ -1,4 +1,4 @@
-import { ArrowRight, CircleCheckBig, Clock3 } from "lucide-react";
+import { ArrowRight, CircleCheckBig, Clock3, Trophy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
 import {
@@ -8,32 +8,44 @@ import {
 
 const recentActivity = [
   {
-    title: "Racha activa",
-    description: "3 días consecutivos",
-    points: "+20 pts",
-    icon: CircleCheckBig,
-  },
-  {
     title: "Trivia Express",
     description: "Completado hace 2 h",
-    points: "+60 pts",
-    icon: Clock3,
+    points: "+40 pts",
   },
   {
-    title: "Reflejos Tribe",
-    description: "Disponible para hoy",
-    points: "+55 pts",
-    icon: Clock3,
+    title: "Ascenso en el ranking",
+    description: "Ayer • Posición #4",
+    points: "",
   },
+  {
+    title: "Tier Oro Activado",
+    description: "Hace 2 días - $50 Toka",
+    points: "",
+  },
+];
+
+const leaderboardData = [
+  { rank: 1, name: "Solar Club", score: "2,340" },
+  { rank: 2, name: "Delta Crew", score: "2,280" },
+  { rank: 4, name: "Axo Squad (Tú)", score: "2,140", isHighlighted: true },
+  { rank: 5, name: "Orbit Team", score: "2,080" },
 ];
 
 export default function DashboardPage() {
   return (
-    <AppShell title="Home" subtitle="Retos de hoy y actividad reciente" headerBadge={<div className="balance-pill">1,480 pts</div>}>
+    <AppShell title="Home" subtitle="Tu dashboard de retos y actividad" headerBadge={<div className="balance-pill">1,480 pts</div>}>
       <div className="workspace__grid fig-dashboard-main-grid">
-        <Panel>
-          <SectionHeader eyebrow="Reto de hoy" title={dailyChallenge.title} description={dailyChallenge.description} />
-          <article className="challenge-card" style={{ border: "1px solid rgba(74, 119, 227, 0.12)", background: "linear-gradient(180deg, #f8fbff 0%, #edf3ff 100%)" }}>
+        {/* RETO DE HOY - PROMINENTE */}
+        <Panel className="fig-panel-featured">
+          <SectionHeader 
+            eyebrow="Reto de hoy" 
+            title={dailyChallenge.title} 
+            description={dailyChallenge.description} 
+          />
+          <article className="challenge-card fig-challenge-daily" style={{ 
+            border: "1px solid rgba(74, 119, 227, 0.12)", 
+            background: "linear-gradient(180deg, #f8fbff 0%, #edf3ff 100%)" 
+          }}>
             <div className="inline-row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
               <span className="status-pill">{dailyChallenge.status}</span>
               <span className="reward-pill"><Clock3 size={14} /> {dailyChallenge.countdown}</span>
@@ -43,7 +55,7 @@ export default function DashboardPage() {
                 <h3 style={{ margin: 0, color: "#0b1f36" }}>Mantén tu racha activa</h3>
                 <p style={{ margin: "8px 0 0", color: "#3557a8", fontWeight: 700 }}>{dailyChallenge.closesAt}</p>
               </div>
-              <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" style={{ width: 84, height: 84, objectFit: "cover", borderRadius: 18 }} />
+              <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 16 }} />
             </div>
             <div className="inline-row" style={{ justifyContent: "space-between", marginTop: 16 }}>
               <strong>{dailyChallenge.points}</strong>
@@ -53,22 +65,84 @@ export default function DashboardPage() {
           </article>
         </Panel>
 
+        {/* LEADERBOARD */}
+        <Panel>
+          <SectionHeader 
+            eyebrow="Leaderboard" 
+            title="Leaderboard de tu división"
+            description="División Plata • Semana 4"
+          />
+          <div className="leaderboard-container">
+            <div className="leaderboard-list">
+              {leaderboardData.map((item) => (
+                <div 
+                  key={item.rank} 
+                  className={`leaderboard-item ${item.isHighlighted ? 'highlighted' : ''}`}
+                >
+                  <span className="rank">{item.rank}</span>
+                  <span className="name">{item.name}</span>
+                  <span className="score">{item.score}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <a href="/leaderboard" className="button button--tertiary" style={{ marginTop: 16 }}>Ver todo</a>
+        </Panel>
+
+        {/* RECOMPENSAS */}
+        <Panel>
+          <div className="reward-card" style={{ background: "#e1e3e4", border: "2px dashed rgba(0,106,98,0.3)", borderRadius: 24, padding: 24 }}>
+            <span className="badge" style={{ background: "#3864c5", color: "#fff", padding: "4px 12px", borderRadius: "9999px", fontSize: 10, fontWeight: 600 }}>Disponible ahora</span>
+            <h3 style={{ marginTop: 10, marginBottom: 8, color: "#001624", fontSize: 18, fontWeight: 800 }}>$50 en saldo Toka</h3>
+            <p style={{ margin: "0 0 20px", color: "#42474c", fontSize: 14 }}>Recompensa disponible por racha.</p>
+            <a className="button button--primary" href="#" style={{ width: "100%", textAlign: "center" }}>Reclamar</a>
+          </div>
+        </Panel>
+
+        {/* TEMPORADA */}
+        <Panel>
+          <SectionHeader 
+            eyebrow="Temporada" 
+            title="Temporada semanal"
+            description="Cierra en 2 días 14 h"
+          />
+          <div className="season-chart" style={{ display: "flex", gap: 4, height: 100, alignItems: "flex-end", marginBottom: 16 }}>
+            {[38.39, 57.59, 86.39, 48, 67.19].map((height, i) => (
+              <div key={i} style={{ flex: 1, height: `${height}%`, background: i === 2 ? "#5d89e4" : "#e7e8e9", borderRadius: 8 }} />
+            ))}
+          </div>
+          <p className="subtle">Progreso de temporada esta semana</p>
+        </Panel>
+
+        {/* RETO PREMIUM */}
+        <Panel>
+          <div className="premium-challenge" style={{ background: "#001624", borderRadius: 24, padding: 24, color: "#fff" }}>
+            <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 16, width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+              <Trophy size={20} />
+            </div>
+            <h4 style={{ color: "#fff", margin: "12px 0 4px", fontWeight: 600 }}>Reto Premium</h4>
+            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, margin: 0, marginBottom: 16 }}>High stakes</p>
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "#5e8ae5", fontSize: 14, fontWeight: 600 }}>+80 pts</span>
+              <ArrowRight size={16} />
+            </div>
+          </div>
+        </Panel>
+
+        {/* ACTIVIDAD RECIENTE */}
         <Panel>
           <SectionHeader eyebrow="Actividad reciente" title="Tu actividad" description="Lo último que pasó en tu Tribe" />
           <div className="stack stack--tight">
             {recentActivity.map((item) => (
-              <div key={item.title} className="activity-row">
-                <div className="mini-icon" aria-hidden="true"><item.icon size={16} /></div>
-                <div>
+              <div key={item.title} className="activity-row fig-activity-item">
+                <div className="activity-bullet" style={{ width: 6, height: 6, background: "#006a62", borderRadius: "50%", marginRight: 16 }} />
+                <div style={{ flex: 1 }}>
                   <div className="item-title">{item.title}</div>
                   <div className="subtle">{item.description}</div>
                 </div>
-                <div className="score">{item.points}</div>
+                {item.points && <div className="score">{item.points}</div>}
               </div>
             ))}
-          </div>
-          <div className="panel" style={{ marginTop: 16, padding: 16, background: "#4a77e3", color: "#fff" }}>
-            La actividad reciente resume tu progreso y lo que está por vencer.
           </div>
         </Panel>
       </div>
