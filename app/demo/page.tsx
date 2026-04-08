@@ -53,7 +53,10 @@ type MiniApi = {
 };
 
 const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_TOKA_API_BASE_URL ?? "http://talentland-toka.eastus2.cloudapp.azure.com";
-const DEFAULT_APP_ID = process.env.NEXT_PUBLIC_TOKA_APP_ID ?? "";
+const FALLBACK_TOKA_APP_ID = "3500020265479238";
+const DEFAULT_APP_ID = (process.env.NEXT_PUBLIC_TOKA_APP_ID ?? "").trim().length === 16
+  ? (process.env.NEXT_PUBLIC_TOKA_APP_ID ?? "").trim()
+  : FALLBACK_TOKA_APP_ID;
 const DEFAULT_MERCHANT_CODE = process.env.NEXT_PUBLIC_TOKA_MERCHANT_CODE ?? "";
 const DEFAULT_TEST_AUTH_CODE = process.env.NEXT_PUBLIC_TOKA_TEST_AUTH_CODE ?? "";
 const SWAGGER_OPERATIONS = getApiOperations();
@@ -151,7 +154,14 @@ export default function DemoPage() {
   }
 
   function isValidAppId(value: string) {
-    return value.trim().length >= 16;
+    return value.trim().length === 16;
+  }
+
+  function getEffectiveAppId(): string {
+    const current = appId.trim();
+    if (isValidAppId(current)) return current;
+    if (isValidAppId(DEFAULT_APP_ID)) return DEFAULT_APP_ID;
+    return "";
   }
 
   function isValidMerchantCode(value: string) {
@@ -829,11 +839,12 @@ export default function DemoPage() {
   }
 
   async function authenticateWithCode(code: string) {
+    const effectiveAppId = getEffectiveAppId();
     const result = await callApi("Legacy POST /v1/user/authenticate", "/v1/user/authenticate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-App-Id": appId.trim(),
+        "X-App-Id": effectiveAppId,
       },
       body: JSON.stringify({ authcode: code.trim() }),
     });
@@ -860,6 +871,7 @@ export default function DemoPage() {
 
   async function requestUserInfo(codes: string[], jwtOverride?: string) {
     const jwt = (jwtOverride ?? token).trim();
+    const effectiveAppId = getEffectiveAppId();
 
     if (!jwt) {
       return {
@@ -874,7 +886,7 @@ export default function DemoPage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-App-Id": appId.trim(),
+        "X-App-Id": effectiveAppId,
         Authorization: `Bearer ${jwt}`,
       },
       body: JSON.stringify({ authCodes: codes }),
@@ -899,9 +911,14 @@ export default function DemoPage() {
   }
 
   const runAutoDemoFlow = useCallback(async (options?: { silentNoBridge?: boolean }) => {
-    if (!isValidAppId(appId)) {
+    const effectiveAppId = getEffectiveAppId();
+    if (effectiveAppId && effectiveAppId !== appId.trim()) {
+      setAppId(effectiveAppId);
+    }
+
+    if (!isValidAppId(effectiveAppId)) {
       if (!options?.silentNoBridge) {
-        setMessage("Configura un X-App-Id válido (16+ caracteres) para ejecutar automático.");
+        setMessage("Configura un X-App-Id válido (exactamente 16 caracteres) para ejecutar automático.");
       }
       return;
     }
