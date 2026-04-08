@@ -1,0 +1,1209 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Aplicación en línea."
+          }
+        },
+        "summary": "Estado general de la aplicación",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "La aplicación está lista."
+          }
+        },
+        "summary": "Verificar si la aplicación está lista para recibir tráfico",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "La aplicación está viva."
+          }
+        },
+        "summary": "Verificar si la aplicación está viva",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/auth/toka/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginWithTokaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso con JWT interno."
+          },
+          "400": {
+            "description": "Código de autorización inválido."
+          },
+          "503": {
+            "description": "Proveedor de autenticación no disponible."
+          }
+        },
+        "summary": "Autenticación con código de Toka",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me/sync-profile": {
+      "post": {
+        "operationId": "AuthController_syncProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncTokaProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil sincronizado correctamente."
+          },
+          "400": {
+            "description": "Códigos inválidos."
+          },
+          "401": {
+            "description": "No autorizado / Token de Toka expirado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Sincronizar información demográfica de Toka al perfil",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Datos del usuario autenticado."
+          },
+          "401": {
+            "description": "No autorizado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Obtener usuario autenticado actual",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "operationId": "UsersController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Perfil del usuario."
+          },
+          "401": {
+            "description": "No autorizado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Obtener perfil del usuario actual",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil actualizado."
+          },
+          "401": {
+            "description": "No autorizado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Actualizar perfil del usuario actual",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/pets": {
+      "post": {
+        "operationId": "PetsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mascota creada."
+          },
+          "409": {
+            "description": "El usuario ya tiene una mascota."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Crear mascota",
+        "tags": [
+          "pets"
+        ]
+      }
+    },
+    "/pets/me": {
+      "get": {
+        "operationId": "PetsController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Datos de la mascota."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Obtener mi mascota",
+        "tags": [
+          "pets"
+        ]
+      }
+    },
+    "/pets/me/equip": {
+      "post": {
+        "operationId": "PetsController_equip",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EquipItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Artículo equipado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Equipar artículo a la mascota",
+        "tags": [
+          "pets"
+        ]
+      }
+    },
+    "/pets/items/store": {
+      "get": {
+        "operationId": "PetsController_store",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Lista de artículos."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Ver catálogo de artículos disponibles",
+        "tags": [
+          "pets"
+        ]
+      }
+    },
+    "/pets/items/{itemId}/unlock": {
+      "post": {
+        "operationId": "PetsController_unlock",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artículo desbloqueado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Desbloquear artículo con puntos",
+        "tags": [
+          "pets"
+        ]
+      }
+    },
+    "/seasons/current": {
+      "get": {
+        "operationId": "SeasonsController_current",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Temporada activa."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Obtener temporada activa",
+        "tags": [
+          "seasons"
+        ]
+      }
+    },
+    "/seasons/{seasonId}": {
+      "get": {
+        "operationId": "SeasonsController_findById",
+        "parameters": [
+          {
+            "name": "seasonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos de la temporada."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Obtener temporada por ID",
+        "tags": [
+          "seasons"
+        ]
+      }
+    },
+    "/admin/seasons": {
+      "post": {
+        "operationId": "AdminSeasonsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Temporada creada."
+          },
+          "409": {
+            "description": "Ya hay una temporada activa."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Crear nueva temporada",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/seasons/{seasonId}/close": {
+      "post": {
+        "operationId": "AdminSeasonsController_close",
+        "parameters": [
+          {
+            "name": "seasonId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Temporada cerrada."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Cerrar temporada",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/tribes": {
+      "get": {
+        "operationId": "TribesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Listar tribus públicas",
+        "tags": [
+          "tribes"
+        ]
+      },
+      "post": {
+        "operationId": "TribesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Tribu creada."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Crear tribu",
+        "tags": [
+          "tribes"
+        ]
+      }
+    },
+    "/tribes/{tribeId}": {
+      "get": {
+        "operationId": "TribesController_detail",
+        "parameters": [
+          {
+            "name": "tribeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Detalle de tribu",
+        "tags": [
+          "tribes"
+        ]
+      }
+    },
+    "/tribes/{tribeId}/join": {
+      "post": {
+        "operationId": "TribesController_join",
+        "parameters": [
+          {
+            "name": "tribeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Unido a la tribu."
+          },
+          "409": {
+            "description": "Ya estás en una tribu esta temporada."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Unirse a tribu",
+        "tags": [
+          "tribes"
+        ]
+      }
+    },
+    "/tribes/{tribeId}/leave": {
+      "post": {
+        "operationId": "TribesController_leave",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Abandonar tribu",
+        "tags": [
+          "tribes"
+        ]
+      }
+    },
+    "/tribes/{tribeId}/members": {
+      "get": {
+        "operationId": "TribesController_members",
+        "parameters": [
+          {
+            "name": "tribeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Miembros de la tribu",
+        "tags": [
+          "tribes"
+        ]
+      }
+    },
+    "/games": {
+      "get": {
+        "operationId": "GamesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Listar juegos",
+        "tags": [
+          "games"
+        ]
+      }
+    },
+    "/games/{gameId}": {
+      "get": {
+        "operationId": "GamesController_detail",
+        "parameters": [
+          {
+            "name": "gameId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Detalle de juego",
+        "tags": [
+          "games"
+        ]
+      }
+    },
+    "/admin/games": {
+      "post": {
+        "operationId": "AdminGamesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Crear juego",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/games/{gameId}": {
+      "patch": {
+        "operationId": "AdminGamesController_update",
+        "parameters": [
+          {
+            "name": "gameId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Actualizar juego",
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminGamesController_deactivate",
+        "parameters": [
+          {
+            "name": "gameId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Desactivar juego",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/challenges/active": {
+      "get": {
+        "operationId": "ChallengesController_active",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Listar retos activos",
+        "tags": [
+          "challenges"
+        ]
+      }
+    },
+    "/challenges/{challengeId}": {
+      "get": {
+        "operationId": "ChallengesController_detail",
+        "parameters": [
+          {
+            "name": "challengeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Detalle del reto",
+        "tags": [
+          "challenges"
+        ]
+      }
+    },
+    "/admin/challenges": {
+      "post": {
+        "operationId": "AdminChallengesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Crear reto",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/challenges/{challengeId}/activate": {
+      "post": {
+        "operationId": "AdminChallengesController_activate",
+        "parameters": [
+          {
+            "name": "challengeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Activar reto",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/challenges/{challengeId}/close": {
+      "post": {
+        "operationId": "AdminChallengesController_close",
+        "parameters": [
+          {
+            "name": "challengeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Cerrar reto",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/game-sessions": {
+      "post": {
+        "operationId": "GameSessionsController_register",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Sesión registrada."
+          },
+          "409": {
+            "description": "Ya jugaste este reto."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Registrar sesión de juego",
+        "tags": [
+          "scoring"
+        ]
+      }
+    },
+    "/game-sessions/me": {
+      "get": {
+        "operationId": "GameSessionsController_mySessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Mis sesiones de juego",
+        "tags": [
+          "scoring"
+        ]
+      }
+    },
+    "/leaderboard/divisions/{division}": {
+      "get": {
+        "operationId": "LeaderboardController_byDivision",
+        "parameters": [
+          {
+            "name": "division",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Leaderboard por división",
+        "tags": [
+          "leaderboard"
+        ]
+      }
+    },
+    "/leaderboard/current": {
+      "get": {
+        "operationId": "LeaderboardController_current",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Leaderboard actual completo",
+        "tags": [
+          "leaderboard"
+        ]
+      }
+    },
+    "/leaderboard/tribes/{tribeId}/history": {
+      "get": {
+        "operationId": "LeaderboardController_tribeHistory",
+        "parameters": [
+          {
+            "name": "tribeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Historial de ranking de una tribu",
+        "tags": [
+          "leaderboard"
+        ]
+      }
+    },
+    "/rewards": {
+      "get": {
+        "operationId": "RewardsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Listar recompensas",
+        "tags": [
+          "rewards"
+        ]
+      }
+    },
+    "/rewards/my-claims": {
+      "get": {
+        "operationId": "RewardsController_myClaims",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Mis reclamos",
+        "tags": [
+          "rewards"
+        ]
+      }
+    },
+    "/rewards/{rewardId}/claim": {
+      "post": {
+        "operationId": "RewardsController_claim",
+        "parameters": [
+          {
+            "name": "rewardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Recompensa reclamada."
+          },
+          "409": {
+            "description": "Ya reclamaste esta recompensa."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Reclamar recompensa",
+        "tags": [
+          "rewards"
+        ]
+      }
+    },
+    "/admin/rewards": {
+      "post": {
+        "operationId": "AdminRewardsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Crear recompensa",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/payments": {
+      "post": {
+        "operationId": "PaymentsController_createOrder",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Pago creado exitosamente."
+          },
+          "401": {
+            "description": "Token de Toka no encontrado o expirado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Crear orden de pago vía Toka",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/{id}/sync": {
+      "post": {
+        "operationId": "PaymentsController_syncPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado sincronizado exitosamente."
+          },
+          "404": {
+            "description": "Pago no encontrado."
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Sincronizar el estado del pago con Toka",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/me": {
+      "get": {
+        "operationId": "PaymentsController_myPayments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Mis pagos",
+        "tags": [
+          "payments"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Toka Tribe API",
+    "description": "API de gamificación para Toka Tribe.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "jwt": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "LoginWithTokaDto": {
+        "type": "object",
+        "properties": {
+          "authCode": {
+            "type": "string",
+            "description": "Código de autorización obtenido desde el frontend H5 (AlipayJSBridge)",
+            "example": "QZvGrF"
+          }
+        },
+        "required": [
+          "authCode"
+        ]
+      },
+      "SyncTokaProfileDto": {
+        "type": "object",
+        "properties": {
+          "authCodes": {
+            "description": "Array de códigos de autorización obtenidos vía getAuthCode (hasta 5).",
+            "example": [
+              "rNAeg7",
+              "IfDTCP"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "authCodes"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Nombre de usuario",
+            "example": "jeshua"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "description": "URL del avatar",
+            "example": "https://example.com/avatar.png"
+          }
+        }
+      },
+      "CreatePetDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nombre de la mascota",
+            "example": "Firulais",
+            "minLength": 3,
+            "maxLength": 20
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "EquipItemDto": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "description": "ID del artículo a equipar",
+            "example": "hat_crown_gold"
+          }
+        },
+        "required": [
+          "itemId"
+        ]
+      }
+    }
+  }
+}
