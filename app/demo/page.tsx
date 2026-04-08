@@ -46,6 +46,10 @@ type BridgeApi = {
 
 type MiniApi = {
   getAuthCode?: (payload: Record<string, unknown>, callback?: (response: unknown) => void) => void;
+  getOpenUserInfo?: (payload: Record<string, unknown>, callback?: (response: unknown) => void) => void;
+  getAuthUserInfo?: (payload: Record<string, unknown>, callback?: (response: unknown) => void) => void;
+  getUserInfo?: (payload: Record<string, unknown>, callback?: (response: unknown) => void) => void;
+  [key: string]: unknown;
 };
 
 const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_TOKA_API_BASE_URL ?? "http://talentland-toka.eastus2.cloudapp.azure.com";
@@ -429,6 +433,62 @@ export default function DemoPage() {
     return null;
   }
 
+  function extractUserProfileFromPayload(payload: unknown): RealUserProfile | null {
+    if (!payload || typeof payload !== "object") {
+      return null;
+    }
+
+    const queue: unknown[] = [payload];
+    let depth = 0;
+
+    while (queue.length > 0 && depth < 5) {
+      const currentLevelCount = queue.length;
+
+      for (let i = 0; i < currentLevelCount; i += 1) {
+        const item = queue.shift();
+        if (!item || typeof item !== "object") continue;
+
+        const record = item as Record<string, unknown>;
+
+        const candidate: RealUserProfile = {
+          userId: typeof record.userId === "string"
+            ? record.userId
+            : (typeof record.user_id === "string" ? record.user_id : undefined),
+          nickName: typeof record.nickName === "string"
+            ? record.nickName
+            : (typeof record.nick_name === "string" ? record.nick_name : undefined),
+          fullName: typeof record.fullName === "string"
+            ? record.fullName
+            : (typeof record.name === "string" ? record.name : undefined),
+          firstName: typeof record.firstName === "string" ? record.firstName : undefined,
+          lastName: typeof record.lastName === "string" ? record.lastName : undefined,
+          avatar: typeof record.avatar === "string"
+            ? record.avatar
+            : (typeof record.avatarUrl === "string" ? record.avatarUrl : undefined),
+          mobilePhone: typeof record.mobilePhone === "string"
+            ? record.mobilePhone
+            : (typeof record.mobile === "string" ? record.mobile : undefined),
+          email: typeof record.email === "string" ? record.email : undefined,
+          kycState: typeof record.kycState === "string" ? record.kycState : undefined,
+        };
+
+        if (candidate.userId || candidate.nickName || candidate.fullName || candidate.firstName || candidate.lastName || candidate.email) {
+          return candidate;
+        }
+
+        for (const value of Object.values(record)) {
+          if (value && typeof value === "object") {
+            queue.push(value);
+          }
+        }
+      }
+
+      depth += 1;
+    }
+
+    return null;
+  }
+
   async function callBridgeMethod(
     bridge: BridgeApi,
     method: string,
@@ -486,6 +546,74 @@ export default function DemoPage() {
         resolve(null);
       }
     });
+  }
+
+  async function callMiniApiMethod(
+    api: MiniApi,
+    methodName: "getOpenUserInfo" | "getAuthUserInfo" | "getUserInfo",
+    payload: Record<string, unknown>,
+  ): Promise<unknown> {
+    return await new Promise((resolve) => {
+      const method = api[methodName];
+      if (typeof method !== "function") {
+        resolve(null);
+        return;
+      }
+
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        resolve(null);
+      }, 4500);
+
+      try {
+        (method as (payload: Record<string, unknown>, cb?: (response: unknown) => void) => void)(
+          payload,
+          (response) => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeoutId);
+            resolve(response);
+          },
+        );
+      } catch {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeoutId);
+        resolve(null);
+      }
+    });
+  }
+
+  async function tryLoadProfileFromMiniApi(): Promise<boolean> {
+    const myApi = getMiniApi("my");
+    const apApi = getMiniApi("ap");
+
+    const attempts: Array<{ source: string; api: MiniApi | null; method: "getOpenUserInfo" | "getAuthUserInfo" | "getUserInfo"; payload: Record<string, unknown> }> = [
+      { source: "my", api: myApi, method: "getOpenUserInfo", payload: {} },
+      { source: "my", api: myApi, method: "getAuthUserInfo", payload: {} },
+      { source: "my", api: myApi, method: "getUserInfo", payload: {} },
+      { source: "ap", api: apApi, method: "getOpenUserInfo", payload: {} },
+      { source: "ap", api: apApi, method: "getAuthUserInfo", payload: {} },
+      { source: "ap", api: apApi, method: "getUserInfo", payload: {} },
+    ];
+
+    for (const attempt of attempts) {
+      if (!attempt.api) continue;
+      const response = await callMiniApiMethod(attempt.api, attempt.method, attempt.payload);
+      const profile = extractUserProfileFromPayload(response);
+      if (!profile) continue;
+
+      setRealUserProfile((prev) => ({
+        ...prev,
+        ...profile,
+      }));
+      setBridgeDiagnostics((prev) => [prev, `${attempt.source}.${attempt.method} -> perfil ok`].filter(Boolean).join(" | "));
+      return true;
+    }
+
+    return false;
   }
 
   async function onGetDigitalIdentityCode(event: FormEvent) {
@@ -684,6 +812,12 @@ export default function DemoPage() {
     }
 
     if (!code) {
+      const hasProfileFallback = await tryLoadProfileFromMiniApi();
+      if (hasProfileFallback) {
+        setMessage("No hubo authCode, pero se cargó perfil básico desde bridge.");
+        return;
+      }
+
       if (!options?.silentNoBridge) {
         setMessage("No se pudo obtener authCode automáticamente desde el bridge.");
       }
