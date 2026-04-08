@@ -1,12 +1,17 @@
-import { CircleDollarSign, Gift, Wallet } from "lucide-react";
+import { CircleDollarSign, Flame, Gift, Wallet } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { AppPointsBadge } from "@/components/app-points-badge";
+import BottomNav from "@/components/BottomNav";
+import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
-import { rewardCards } from "@/lib/data";
+import { FIGMA_ASSETS, rewardCards } from "@/lib/data";
 
 export default function RecompensasPage() {
   return (
-    <AppShell title="Recompensas" subtitle="Wallet, canjes y beneficios del ecosistema">
-      <div className="workspace__grid">
+    <>
+      <div className="fig-desktop-only">
+        <AppShell title="Recompensas" subtitle="Wallet, canjes y beneficios del ecosistema" headerBadge={<AppPointsBadge />}>
+          <div className="workspace__grid">
         <Panel>
           <SectionHeader eyebrow="Wallet Toka" title="$1,240 balance disponible" description="Tus recompensas pasan por la wallet simulada y quedan listas para canje." />
           <div className="metric-grid">
@@ -35,17 +40,63 @@ export default function RecompensasPage() {
             </div>
           </Panel>
         </div>
+          </div>
+
+          <div className="reward-grid" style={{ marginTop: 18 }}>
+            {rewardCards.map((item) => (
+              <article key={item.title} className="reward-card">
+                <span className="reward-pill">{item.status}</span>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </article>
+            ))}
+          </div>
+        </AppShell>
       </div>
 
-      <div className="reward-grid" style={{ marginTop: 18 }}>
-        {rewardCards.map((item) => (
-          <article key={item.title} className="reward-card">
-            <span className="reward-pill">{item.status}</span>
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
+      <main className="fig-mobile-recompensas fig-mobile-only">
+        <header className="fig-mobile-topbar fig-retos-topbar">
+          <div className="fig-mobile-topbar__left">
+            <MobileHamburgerMenu />
+            <strong className="fig-retos-brand">TokaTribe</strong>
+          </div>
+          <div className="fig-retos-avatar">
+            <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" />
+          </div>
+        </header>
+
+        <section className="fig-retos-hero">
+          <div className="fig-retos-hero__content">
+            <h1>Recompensas</h1>
+            <p>Wallet · Canjes · Beneficios</p>
+            <span className="fig-retos-racha"><Flame size={14} /> Disponible ahora: $50 Toka</span>
+          </div>
+          <img src="/images/ajolote_4.png" alt="Mascot" draggable="false" />
+        </section>
+
+        <section className="fig-unified-section">
+          <article className="fig-unified-card">
+            <div className="fig-unified-head">
+              <strong>Wallet Toka</strong>
+              <AppPointsBadge className="fig-unified-badge" />
+            </div>
+            <h3>$1,240 balance disponible</h3>
+            <p>Listo para canjes de temporada y recompensas por racha.</p>
           </article>
-        ))}
-      </div>
-    </AppShell>
+
+          {rewardCards.map((item) => (
+            <article key={item.title} className="fig-unified-card fig-unified-card--soft">
+              <div className="fig-unified-head">
+                <strong>{item.title}</strong>
+                <span>{item.status}</span>
+              </div>
+              <p>{item.description}</p>
+            </article>
+          ))}
+        </section>
+
+        <BottomNav active="retos" />
+      </main>
+    </>
   );
 }

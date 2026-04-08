@@ -1,7 +1,9 @@
-import { ArrowRight, CircleCheckBig, Clock3, Trophy } from "lucide-react";
+import { ArrowRight, Clock3, Flame, Trophy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { AppPointsBadge } from "@/components/app-points-badge";
+import BottomNav from "@/components/BottomNav";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
+import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import {
   dailyChallenge,
   FIGMA_ASSETS,
@@ -34,8 +36,10 @@ const leaderboardData = [
 
 export default function DashboardPage() {
   return (
-    <AppShell title="Home" subtitle="Tu dashboard de retos y actividad" headerBadge={<AppPointsBadge />}>
-      <div className="workspace__grid fig-dashboard-main-grid">
+    <>
+      <div className="fig-desktop-only">
+        <AppShell title="Home" subtitle="Tu dashboard de retos y actividad" headerBadge={<AppPointsBadge />}>
+          <div className="workspace__grid fig-dashboard-main-grid">
         {/* RETO DE HOY - PROMINENTE */}
         <Panel className="fig-panel-featured">
           <SectionHeader 
@@ -146,7 +150,67 @@ export default function DashboardPage() {
             ))}
           </div>
         </Panel>
+          </div>
+        </AppShell>
       </div>
-    </AppShell>
+
+      <main className="fig-mobile-dashboard fig-mobile-only">
+        <header className="fig-mobile-topbar fig-retos-topbar">
+          <div className="fig-mobile-topbar__left">
+            <MobileHamburgerMenu />
+            <strong className="fig-retos-brand">TokaTribe</strong>
+          </div>
+          <div className="fig-retos-avatar">
+            <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" />
+          </div>
+        </header>
+
+        <section className="fig-retos-hero">
+          <div className="fig-retos-hero__content">
+            <h1>Home</h1>
+            <p>Axo Squad · 2,140 pts</p>
+            <span className="fig-retos-racha"><Flame size={14} /> Racha: 3 días</span>
+          </div>
+          <img src="/images/ajolote_2.png" alt="Mascot" draggable="false" />
+        </section>
+
+        <section className="fig-unified-section">
+          <article className="fig-unified-card">
+            <div className="fig-unified-head">
+              <strong>Reto de hoy</strong>
+              <span className="fig-retos-timer"><Clock3 size={13} /> {dailyChallenge.countdown}</span>
+            </div>
+            <h3>{dailyChallenge.title}</h3>
+            <p>{dailyChallenge.description}</p>
+            <a className="fig-retos-play" href="/retos/serpiente">JUGAR SNAKE</a>
+          </article>
+
+          <article className="fig-unified-card fig-unified-card--soft">
+            <div className="fig-unified-head">
+              <strong>Leaderboard</strong>
+              <a href="/leaderboard">Ver</a>
+            </div>
+            {leaderboardData.slice(0, 3).map((item) => (
+              <div key={item.rank} className="fig-unified-row">
+                <span>#{item.rank}</span>
+                <strong>{item.name}</strong>
+                <span>{item.score}</span>
+              </div>
+            ))}
+          </article>
+
+          <article className="fig-unified-card fig-unified-card--dark">
+            <div className="fig-unified-head">
+              <strong>Recompensa activa</strong>
+              <span>$50 Toka</span>
+            </div>
+            <p>Disponible por racha semanal y participación de la Tribe.</p>
+            <a className="fig-retos-play" href="/recompensas">VER RECOMPENSAS</a>
+          </article>
+        </section>
+
+        <BottomNav active="inicio" />
+      </main>
+    </>
   );
 }

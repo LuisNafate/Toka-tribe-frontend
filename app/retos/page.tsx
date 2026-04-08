@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { AppPointsBadge } from "@/components/app-points-badge";
 import BottomNav from "@/components/BottomNav";
+import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, SectionHeader } from "@/components/common";
 import { challengeCards, FIGMA_ASSETS } from "@/lib/data";
 
@@ -65,7 +66,7 @@ export default function RetosPage() {
         {/* Header */}
         <header className="fig-mobile-topbar fig-retos-topbar">
           <div className="fig-mobile-topbar__left">
-            <span className="fig-mobile-menu"><Menu size={20} /></span>
+            <MobileHamburgerMenu />
             <strong className="fig-retos-brand">TokaTribe</strong>
           </div>
           <div className="fig-retos-avatar">

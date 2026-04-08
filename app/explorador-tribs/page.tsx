@@ -5,6 +5,7 @@ import { FIGMA_ASSETS } from "@/lib/data";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import { AppShell } from "@/components/app-shell";
+import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 
 const tiers = ["Todos", "Bronce", "Plata", "Oro", "Diamante"];
 
@@ -166,6 +167,14 @@ export default function ExplorerPage() {
       </div>
 
       <main className="fig-mobile-explorer fig-responsive-page fig-mobile-only">
+        <header className="fig-mobile-topbar">
+          <div className="fig-mobile-topbar__left">
+            <MobileHamburgerMenu />
+            <strong>Explorador</strong>
+          </div>
+          <div style={{ width: 36, height: 36 }} />
+        </header>
+
         {content}
 
         <BottomNav active="inicio" />

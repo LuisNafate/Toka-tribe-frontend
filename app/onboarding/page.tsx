@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { AppShell } from "@/components/app-shell";
 import BottomNav from "@/components/BottomNav";
+import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 
 function OnboardingContent() {
   return (
@@ -100,7 +101,7 @@ export default function OnboardingPage() {
       <main className="fig-mobile-home fig-responsive-page fig-mobile-only">
         <header className="fig-mobile-topbar">
           <div className="fig-mobile-topbar__left">
-            <span className="fig-mobile-menu">☰</span>
+            <MobileHamburgerMenu />
             <strong>TokaTribe</strong>
           </div>
           <Link href="/dashboard" className="fig-mobile-enter-btn">

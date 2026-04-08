@@ -1,12 +1,17 @@
-import { Target } from "lucide-react";
+import { Flame, Target, Trophy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { AppPointsBadge } from "@/components/app-points-badge";
+import BottomNav from "@/components/BottomNav";
+import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, SectionHeader } from "@/components/common";
-import { leaderboardRows } from "@/lib/data";
+import { FIGMA_ASSETS, leaderboardRows } from "@/lib/data";
 
 export default function LeaderboardPage() {
   return (
-    <AppShell title="Leaderboard" subtitle="Ranking por división y temporada">
-      <div className="workspace__grid">
+    <>
+      <div className="fig-desktop-only">
+        <AppShell title="Leaderboard" subtitle="Ranking por división y temporada" headerBadge={<AppPointsBadge />}>
+          <div className="workspace__grid">
         <Panel>
           <SectionHeader eyebrow="División Plata" title="Clasificación semanal" description="Las posiciones cambian conforme tu Tribe suma puntos." action={<span className="badge">Semana 4</span>} />
           <div className="chip-list" style={{ marginBottom: 18 }}>
@@ -50,7 +55,56 @@ export default function LeaderboardPage() {
             </div>
           </Panel>
         </div>
+          </div>
+        </AppShell>
       </div>
-    </AppShell>
+
+      <main className="fig-mobile-leaderboard fig-mobile-only">
+        <header className="fig-mobile-topbar fig-retos-topbar">
+          <div className="fig-mobile-topbar__left">
+            <MobileHamburgerMenu />
+            <strong className="fig-retos-brand">TokaTribe</strong>
+          </div>
+          <div className="fig-retos-avatar">
+            <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" />
+          </div>
+        </header>
+
+        <section className="fig-retos-hero">
+          <div className="fig-retos-hero__content">
+            <h1>Leaderboard</h1>
+            <p>División Plata · Semana 4</p>
+            <span className="fig-retos-racha"><Flame size={14} /> Cerrando en 2 días</span>
+          </div>
+          <img src="/images/ajolote_3.png" alt="Mascot" draggable="false" />
+        </section>
+
+        <section className="fig-unified-section">
+          <article className="fig-unified-card fig-unified-card--soft">
+            <div className="fig-unified-head">
+              <strong>Top de la división</strong>
+              <Trophy size={16} color="#2a55b9" />
+            </div>
+            {leaderboardRows.concat([{ rank: 6, name: "Pulse Unit", score: "1,980", tone: "muted" }]).map((row) => (
+              <div key={row.name} className={`fig-unified-row ${row.tone === "highlight" ? "is-highlight" : ""}`}>
+                <span>#{row.rank}</span>
+                <strong>{row.name}</strong>
+                <span>{row.score}</span>
+              </div>
+            ))}
+          </article>
+
+          <article className="fig-unified-card">
+            <div className="fig-unified-head">
+              <strong>Motivo de avance</strong>
+              <Target size={16} color="#2a55b9" />
+            </div>
+            <p>Completa 2 retos más, conserva racha y supera al puesto #3 para entrar al top.</p>
+          </article>
+        </section>
+
+        <BottomNav active="retos" />
+      </main>
+    </>
   );
 }

@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Gamepad2, Home, User, Users } from "lucide-react";
+import { Gamepad2, Home, User, Users, Settings, Calendar } from "lucide-react";
 
-type NavTab = "inicio" | "squad" | "retos" | "perfil";
+type NavTab = "inicio" | "squad" | "retos" | "perfil" | "settings" | "temporada";
 
 const NAV_ITEMS: { tab: NavTab; href: string; label: string; icon: React.ReactNode }[] = [
   { tab: "inicio", href: "/dashboard", label: "INICIO", icon: <Home size={20} /> },
   { tab: "squad", href: "/tribe", label: "SQUAD", icon: <Users size={20} /> },
   { tab: "retos", href: "/retos", label: "RETOS", icon: <Gamepad2 size={20} /> },
   { tab: "perfil", href: "/perfil", label: "PERFIL", icon: <User size={20} /> },
+  { tab: "settings", href: "/settings", label: "SETTINGS", icon: <Settings size={20} /> },
+  { tab: "temporada", href: "/temporada", label: "TEMPORADA", icon: <Calendar size={20} /> },
 ];
 
 export default function BottomNav({ active }: { active?: NavTab }) {
