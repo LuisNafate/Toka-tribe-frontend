@@ -3181,9 +3181,19 @@ img {
 }
 
 .demo-inline-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.demo-inline-form input {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.demo-inline-form button {
+  flex: 0 0 auto;
 }
 
 .demo-page input,
