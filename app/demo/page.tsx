@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   getApiOperations,
@@ -53,6 +53,7 @@ const SWAGGER_TAGS = ["all", ...getApiTags()];
 const FORBIDDEN_HEADER_KEYS = new Set(["host", "content-length"]);
 
 export default function DemoPage() {
+  const autoBootstrapAttemptedRef = useRef(false);
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
   const [useServerProxy, setUseServerProxy] = useState(true);
   const [token, setToken] = useState("");
@@ -448,16 +449,31 @@ export default function DemoPage() {
       setRealUserProfile((prev) => ({ ...prev, userId: nextUserId }));
     }
 
-    return result;
+    return {
+      ...result,
+      nextToken: typeof nextToken === "string" ? nextToken : undefined,
+      nextUserId: typeof nextUserId === "string" ? nextUserId : undefined,
+    };
   }
 
-  async function requestUserInfo(codes: string[]) {
+  async function requestUserInfo(codes: string[], jwtOverride?: string) {
+    const jwt = (jwtOverride ?? token).trim();
+
+    if (!jwt) {
+      return {
+        action: "Legacy POST /v1/user/info",
+        ok: false,
+        status: 0,
+        payload: { message: "JWT no disponible para /v1/user/info" },
+      } as ApiResult;
+    }
+
     const result = await callApi("Legacy POST /v1/user/info", "/v1/user/info", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-App-Id": appId.trim(),
-        Authorization: `Bearer ${token.trim()}`,
+        Authorization: `Bearer ${jwt}`,
       },
       body: JSON.stringify({ authCodes: codes }),
     });
@@ -479,6 +495,58 @@ export default function DemoPage() {
 
     return result;
   }
+
+  const runAutoDemoFlow = useCallback(async (options?: { silentNoBridge?: boolean }) => {
+    if (!isValidAppId(appId)) {
+      if (!options?.silentNoBridge) {
+        setMessage("Configura un X-App-Id válido (16+ caracteres) para ejecutar automático.");
+      }
+      return;
+    }
+
+    if (!merchantCode.trim() && DEFAULT_MERCHANT_CODE) {
+      setMerchantCode(DEFAULT_MERCHANT_CODE);
+    }
+
+    let code = authCode.trim();
+    if (!code) {
+      const bridgeCode = await getDigitalIdentityCodeFromBridge();
+      if (bridgeCode) {
+        code = bridgeCode;
+      }
+    }
+
+    if (!code && DEFAULT_TEST_AUTH_CODE) {
+      code = DEFAULT_TEST_AUTH_CODE;
+      setAuthCode(code);
+    }
+
+    if (!code) {
+      if (!options?.silentNoBridge) {
+        setMessage("No hay authCode. Obtén uno por bridge o define NEXT_PUBLIC_TOKA_TEST_AUTH_CODE.");
+      }
+      return;
+    }
+
+    setMessage("Ejecutando prueba automática: authenticate -> user/info...");
+
+    const authResult = await authenticateWithCode(code);
+    if (!authResult.ok) {
+      setMessage("Falló authenticate automático. Revisa la última respuesta.");
+      return;
+    }
+
+    const authCodes = [code];
+    setAuthCodesCsv(authCodes.join(","));
+
+    const infoResult = await requestUserInfo(authCodes, authResult.nextToken ?? token);
+    if (!infoResult.ok) {
+      setMessage("Authenticate OK, pero falló user/info. Revisa la última respuesta.");
+      return;
+    }
+
+    setMessage("Prueba automática completada. Token y datos reales cargados.");
+  }, [appId, authCode, merchantCode, token]);
 
   async function onLegacyAuthenticate(event: FormEvent) {
     event.preventDefault();
@@ -529,53 +597,19 @@ export default function DemoPage() {
 
   async function onAutoCompleteAndRunDemo(event: FormEvent) {
     event.preventDefault();
-
-    if (!isValidAppId(appId)) {
-      setMessage("Configura un X-App-Id válido (16+ caracteres) para ejecutar automático.");
-      return;
-    }
-
-    if (!merchantCode.trim() && DEFAULT_MERCHANT_CODE) {
-      setMerchantCode(DEFAULT_MERCHANT_CODE);
-    }
-
-    let code = authCode.trim();
-    if (!code) {
-      const bridgeCode = await getDigitalIdentityCodeFromBridge();
-      if (bridgeCode) {
-        code = bridgeCode;
-      }
-    }
-
-    if (!code && DEFAULT_TEST_AUTH_CODE) {
-      code = DEFAULT_TEST_AUTH_CODE;
-      setAuthCode(code);
-    }
-
-    if (!code) {
-      setMessage("No hay authCode. Obtén uno por bridge o define NEXT_PUBLIC_TOKA_TEST_AUTH_CODE.");
-      return;
-    }
-
-    setMessage("Ejecutando prueba automática: authenticate -> user/info...");
-
-    const authResult = await authenticateWithCode(code);
-    if (!authResult.ok) {
-      setMessage("Falló authenticate automático. Revisa la última respuesta.");
-      return;
-    }
-
-    const authCodes = [code];
-    setAuthCodesCsv(authCodes.join(","));
-
-    const infoResult = await requestUserInfo(authCodes);
-    if (!infoResult.ok) {
-      setMessage("Authenticate OK, pero falló user/info. Revisa la última respuesta.");
-      return;
-    }
-
-    setMessage("Prueba automática completada. Token y datos reales cargados.");
+    await runAutoDemoFlow();
   }
+
+  useEffect(() => {
+    if (autoBootstrapAttemptedRef.current) return;
+    autoBootstrapAttemptedRef.current = true;
+
+    if (!getBridge()) {
+      return;
+    }
+
+    void runAutoDemoFlow({ silentNoBridge: true });
+  }, [runAutoDemoFlow]);
 
   async function onLegacyCreatePayment(event: FormEvent) {
     event.preventDefault();
