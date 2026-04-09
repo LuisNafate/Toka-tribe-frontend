@@ -30,6 +30,8 @@ export interface TriviaResult {
   correctCount: number;
   totalQuestions: number;
   coupon: Coupon | null;
+  /** Milliseconds elapsed from first question to last answer */
+  durationMs?: number;
 }
 
 export interface Coupon {

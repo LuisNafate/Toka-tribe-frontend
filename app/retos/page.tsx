@@ -149,6 +149,24 @@ export default function RetosPage() {
         const usersData = toRecord(usersResult.value.data);
         const nextTribe = toText(usersData?.tribeName) ?? toText(toRecord(usersData?.tribe)?.name) ?? null;
         if (nextTribe) setTribeName(nextTribe);
+
+        // Sync tier + division to localStorage so Trivia can apply the correct score multiplier.
+        const tierRaw =
+          toText(usersData?.tier) ??
+          toText(toRecord(usersData?.tribe)?.tier) ??
+          toText(toRecord(usersData?.tribe)?.division) ??
+          null;
+        if (tierRaw) {
+          const tier = tierRaw.toLowerCase();
+          const division =
+            tier.includes("oro") ? "oro" :
+              tier.includes("plat") ? "plata" :
+                "bronce";
+          try {
+            localStorage.setItem("toka_active_tier", division);
+            localStorage.setItem("toka_division", division);
+          } catch { /* ignore */ }
+        }
       }
 
       if (challengesResult.status === "fulfilled") {

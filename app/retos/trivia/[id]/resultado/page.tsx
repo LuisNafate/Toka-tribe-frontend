@@ -42,7 +42,7 @@ export default function TriviaResultadoPage({
     try {
       const raw = localStorage.getItem(RESULT_KEY);
       if (raw) setResult(JSON.parse(raw) as TriviaResult);
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function TriviaResultadoPage({
         await TokaApi.gameSessionsCreate(buildGameSessionRequest({
           challengeId,
           score: result.finalScore,
-          durationMs: result.totalQuestions * 15000,
+          durationMs: result.durationMs ?? result.totalQuestions * 15000,
           metadata: {
             source: "trivia",
             correctCount: result.correctCount,

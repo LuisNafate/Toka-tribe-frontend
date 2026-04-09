@@ -40,6 +40,7 @@ export function useTrivia() {
   const answersRef = useRef<UserAnswer[]>([]);
   const timePerAnswerRef = useRef<number[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const gameStartedAtRef = useRef<number | null>(null);
 
   // ── Shuffle on mount (client only) ──────────────────────────────
   useEffect(() => {
@@ -89,6 +90,11 @@ export function useTrivia() {
     const question = questions[questionIdx];
     const isCorrect = answerId === question.correctAnswerId;
 
+    // Track start of first answer
+    if (gameStartedAtRef.current === null) {
+      gameStartedAtRef.current = Date.now();
+    }
+
     const answer: UserAnswer = {
       questionId: question.questionId,
       selectedAnswerId: answerId,
@@ -133,6 +139,11 @@ export function useTrivia() {
     const finalScore = applyMultiplier(baseScore, multiplier);
     const coupon = getCouponForPoints(finalScore, division);
 
+    // Calculate real elapsed duration from first to last answer
+    const durationMs = gameStartedAtRef.current
+      ? Math.max(0, Date.now() - gameStartedAtRef.current)
+      : undefined;
+
     const result: TriviaResult = {
       answers: finalAnswers,
       baseScore,
@@ -141,6 +152,7 @@ export function useTrivia() {
       correctCount: finalAnswers.filter((a) => a.isCorrect).length,
       totalQuestions: questions.length,
       coupon,
+      durationMs,
     };
 
     try {
