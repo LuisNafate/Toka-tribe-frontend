@@ -70,9 +70,13 @@ export default function TriviaResultadoPage({
       setSyncMessage("Sincronizando puntaje de Trivia con backend...");
 
       try {
+        // Juego Infinito: el backend acepta múltiples sesiones del mismo reto.
+        // score debe ser ≥ 1 para evitar errores de validación.
+        const safeScore = Math.max(1, result.finalScore);
+
         const sessionResponse = await TokaApi.gameSessionsCreate(buildGameSessionRequest({
           challengeId,
-          score: result.finalScore,
+          score: safeScore,
           durationMs: result.durationMs ?? result.totalQuestions * 15000,
           metadata: {
             source: "trivia",
@@ -82,24 +86,38 @@ export default function TriviaResultadoPage({
             multiplier: result.multiplier,
           },
         }));
-        // Read totalPoints and currentStreak directly from the POST response (fastest path)
+
+        // Leer puntos y streak desde la respuesta del POST (camino más rápido)
         const res = sessionResponse as Record<string, unknown>;
-        const newTotal = (res.data as Record<string, unknown>)?.totalPoints ?? res.totalPoints;
-        if (typeof newTotal === "number") writeAppPoints(newTotal);
-        const newStreak = (res.data as Record<string, unknown>)?.currentStreak ?? res.currentStreak;
+        const inner = toRecord(res.data) ?? res;
+
+        const pointsEarned = typeof inner.pointsEarned === "number" ? inner.pointsEarned : null;
+        const newTotal = typeof inner.totalPoints === "number" ? inner.totalPoints : null;
+        const bonusAwarded = Boolean(inner.isChallengeBonusAwarded ?? false);
+
+        if (newTotal !== null) writeAppPoints(newTotal);
+        const newStreak = inner.currentStreak;
         if (newStreak !== undefined) {
           localStorage.setItem("toka_current_streak", String(newStreak));
         }
-        // Fallback sync in case response didn't include totalPoints
-        if (typeof newTotal !== "number") await refreshAppPointsFromBackend();
-        setSyncMessage(`Puntaje sincronizado correctamente: +${result.finalScore} pts`);
-      } catch (error) {
-        if (error instanceof ApiError && error.status === 409) {
-          setSyncMessage("Este challenge ya fue registrado anteriormente para tu cuenta.");
-          return;
-        }
 
-        const detail = error instanceof Error ? error.message : "Error desconocido";
+        // Fallback si el response no trajo totalPoints
+        if (newTotal === null) await refreshAppPointsFromBackend();
+
+        const earnedLabel = pointsEarned !== null ? pointsEarned : safeScore;
+        const bonusLabel = bonusAwarded ? " 🎉 ¡Bono de reto acreditado!" : " (reintento: solo pts base)";
+        setSyncMessage(`Puntaje sincronizado: +${earnedLabel} pts${bonusLabel}`);
+      } catch (error) {
+        // Fallback: actualizar puntos desde backend aunque el POST haya fallado
+        void refreshAppPointsFromBackend();
+
+        // Mostrar mensaje de error con el mayor detalle posible para debugging
+        let detail = "Error desconocido";
+        if (error instanceof ApiError) {
+          detail = `HTTP ${error.status} – ${error.message}`;
+        } else if (error instanceof Error) {
+          detail = error.message;
+        }
         setSyncMessage(`No se pudo sincronizar con backend: ${detail}`);
       }
     };
