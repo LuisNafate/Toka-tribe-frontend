@@ -29,7 +29,7 @@ export async function resolveActiveChallengeId(keywords: string[]): Promise<stri
     const rec = toRecord(item);
     if (!rec) continue;
 
-    const id = toText(rec.id) ?? toText(rec.challengeId);
+    const id = toText(rec._id) ?? toText(rec.id) ?? toText(rec.challengeId);
     const title = toText(rec.title) ?? toText(rec.name) ?? "";
     const description = toText(rec.description) ?? "";
     const haystack = `${title} ${description}`.toLowerCase();
