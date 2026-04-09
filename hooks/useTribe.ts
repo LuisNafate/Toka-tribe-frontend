@@ -106,9 +106,16 @@ function extractTribeId(usersData: unknown, authData: unknown): string | null {
   const ad = toRecord(authData);
   return (
     toText(ud?.tribeId) ??
+    toText(ud?.currentTribeId) ??
+    toText(ud?.squadId) ??
     toText(toRecord(ud?.tribe)?.id) ??
     toText(toRecord(ud?.tribe)?._id) ??
+    toText(toRecord(ud?.squad)?.id) ??
+    toText(toRecord(ud?.squad)?._id) ??
     toText(ad?.tribeId) ??
+    toText(ad?.currentTribeId) ??
+    toText(toRecord(ad?.tribe)?.id) ??
+    toText(toRecord(ad?.tribe)?._id) ??
     null
   );
 }
@@ -152,7 +159,7 @@ export function useTribe() {
           TokaApi.authMe(),
         ]);
         const usersData = usersEnv.status === "fulfilled" ? usersEnv.value.data : null;
-        const authData  = authEnv.status  === "fulfilled" ? authEnv.value.data  : null;
+        const authData = authEnv.status === "fulfilled" ? authEnv.value.data : null;
 
         const userId = extractUserId(usersData, authData);
         const tribeId = extractTribeId(usersData, authData);
@@ -165,7 +172,7 @@ export function useTribe() {
             TokaApi.tribesMembers(tribeId),
           ]);
           if (!alive) return;
-          if (detailEnv.status === "fulfilled")  setMyTribe(normalizeTribe(detailEnv.value.data));
+          if (detailEnv.status === "fulfilled") setMyTribe(normalizeTribe(detailEnv.value.data));
           if (membersEnv.status === "fulfilled") setMembers(normalizeMembers(membersEnv.value.data));
         }
       } finally {
@@ -214,8 +221,30 @@ export function useTribe() {
   const createTribe = useCallback(async (input: CreateTribeInput): Promise<ActionResult> => {
     try {
       const env = await TokaApi.tribesCreate(input as Record<string, unknown>);
-      const created = normalizeTribe(env.data);
-      setMyTribe(created);
+
+      // Extract the new tribe id from the create response.
+      // Some backends wrap it under data.id, others under data._id or data.tribeId.
+      const raw = env.data as Record<string, unknown> | null | undefined;
+      const newId =
+        toText(raw?.id) ??
+        toText(raw?.["_id"]) ??
+        toText(raw?.tribeId) ??
+        null;
+
+      if (newId) {
+        // Fetch full detail + members to populate state consistently (same as joinTribe).
+        const [detailEnv, membersEnv] = await Promise.allSettled([
+          TokaApi.tribesDetail(newId),
+          TokaApi.tribesMembers(newId),
+        ]);
+        if (detailEnv.status === "fulfilled") setMyTribe(normalizeTribe(detailEnv.value.data));
+        if (membersEnv.status === "fulfilled") setMembers(normalizeMembers(membersEnv.value.data));
+      } else {
+        // Fallback: the create response may not include id — normalize whatever we got.
+        const created = normalizeTribe(env.data);
+        setMyTribe(created);
+      }
+
       showToast("ok", `¡Tribe "${input.name}" creada!`);
       return { success: true };
     } catch (e) {
