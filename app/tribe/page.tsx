@@ -186,7 +186,11 @@ export default function TribePage() {
         progressHint: `A ${Math.max(0, 120).toLocaleString("es-ES")} pts de ascender · ${progressPercent}%`,
         rankingLabel,
         membersTitle: `Tu Tribe (${memberCount}/${maxMembers})`,
-        currentStreakLabel: `${Math.max(1, Math.min(10, sessions.length + 1))} días`,
+        currentStreakLabel: (() => {
+          const stored = localStorage.getItem("toka_current_streak");
+          const streak = stored !== null ? Number(stored) : 0;
+          return `${streak} día${streak !== 1 ? "s" : ""}`;
+        })(),
         retosLabel,
         members,
         activity: activity.length > 0 ? activity : undefined,

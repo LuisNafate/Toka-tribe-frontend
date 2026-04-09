@@ -156,7 +156,9 @@ export function extractProfileSnapshot(args: {
       0,
     currentStreakDays:
       (findValueByKeys(baseRoot, ["currentStreak", "streak", "streakDays"], "number") as number | null) ??
-      0,
+      (typeof window !== "undefined" && localStorage.getItem("toka_current_streak") !== null
+        ? Number(localStorage.getItem("toka_current_streak"))
+        : 0),
     completedChallenges:
       (findValueByKeys(baseRoot, ["completedChallenges", "completedGames", "challengesCompleted", "gamesPlayed"], "number") as number | null) ??
       sessionsSummary.totalSessions,

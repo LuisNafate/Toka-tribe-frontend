@@ -70,7 +70,7 @@ export default function TriviaResultadoPage({
       setSyncMessage("Sincronizando puntaje de Trivia con backend...");
 
       try {
-        await TokaApi.gameSessionsCreate(buildGameSessionRequest({
+        const sessionResponse = await TokaApi.gameSessionsCreate(buildGameSessionRequest({
           challengeId,
           score: result.finalScore,
           durationMs: result.durationMs ?? result.totalQuestions * 15000,
@@ -82,6 +82,10 @@ export default function TriviaResultadoPage({
             multiplier: result.multiplier,
           },
         }));
+        const newStreak = (sessionResponse as any)?.currentStreak;
+        if (newStreak !== undefined) {
+          localStorage.setItem("toka_current_streak", String(newStreak));
+        }
         await refreshAppPointsFromBackend();
         setSyncMessage(`Puntaje sincronizado correctamente: +${result.finalScore} pts`);
       } catch (error) {
