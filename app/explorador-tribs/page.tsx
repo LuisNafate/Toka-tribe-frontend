@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Users } from "lucide-react";
+import { Users, Search } from "lucide-react";
 import { FIGMA_ASSETS } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 import { AppShell } from "@/components/app-shell";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
-import { TokaApi } from "@/services/toka-api.service";
+import { TokaApi, ApiError } from "@/services/toka-api.service";
 import { useTribe } from "@/hooks/useTribe";
 import { CreateTribeModal } from "@/components/organisms/CreateTribeModal";
 
@@ -20,7 +20,7 @@ type TribeCard = {
   pointsWeek: number;
 };
 
-const tiers = ["Todos", "Bronce", "Plata", "Oro", "Diamante"];
+const tiers = ["Todos", "Bronce", "Plata", "Oro"];
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -96,8 +96,18 @@ export default function ExplorerPage() {
   async function loadTribes() {
     setLoadingTribes(true);
     try {
-      const response = await TokaApi.tribesList();
-      const parsed = extractTribes(response.data);
+      // Try /tribes first; if 404, fall back to leaderboard data
+      let parsed: TribeCard[] = [];
+      try {
+        const response = await TokaApi.tribesList();
+        parsed = extractTribes(response.data);
+      } catch (primaryErr) {
+        const is404 = primaryErr instanceof ApiError && primaryErr.status === 404;
+        if (!is404) throw primaryErr;
+        // Fallback: extract tribes from leaderboard
+        const lb = await TokaApi.leaderboardCurrent();
+        parsed = extractTribes(lb.data);
+      }
       if (parsed.length > 0) setTribes(parsed);
       setMessage(null);
     } catch (error) {
@@ -152,7 +162,7 @@ export default function ExplorerPage() {
     <>
       <header className="fig-mobile-search-head">
         <div className="fig-mobile-search-box">
-          <span>🔍</span>
+          <Search size={17} color="#9aa6b6" />
           <input
             type="text"
             placeholder="Buscar Tribe..."
