@@ -24,6 +24,15 @@ function normalizePet(raw: Record<string, unknown>): import("@/types/pet").Pet {
   };
 }
 
+// Static fallback catalog — used when backend store is empty or not yet deployed.
+// itemId values must match what the backend uses once the store is live.
+const STATIC_CATALOG: import("@/types/pet").PetItem[] = [
+  { _id: "static_hat_sombrero",   itemId: "hat_sombrero",   name: "Sombrero",  imageUrl: "/images/items/mascota_sombrero.png",  slot: "hat",       pointCost: 500,  isAvailable: true },
+  { _id: "static_shirt_chaqueta", itemId: "shirt_chaqueta", name: "Chaqueta",  imageUrl: "/images/items/mascota_chaqueta.png", slot: "shirt",     pointCost: 750,  isAvailable: true },
+  { _id: "static_acc_bufanda",    itemId: "acc_bufanda",    name: "Bufanda",   imageUrl: "/images/items/mascota_bufanda.png",  slot: "accessory", pointCost: 400,  isAvailable: true },
+  { _id: "static_acc_lentes",     itemId: "acc_lentes",     name: "Lentes",    imageUrl: "/images/items/mascota_lentes.png",   slot: "accessory", pointCost: 600,  isAvailable: true },
+];
+
 function normalizeCatalog(raw: unknown): import("@/types/pet").PetItem[] {
   return toArr(raw).flatMap((item) => {
     const r = toRec(item);
@@ -95,7 +104,8 @@ export function usePet() {
         const rawCatalog = catalogResult.status === "fulfilled"
           ? ((catalogResult.value.data ?? catalogResult.value) as unknown)
           : [];
-        setCatalog(normalizeCatalog(rawCatalog));
+        const fromApi = normalizeCatalog(rawCatalog);
+        setCatalog(fromApi.length > 0 ? fromApi : STATIC_CATALOG);
 
         const userRaw = (userEnv.status === "fulfilled"
           ? (userEnv.value.data ?? userEnv.value) as Record<string, unknown>
