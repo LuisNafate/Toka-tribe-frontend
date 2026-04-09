@@ -6,7 +6,7 @@ import { Trophy, Users, Zap, Tag } from "lucide-react";
 import type { TriviaResult } from "@/types/trivia";
 import { getSessionToken } from "@/services/auth.service";
 import { ApiError, TokaApi } from "@/services/toka-api.service";
-import { refreshAppPointsFromBackend } from "@/components/use-app-points";
+import { refreshAppPointsFromBackend, writeAppPoints } from "@/components/use-app-points";
 import { buildGameSessionRequest, resolveActiveChallengeId } from "@/services/game-session-sync";
 const RESULT_KEY = "toka_trivia_result";
 
@@ -82,11 +82,16 @@ export default function TriviaResultadoPage({
             multiplier: result.multiplier,
           },
         }));
-        const newStreak = (sessionResponse as any)?.currentStreak;
+        // Read totalPoints and currentStreak directly from the POST response (fastest path)
+        const res = sessionResponse as Record<string, unknown>;
+        const newTotal = (res.data as Record<string, unknown>)?.totalPoints ?? res.totalPoints;
+        if (typeof newTotal === "number") writeAppPoints(newTotal);
+        const newStreak = (res.data as Record<string, unknown>)?.currentStreak ?? res.currentStreak;
         if (newStreak !== undefined) {
           localStorage.setItem("toka_current_streak", String(newStreak));
         }
-        await refreshAppPointsFromBackend();
+        // Fallback sync in case response didn't include totalPoints
+        if (typeof newTotal !== "number") await refreshAppPointsFromBackend();
         setSyncMessage(`Puntaje sincronizado correctamente: +${result.finalScore} pts`);
       } catch (error) {
         if (error instanceof ApiError && error.status === 409) {

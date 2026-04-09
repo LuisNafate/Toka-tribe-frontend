@@ -110,19 +110,22 @@ export async function refreshAppPointsFromBackend(): Promise<number | null> {
   if (!getSessionToken()) return null;
 
   const userResponse = await safeApiCall(() => TokaApi.usersMe());
-  const userPoints = extractPointsFromRecord((userResponse?.data ?? null) as Record<string, unknown> | null);
+  // Backend may return points at root OR nested under .data
+  const userRecord = (userResponse?.data ?? userResponse) as Record<string, unknown> | null;
+  const userPoints = extractPointsFromRecord(userRecord);
   if (userPoints !== null) {
     return writeAppPoints(userPoints);
   }
 
   const authResponse = await safeApiCall(() => TokaApi.authMe());
-  const authPoints = extractPointsFromRecord((authResponse?.data ?? null) as Record<string, unknown> | null);
+  const authRecord = (authResponse?.data ?? authResponse) as Record<string, unknown> | null;
+  const authPoints = extractPointsFromRecord(authRecord);
   if (authPoints !== null) {
     return writeAppPoints(authPoints);
   }
 
   const sessionsResponse = await safeApiCall(() => TokaApi.gameSessionsMe());
-  const sessionsPoints = sumScoresFromSessions(sessionsResponse?.data ?? null);
+  const sessionsPoints = sumScoresFromSessions(sessionsResponse?.data ?? sessionsResponse ?? null);
   if (sessionsPoints !== null) {
     return writeAppPoints(sessionsPoints);
   }
