@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, CheckCircle2, ShoppingBag, Shirt, Star, HardHat, Sparkles } from "lucide-react";
+import { Lock, CheckCircle2, ShoppingBag, Shirt, Star, HardHat, Sparkles, Crown } from "lucide-react";
 import { usePet } from "@/hooks/usePet";
 import { PetDisplay } from "./PetDisplay";
 import type { PetItem, PetSlot } from "@/types/pet";
@@ -155,8 +155,16 @@ export function PetCustomizer() {
                       <Lock size={10} />
                     </span>
                   )}
+                  {item.requiresMembership && (
+                    <span className="fig-mascota-item-membership-badge">
+                      <Crown size={9} />
+                    </span>
+                  )}
                 </div>
                 <span className="fig-mascota-item-name">{item.name}</span>
+                {item.requiresMembership && (
+                  <span className="fig-mascota-item-membership-chip">Membresía</span>
+                )}
                 {(state === "disponible" || state === "bloqueado") && (
                   <span className={`fig-mascota-item-cost${state === "bloqueado" ? " fig-mascota-item-cost--locked" : ""}`}>
                     {item.pointCost.toLocaleString()} pts

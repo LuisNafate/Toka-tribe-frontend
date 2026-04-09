@@ -16,6 +16,7 @@ export interface PetItem {
   pointCost: number;
   isAvailable: boolean;
   seasonId?: string;
+  requiresMembership?: boolean;
 }
 
 export interface Pet {

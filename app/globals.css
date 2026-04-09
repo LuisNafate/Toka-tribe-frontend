@@ -7578,6 +7578,34 @@ img {
 .fig-mascota-item-badge--owned    { background: #22c55e; color: #fff; }
 .fig-mascota-item-badge--locked   { background: #94a3b8; color: #fff; }
 
+.fig-mascota-item-membership-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.fig-mascota-item-membership-chip {
+  font-size: 0.45rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d97706;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 999px;
+  padding: 1px 5px;
+  margin-top: 2px;
+}
+
 .fig-mascota-item-name {
   font-size: 0.55rem;
   font-weight: 700;
