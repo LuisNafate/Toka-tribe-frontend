@@ -1,9 +1,47 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { TokaApi } from "@/services/toka-api.service";
+import { ApiError, TokaApi } from "@/services/toka-api.service";
 import { getSessionToken } from "@/services/auth.service";
 import type { Pet, PetItem, PetItemState } from "@/types/pet";
+
+function toText(v: unknown): string { return typeof v === "string" && v.trim() ? v.trim() : ""; }
+function toNum(v: unknown): number { return typeof v === "number" && Number.isFinite(v) ? v : 0; }
+function toArr(v: unknown): unknown[] { return Array.isArray(v) ? v : []; }
+function toRec(v: unknown): Record<string, unknown> { return v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : {}; }
+
+function normalizePet(raw: Record<string, unknown>): import("@/types/pet").Pet {
+  const equipped = toRec(raw.equippedItems);
+  return {
+    id: toText(raw.id) || toText(raw._id),
+    name: toText(raw.name) || "Mi mascota",
+    unlockedItems: toArr(raw.unlockedItems).map((x) => toText(x)).filter(Boolean) as string[],
+    equippedItems: {
+      hat: toText(equipped.hat) || null,
+      shirt: toText(equipped.shirt) || null,
+      accessory: toText(equipped.accessory) || null,
+    },
+  };
+}
+
+function normalizeCatalog(raw: unknown): import("@/types/pet").PetItem[] {
+  return toArr(raw).flatMap((item) => {
+    const r = toRec(item);
+    const id = toText(r._id) || toText(r.id);
+    const slot = (["hat", "shirt", "accessory"].includes(toText(r.slot)) ? toText(r.slot) : null) as import("@/types/pet").PetSlot | null;
+    if (!id || !slot) return [];
+    return [{
+      _id: id,
+      itemId: toText(r.itemId) || id,
+      name: toText(r.name) || "Ítem",
+      imageUrl: toText(r.imageUrl) || toText(r.image) || "/images/mascota.png",
+      slot,
+      pointCost: toNum(r.pointCost) || toNum(r.cost) || toNum(r.price),
+      isAvailable: r.isAvailable !== false,
+      seasonId: toText(r.seasonId) || undefined,
+    }];
+  });
+}
 
 export function usePet() {
   const [pet, setPet] = useState<Pet | null>(null);
@@ -30,8 +68,8 @@ export function usePet() {
     let alive = true;
     async function load() {
       try {
-        // Load catalog and user points in parallel; pet may not exist yet
-        const [catalogEnv, userEnv] = await Promise.all([
+        // petsStore may return 404 if endpoint not yet deployed — treat as empty catalog
+        const [catalogResult, userEnv] = await Promise.allSettled([
           TokaApi.petsStore(),
           TokaApi.usersMe(),
         ]);
@@ -39,21 +77,30 @@ export function usePet() {
         let petData: Pet | null = null;
         try {
           const petEnv = await TokaApi.petsMe();
-          petData = petEnv.data as Pet;
+          // Backend may return pet at root or nested under .data
+          const raw = (petEnv.data ?? petEnv) as Record<string, unknown>;
+          petData = normalizePet(raw);
         } catch (petErr) {
-          const msg = petErr instanceof Error ? petErr.message : "";
-          if (msg.includes("404")) {
-            // User has no pet yet — show creation form
+          const is404 = petErr instanceof ApiError && petErr.status === 404;
+          if (is404) {
             if (alive) setNeedsCreate(true);
           } else {
-            throw petErr; // re-throw unexpected errors
+            throw petErr;
           }
         }
 
         if (!alive) return;
         setPet(petData);
-        setCatalog((catalogEnv.data as PetItem[]) ?? []);
-        setTotalPoints((userEnv.data as { totalPoints: number })?.totalPoints ?? 0);
+
+        const rawCatalog = catalogResult.status === "fulfilled"
+          ? ((catalogResult.value.data ?? catalogResult.value) as unknown)
+          : [];
+        setCatalog(normalizeCatalog(rawCatalog));
+
+        const userRaw = (userEnv.status === "fulfilled"
+          ? (userEnv.value.data ?? userEnv.value) as Record<string, unknown>
+          : {}) as { totalPoints?: number };
+        setTotalPoints(typeof userRaw.totalPoints === "number" ? userRaw.totalPoints : 0);
       } catch (e) {
         if (!alive) return;
         const msg = e instanceof Error ? e.message : "No se pudo cargar la mascota.";
@@ -71,7 +118,8 @@ export function usePet() {
     setError(null);
     try {
       const env = await TokaApi.petsCreate(name);
-      setPet(env.data as Pet);
+      const raw = toRec((env.data ?? env) as unknown);
+      setPet(normalizePet(raw));
       setNeedsCreate(false);
       showToast("ok", `¡Mascota "${name}" creada!`);
     } catch (e) {

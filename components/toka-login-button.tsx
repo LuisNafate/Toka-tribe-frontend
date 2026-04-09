@@ -18,7 +18,7 @@ type TokaLoginButtonProps = {
 
 export function TokaLoginButton({ className, children, redirectTo = "/dashboard", showDiagnostics = false }: TokaLoginButtonProps) {
   const router = useRouter();
-  const { getDigitalIdentityCode, isLoading, isBridgeReady, error: bridgeError } = useTokaBridge();
+  const { getDigitalIdentityCode, getPersonalInformationCode, isLoading, isBridgeReady, error: bridgeError } = useTokaBridge();
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("idle");
   const [lastAuthCode, setLastAuthCode] = useState<string | null>(null);
@@ -51,6 +51,17 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
     });
   }
 
+  /** Detecta si un username parece un ID provisional generado por el backend (no un nombre real). */
+  function looksLikeProvisionalId(username: string | null | undefined): boolean {
+    if (!username) return true;
+    const u = username.trim();
+    if (u.length === 0) return true;
+    // Patrones conocidos de IDs provisionales: empieza con "toka_", uuid puro, solo hex, etc.
+    if (/^toka_/i.test(u)) return true;
+    if (/^[0-9a-f\-]{32,}$/i.test(u)) return true; // UUID / solo hex largo
+    return false;
+  }
+
   async function handleLogin() {
     setError(null);
     setStatus("Solicitando authCode a Toka Bridge...");
@@ -71,16 +82,61 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
       const { token } = await exchangeAuthCode(authCode);
       saveSessionToken(token);
 
-      // Sync no bloqueante: si falla, el login principal continua para no romper UX.
+      // ── Paso 1: Sync de perfil con authCode de identidad. No bloqueante. ──
       setStatus("JWT guardado. Sincronizando perfil...");
+      const allAuthCodes: string[] = [authCode];
+
       try {
-        await TokaApi.authSyncProfile([authCode]);
-        setStatus("Perfil sincronizado. Redirigiendo...");
+        await TokaApi.authSyncProfile(allAuthCodes);
+        setStatus("Perfil sincronizado. Verificando nombre...");
       } catch (syncErr) {
         const syncMessage = syncErr instanceof Error ? syncErr.message : "Error desconocido en sync-profile.";
-        setStatus(`JWT guardado. Sync perfil omitido: ${syncMessage}. Redirigiendo...`);
+        setStatus(`Sync inicial omitido: ${syncMessage}. Verificando nombre...`);
       }
 
+      // ── Paso 2: Verificar si el username es provisional y actualizar si es necesario. ──
+      // Esto se hace en background sin bloquear la redirección.
+      void (async () => {
+        try {
+          const usersMeRes = await TokaApi.usersMe();
+          const currentUsername =
+            (usersMeRes as { data?: { username?: string }; username?: string })?.data?.username ??
+            (usersMeRes as { username?: string })?.username ??
+            null;
+
+          if (looksLikeProvisionalId(currentUsername)) {
+            // Pedir authCode con info personal para que el backend pueda resolver el nombre real.
+            try {
+              const personalAuthCode = await getPersonalInformationCode();
+              await TokaApi.authSyncProfile([authCode, personalAuthCode]);
+            } catch {
+              // Si el bridge de info personal falla (o el sync), es tolerable.
+            }
+
+            // Fallback: intentar obtener el nombre desde /auth/me y hacer PATCH directo.
+            try {
+              const authMeRes = await TokaApi.authMe();
+              const resolvedName =
+                (authMeRes as { data?: { username?: string; nickname?: string; name?: string }; username?: string; nickname?: string; name?: string })?.data?.username ??
+                (authMeRes as { data?: { username?: string; nickname?: string; name?: string }; username?: string; nickname?: string; name?: string })?.data?.nickname ??
+                (authMeRes as { data?: { username?: string; nickname?: string; name?: string }; username?: string; nickname?: string; name?: string })?.data?.name ??
+                (authMeRes as { username?: string })?.username ??
+                (authMeRes as { nickname?: string })?.nickname ??
+                null;
+
+              if (resolvedName && !looksLikeProvisionalId(resolvedName)) {
+                await TokaApi.usersUpdateMe({ username: resolvedName });
+              }
+            } catch {
+              // Fallback silencioso.
+            }
+          }
+        } catch {
+          // Cualquier fallo en la sincronización de nombre es silencioso.
+        }
+      })();
+
+      setStatus("Redirigiendo...");
       router.push(redirectTo);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error externo no tipificado.";

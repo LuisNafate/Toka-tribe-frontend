@@ -139,7 +139,7 @@ export function PetCustomizer() {
                 disabled={state === "bloqueado"}
               >
                 <div className="fig-mascota-item-img-wrap">
-                  <img src={item.imageUrl} alt={item.name} draggable="false" />
+                  <img src={item.imageUrl || "/images/mascota.png"} alt={item.name} draggable="false" />
                   {state === "equipado" && (
                     <span className="fig-mascota-item-badge fig-mascota-item-badge--equipped">
                       <CheckCircle2 size={12} />
@@ -176,7 +176,7 @@ export function PetCustomizer() {
         <div className="fig-mascota-modal-overlay" onClick={() => setConfirmItem(null)}>
           <div className="fig-mascota-modal" onClick={(e) => e.stopPropagation()}>
             <div className="fig-mascota-modal-img-wrap">
-              <img src={confirmItem.imageUrl} alt={confirmItem.name} />
+              <img src={confirmItem.imageUrl || "/images/mascota.png"} alt={confirmItem.name} />
             </div>
             <h3 className="fig-mascota-modal-title">{confirmItem.name}</h3>
             <p className="fig-mascota-modal-body">
