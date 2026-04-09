@@ -11,7 +11,16 @@ export type UserIdentityDto = ApiRecord & {
   avatar?: string;
   tribeId?: string;
   tribeName?: string;
-  tribe?: ApiRecord | null;
+  tribe?: {
+    tribeName?: string;
+    activeTier?: string;
+    activeMultiplier?: number;
+    memberRole?: string;
+  } | null;
+  currentDivision?: string;
+  leagueMembership?: string;
+  currentStreak?: number;
+  totalPoints?: number;
 };
 
 export type ChallengeDto = ApiRecord & {

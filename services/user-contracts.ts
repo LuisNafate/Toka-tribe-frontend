@@ -140,10 +140,10 @@ export function extractProfileSnapshot(args: {
       (findValueByKeys(baseRoot, ["avatarUrl", "avatar", "profileImage", "imageUrl"], "string") as string | null) ??
       fallbackAvatarUrl,
     tierLabel:
-      ((findValueByKeys(baseRoot, ["tier", "division", "league", "rankTier"], "string") as string | null) ??
+      ((findValueByKeys(baseRoot, ["activeTier", "currentDivision", "tier", "division", "league", "rankTier"], "string") as string | null) ??
         "NO SINCRONIZADO").toUpperCase(),
     planLabel:
-      (findValueByKeys(baseRoot, ["plan", "membership", "subscription", "planType"], "string") as string | null) ??
+      (findValueByKeys(baseRoot, ["leagueMembership", "plan", "membership", "subscription", "planType"], "string") as string | null) ??
       "No sincronizado",
     tribeName:
       (findValueByKeys(baseRoot, ["tribeName", "tribe", "squadName", "teamName"], "string") as string | null) ??
