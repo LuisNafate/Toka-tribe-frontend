@@ -160,18 +160,15 @@ export default function ExplorerPage() {
 
   const content = (
     <>
-      <header className="fig-mobile-search-head">
-        <div className="fig-mobile-search-box">
-          <Search size={17} color="#9aa6b6" />
-          <input
-            type="text"
-            placeholder="Buscar Tribe..."
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-          />
-        </div>
-        <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" draggable="false" />
-      </header>
+      <div className="fig-mobile-search-box" style={{ marginTop: 8 }}>
+        <Search size={17} color="#9aa6b6" />
+        <input
+          type="text"
+          placeholder="Buscar Tribe..."
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+        />
+      </div>
 
       {/* User's current tribe banner */}
       {!tribeLoading && myTribe && (

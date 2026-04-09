@@ -201,10 +201,12 @@ export function useTribe() {
       showToast("ok", "¡Te uniste a la Tribe!");
       return { success: true };
     } catch (e) {
-      const message = getApiErrorMessage(e, "No se pudo unir a la Tribe.");
-      const alreadyMember = message.toLowerCase().includes("ya fue") || message.toLowerCase().includes("ya perteneces");
+      const is409 = e instanceof Error && "status" in e && (e as { status: number }).status === 409;
+      const message = is409
+        ? "Ya perteneces a una Tribe esta temporada. Para unirte a otra, primero sal de tu Tribe actual."
+        : getApiErrorMessage(e, "No se pudo unir a la Tribe.");
       showToast("error", message);
-      return { success: false, alreadyMember };
+      return { success: false, alreadyMember: is409 };
     }
   }, []);
 

@@ -2822,6 +2822,7 @@ img {
 
 .fig-mobile-filter-strip .filter-pills-container {
   display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 4px;

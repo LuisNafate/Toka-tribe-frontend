@@ -39,12 +39,12 @@ export const FIGMA_ASSETS = {
   // Tribes Explorer
   explorador: {
     tribePhotos: [
-      "http://localhost:3845/assets/c5a1529dc3d3f794cf36cf54574bb20dbb09ba78.png", // Jaguares
-      "http://localhost:3845/assets/1e6a36f4ffc3972ae9db117842f6a9b00f02dfbb.png", // Serpientes
-      "http://localhost:3845/assets/3698294e97884779bdc01c81180a07cbc32d53ea.png", // Águilas
-      "http://localhost:3845/assets/d02d74e13792904b10aea02ecaac3e856c0aa92c.png", // Pumas
-      "http://localhost:3845/assets/1a03b4249d747e06214043db23d5b26f5f98814a.png", // Osos
-      "http://localhost:3845/assets/dd5b185d914fa22e0e7dec5bd18a8bd5c3b6f6f6.png", // Leones
+      "/images/ajolotes_1.png",
+      "/images/ajolote_2.png",
+      "/images/ajolote_3.png",
+      "/images/ajolote_4.png",
+      "/images/mascota.png",
+      "/images/ajolotes_1.png",
     ],
   },
   
