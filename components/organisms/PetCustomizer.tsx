@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, CheckCircle2, ShoppingBag, Shirt, Star, HardHat } from "lucide-react";
+import { Lock, CheckCircle2, ShoppingBag, Shirt, Star, HardHat, Sparkles } from "lucide-react";
 import { usePet } from "@/hooks/usePet";
 import { PetDisplay } from "./PetDisplay";
 import type { PetItem, PetSlot } from "@/types/pet";
@@ -16,9 +16,10 @@ const TABS: { id: TabFilter; label: string; icon: React.ReactNode }[] = [
 ];
 
 export function PetCustomizer() {
-  const { pet, catalog, totalPoints, loading, error, toast, getItemState, buyItem, toggleEquip } = usePet();
+  const { pet, needsCreate, catalog, totalPoints, loading, creating, error, toast, createPet, getItemState, buyItem, toggleEquip } = usePet();
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [confirmItem, setConfirmItem] = useState<PetItem | null>(null);
+  const [petName, setPetName] = useState("");
 
   const filtered = catalog.filter((i) => activeTab === "all" || i.slot === activeTab);
 
@@ -29,7 +30,6 @@ export function PetCustomizer() {
     } else if (state === "disponible") {
       setConfirmItem(item);
     }
-    // "bloqueado" → no action
   }
 
   if (loading) {
@@ -41,13 +41,52 @@ export function PetCustomizer() {
     );
   }
 
-  if (error || !pet) {
+  if (error) {
     return (
       <div className="fig-mascota-error">
-        <p>{error ?? "No se encontró tu mascota."}</p>
+        <p>{error}</p>
       </div>
     );
   }
+
+  if (needsCreate) {
+    const valid = petName.trim().length >= 3 && petName.trim().length <= 20;
+    return (
+      <div className="fig-mascota-create-screen">
+        <div className="fig-mascota-preview-area">
+          <Sparkles size={28} color="rgba(255,255,255,0.7)" style={{ marginBottom: 8 }} />
+          <img src="/images/mascota.png" alt="Mascota" className="fig-mascota-create-img" draggable="false" />
+        </div>
+        <div className="fig-mascota-sheet">
+          <h2 className="fig-mascota-create-title">Ponle nombre a tu mascota</h2>
+          <p className="fig-mascota-create-sub">Entre 3 y 20 caracteres</p>
+          <input
+            className="fig-mascota-name-input"
+            type="text"
+            placeholder="Ej: Toky"
+            value={petName}
+            maxLength={20}
+            onChange={(e) => setPetName(e.target.value)}
+          />
+          <button
+            type="button"
+            className="fig-mascota-create-btn"
+            disabled={!valid || creating}
+            onClick={() => createPet(petName.trim())}
+          >
+            {creating ? "Creando..." : "Crear mascota"}
+          </button>
+        </div>
+        {toast && (
+          <div className={`fig-mascota-toast fig-mascota-toast--${toast.type}`} role="status">
+            {toast.text}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!pet) return null;
 
   return (
     <div className="fig-mascota-customizer">

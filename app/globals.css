@@ -7604,6 +7604,66 @@ img {
 .fig-mascota-toast--error { background: #ef4444; color: #fff; }
 
 /* Loading / error */
+.fig-mascota-create-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: linear-gradient(160deg, #2a55b9 0%, #5d89e4 55%, #8fb3f5 100%);
+}
+
+.fig-mascota-create-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+}
+
+.fig-mascota-create-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #0e1a2b;
+  margin: 0 0 4px;
+}
+
+.fig-mascota-create-sub {
+  font-size: 0.75rem;
+  color: #7a8fa6;
+  margin: 0 0 16px;
+}
+
+.fig-mascota-name-input {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0e1a2b;
+  outline: none;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.fig-mascota-name-input:focus {
+  border-color: #2a55b9;
+}
+
+.fig-mascota-create-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: #2a55b9;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fig-mascota-create-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .fig-mascota-loading,
 .fig-mascota-error {
   display: flex;

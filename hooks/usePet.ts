@@ -7,9 +7,11 @@ import type { Pet, PetItem, PetItemState } from "@/types/pet";
 
 export function usePet() {
   const [pet, setPet] = useState<Pet | null>(null);
+  const [needsCreate, setNeedsCreate] = useState(false);
   const [catalog, setCatalog] = useState<PetItem[]>([]);
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "error"; text: string } | null>(null);
 
@@ -28,13 +30,28 @@ export function usePet() {
     let alive = true;
     async function load() {
       try {
-        const [petEnv, catalogEnv, userEnv] = await Promise.all([
-          TokaApi.petsMe(),
+        // Load catalog and user points in parallel; pet may not exist yet
+        const [catalogEnv, userEnv] = await Promise.all([
           TokaApi.petsStore(),
           TokaApi.usersMe(),
         ]);
+
+        let petData: Pet | null = null;
+        try {
+          const petEnv = await TokaApi.petsMe();
+          petData = petEnv.data as Pet;
+        } catch (petErr) {
+          const msg = petErr instanceof Error ? petErr.message : "";
+          if (msg.includes("404")) {
+            // User has no pet yet — show creation form
+            if (alive) setNeedsCreate(true);
+          } else {
+            throw petErr; // re-throw unexpected errors
+          }
+        }
+
         if (!alive) return;
-        setPet(petEnv.data as Pet);
+        setPet(petData);
         setCatalog((catalogEnv.data as PetItem[]) ?? []);
         setTotalPoints((userEnv.data as { totalPoints: number })?.totalPoints ?? 0);
       } catch (e) {
@@ -47,6 +64,22 @@ export function usePet() {
     }
     load();
     return () => { alive = false; };
+  }, []);
+
+  const createPet = useCallback(async (name: string) => {
+    setCreating(true);
+    setError(null);
+    try {
+      const env = await TokaApi.petsCreate(name);
+      setPet(env.data as Pet);
+      setNeedsCreate(false);
+      showToast("ok", `¡Mascota "${name}" creada!`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "No se pudo crear la mascota.";
+      showToast("error", msg);
+    } finally {
+      setCreating(false);
+    }
   }, []);
 
   const getItemState = useCallback(
@@ -67,7 +100,6 @@ export function usePet() {
       if (!pet) return;
       const prevPet = pet;
       const prevPoints = totalPoints;
-      // Optimistic update
       setPet({ ...pet, unlockedItems: [...pet.unlockedItems, item._id] });
       setTotalPoints((p) => p - item.pointCost);
       try {
@@ -88,7 +120,6 @@ export function usePet() {
       if (!pet) return;
       const prevPet = pet;
       const isEquipped = pet.equippedItems[item.slot] === item._id;
-      // Optimistic update
       setPet({
         ...pet,
         equippedItems: {
@@ -107,5 +138,18 @@ export function usePet() {
     [pet],
   );
 
-  return { pet, catalog, totalPoints, loading, error, toast, getItemState, buyItem, toggleEquip };
+  return {
+    pet,
+    needsCreate,
+    catalog,
+    totalPoints,
+    loading,
+    creating,
+    error,
+    toast,
+    createPet,
+    getItemState,
+    buyItem,
+    toggleEquip,
+  };
 }
