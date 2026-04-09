@@ -532,7 +532,7 @@ export default function LeaderboardPage() {
         </div>
 
         <section className="fig-lb-podium">
-          {podium.length === 0 ? <p className="subtle">Sin podio sincronizado desde backend.</p> : null}
+          {podium.length === 0 ? <p className="subtle">Sin podio sincronizado por ahora.</p> : null}
           {podium.map((team, i) => {
             const isFirst = i === 1;
             return (

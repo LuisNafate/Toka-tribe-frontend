@@ -152,7 +152,7 @@ export default function RecompensasPage() {
               <SectionHeader
                 eyebrow="Historial de pagos"
                 title={documentedBalance === null ? "Historial sincronizado" : `Saldo documentado: $${documentedBalance.toLocaleString("es-ES")}`}
-                description="payments/me se trata como historial. Solo se muestra saldo si el backend lo documenta explícitamente."
+                description="payments/me se trata como historial. Solo se muestra saldo si lo documenta explícitamente."
               />
               <div className="metric-grid">
                 <article className="metric-card"><div className="metric-card__icon"><Wallet size={18} /></div><div className="metric-card__value">{paymentHistoryCount}</div><div className="metric-card__label">Pagos sincronizados</div></article>
@@ -169,7 +169,7 @@ export default function RecompensasPage() {
               <Panel className="muted-card">
                 <span className="status-pill">Disponible ahora</span>
                 <h3>{claimableRewards[0]?.title ?? "Sin recompensas sincronizadas"}</h3>
-                <p>{claimableRewards[0]?.description ?? "No hay recompensas reclamables en la respuesta actual del backend."}</p>
+                <p>{claimableRewards[0]?.description ?? "No hay recompensas reclamables en la respuesta actual."}</p>
                 <button
                   className="button button--primary full-width"
                   style={{ marginTop: 14 }}

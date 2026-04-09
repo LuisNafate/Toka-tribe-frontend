@@ -48,9 +48,9 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
   const tierText = runtime?.tierText ?? "NO SINCRONIZADO";
   const tribeName = runtime?.tribeName ?? "Tribe no sincronizada";
   const pointsText = runtime?.pointsText ?? "0 pts";
-  const statusText = runtime?.statusText ?? "Sin respuesta de tribe desde backend";
+  const statusText = runtime?.statusText ?? "Sin respuesta de tribu por ahora";
   const progressPercent = runtime?.progressPercent ?? 0;
-  const progressHint = runtime?.progressHint ?? "La progresion se muestra al recibir datos de backend";
+  const progressHint = runtime?.progressHint ?? "La progresion se muestra al cargar los datos";
   const rankingLabel = runtime?.rankingLabel ?? "Division no sincronizada";
   const membersTitle = runtime?.membersTitle ?? "Tu Tribe";
   const currentStreakLabel = runtime?.currentStreakLabel ?? "0 días";
@@ -155,7 +155,7 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
                     <div className="fig-member-note-row">
                       <h3>{member.name}</h3>
                       {member.noTier ? (
-                        <span className="fig-member-tier-chip fig-member-tier-chip--none">(Sin tier backend)</span>
+                        <span className="fig-member-tier-chip fig-member-tier-chip--none">(Sin tier)</span>
                       ) : member.tierVariant === "oro" ? (
                         <span className="fig-member-tier-chip fig-member-tier-chip--oro">{member.tierLabel}</span>
                       ) : member.tierVariant === "plata" ? (

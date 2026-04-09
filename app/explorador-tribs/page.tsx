@@ -100,7 +100,7 @@ export default function ExplorerPage() {
       let parsed: TribeCard[] = [];
       try {
         const response = await TokaApi.tribesList();
-        // Pass full response: backend may return array at root OR under .data
+        // Usar la respuesta completa: puede llegar como array en la raíz o en .data
         parsed = extractTribes(response.data ?? response);
       } catch (primaryErr) {
         const is404 = primaryErr instanceof ApiError && primaryErr.status === 404;

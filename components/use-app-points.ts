@@ -105,12 +105,12 @@ export function writeAppPoints(nextPoints: number) {
   return nextPoints;
 }
 
-export async function refreshAppPointsFromBackend(): Promise<number | null> {
+export async function refreshAppPointsFromRemote(): Promise<number | null> {
   if (typeof window === "undefined") return null;
   if (!getSessionToken()) return null;
 
   const userResponse = await safeApiCall(() => TokaApi.usersMe());
-  // Backend may return points at root OR nested under .data
+  // La respuesta puede devolver puntos en la raíz o anidados en .data
   const userRecord = (userResponse?.data ?? userResponse) as Record<string, unknown> | null;
   const userPoints = extractPointsFromRecord(userRecord);
   if (userPoints !== null) {
@@ -142,7 +142,7 @@ export function useAppPoints() {
     };
 
     syncPoints();
-    void refreshAppPointsFromBackend().then((syncedPoints) => {
+    void refreshAppPointsFromRemote().then((syncedPoints) => {
       if (syncedPoints !== null) {
         setPoints(syncedPoints);
       }

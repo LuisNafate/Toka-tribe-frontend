@@ -16,7 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { getSessionToken } from "@/services/auth.service";
 import { TokaApi } from "@/services/toka-api.service";
-import { formatAppPoints, refreshAppPointsFromBackend, useAppPoints } from "@/components/use-app-points";
+import { formatAppPoints, refreshAppPointsFromRemote, useAppPoints } from "@/components/use-app-points";
 import { buildGameSessionRequest, resolveActiveChallengeId } from "@/services/game-session-sync";
 
 type Cell = { x: number; y: number };
@@ -109,13 +109,13 @@ export function SnakeGame() {
 
     const challengeId = await resolveActiveChallengeId(["snake", "serpiente"]);
     if (!challengeId) {
-      setLastReward("No hay challenge activo de Snake en backend. Resultado guardado en local.");
+      setLastReward("No hay challenge activo de Snake. Resultado guardado en local.");
       return;
     }
 
     const durationMs = startedAtRef.current ? Math.max(0, Date.now() - startedAtRef.current) : undefined;
 
-    setLastReward("Sincronizando partida Snake con backend...");
+    setLastReward("Sincronizando partida Snake...");
 
     try {
       await TokaApi.gameSessionsCreate(buildGameSessionRequest({
@@ -130,8 +130,8 @@ export function SnakeGame() {
         },
       }));
 
-      await refreshAppPointsFromBackend();
-      setLastReward(`Partida sincronizada: +${sessionPoints} pts backend`);
+      await refreshAppPointsFromRemote();
+      setLastReward(`Partida sincronizada: +${sessionPoints} pts`);
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Error desconocido";
       setLastReward(`No se pudo sincronizar Snake: ${detail}`);

@@ -9,7 +9,7 @@ import { extractPaymentSnapshot } from "@/services/payment-contracts";
 export default function ActivarTierPage() {
   const [paymentHistoryCount, setPaymentHistoryCount] = useState<number>(0);
   const [documentedBalance, setDocumentedBalance] = useState<number | null>(null);
-  const [message, setMessage] = useState<string>("La activación de tiers requiere catálogo y validación oficial de backend.");
+  const [message, setMessage] = useState<string>("La activación de tiers requiere catálogo y validación oficial.");
 
   useEffect(() => {
     async function loadWallet() {
@@ -47,9 +47,9 @@ export default function ActivarTierPage() {
         <div className="fig-tier-option fig-tier-option--active" role="status">
           <div>
             <h2>Sin catálogo de tiers</h2>
-            <p>Backend pendiente para precios, multiplicadores y validaciones.</p>
+            <p>Catálogo pendiente para precios, multiplicadores y validaciones.</p>
           </div>
-          <strong>Pendiente backend</strong>
+          <strong>Pendiente</strong>
         </div>
       </section>
 
@@ -59,7 +59,7 @@ export default function ActivarTierPage() {
           <strong>{paymentHistoryCount === 0 ? "Sin registros" : `${paymentHistoryCount} movimientos sincronizados`}</strong>
           <p style={{ marginTop: 8 }}>
             {documentedBalance === null
-              ? "Saldo no documentado por el backend."
+              ? "Saldo no documentado todavía."
               : `Saldo documentado: $${documentedBalance.toLocaleString("es-ES")} Toka`}
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function ActivarTierPage() {
       <p className="fig-tier-feedback" role="status" aria-live="polite">{message}</p>
 
       <button type="button" className="fig-tier-activate" disabled>
-        Activación pendiente de backend
+        Activación pendiente
       </button>
     </main>
   );

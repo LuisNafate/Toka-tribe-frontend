@@ -29,7 +29,7 @@ function toNumber(value: unknown): number | null {
 
 export default function TemporadaPage() {
   const [seasonTitle, setSeasonTitle] = useState("Temporada no sincronizada");
-  const [seasonStatus, setSeasonStatus] = useState("Sin respuesta de estado desde backend");
+  const [seasonStatus, setSeasonStatus] = useState("Sin respuesta de estado todavía");
   const [progressPct, setProgressPct] = useState(0);
   const [remainingLabel, setRemainingLabel] = useState("Tiempo no sincronizado");
   const [warning, setWarning] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export default function TemporadaPage() {
         <AppShell title="Temporada" subtitle="Estado del ciclo semanal, progreso y cierre">
           <div className="workspace__grid">
             <Panel>
-              <SectionHeader eyebrow="Temporada activa" title={seasonTitle} description="Datos sincronizados desde backend." action={<span className="badge">{remainingLabel}</span>} />
+              <SectionHeader eyebrow="Temporada activa" title={seasonTitle} description="Datos sincronizados del ciclo vigente." action={<span className="badge">{remainingLabel}</span>} />
               <ProgressBar value={progressPct} label="Progreso de temporada" suffix={`${progressPct}%`} muted />
               <div className="timeline-card" style={{ marginTop: 18 }}>
                 <div className="inline-row" style={{ justifyContent: "space-between" }}>
@@ -100,7 +100,7 @@ export default function TemporadaPage() {
 
             <div className="dashboard-side">
               <Panel>
-                <SectionHeader eyebrow="Hitos" title="Reglas de ascenso" description="Reglas y objetivos definidos por backend." />
+                <SectionHeader eyebrow="Hitos" title="Reglas de ascenso" description="Reglas y objetivos del ciclo actual." />
                 <div className="timeline">
                   <div className="timeline-row"><div className="timeline-dot" /><div><strong>Completar retos</strong><p>Sumar puntos diarios.</p></div><span className="subtle">1</span></div>
                   <div className="timeline-row"><div className="timeline-dot" /><div><strong>Sostener la racha</strong><p>Evitar perder el ritmo semanal.</p></div><span className="subtle">2</span></div>
@@ -115,7 +115,7 @@ export default function TemporadaPage() {
               </Panel>
 
               <Panel>
-                <SectionHeader eyebrow="Tiempo" title="Recordatorio de cierre" description="Este valor proviene del backend." />
+                <SectionHeader eyebrow="Tiempo" title="Recordatorio de cierre" description="Cuenta regresiva estimada del cierre." />
                 <div className="inline-row" style={{ gap: 8, color: "#5d89e4", fontWeight: 800 }}><TimerReset size={16} /> {remainingLabel}</div>
               </Panel>
             </div>
@@ -165,7 +165,7 @@ export default function TemporadaPage() {
               <strong>Estado</strong>
               <TimerReset size={16} style={{ color: "#5ef6e6" }} />
             </div>
-            <h3 style={{ marginTop: 8 }}>Estado backend</h3>
+            <h3 style={{ marginTop: 8 }}>Estado de temporada</h3>
             <p className="fig-small-text" style={{ color: "rgba(255,255,255,0.7)" }}>{seasonStatus}</p>
           </article>
 

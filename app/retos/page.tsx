@@ -10,6 +10,7 @@ import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, SectionHeader } from "@/components/common";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { TokaApi } from "@/services/toka-api.service";
+import { getDailyChallengeCountdownLabel } from "@/utils/daily-challenge";
 
 type ChallengeCard = {
   id: string;
@@ -17,7 +18,7 @@ type ChallengeCard = {
   description: string;
   points: number;
   href: string;
-  source: "backend" | "frontend";
+  source: "remote" | "frontend";
 };
 
 const FRONTEND_TRIVIA_CHALLENGE: ChallengeCard = {
@@ -113,7 +114,7 @@ function extractChallenges(payload: unknown): ChallengeCard[] {
             description,
             points,
             href: resolveChallengeHref(title, description),
-            source: "backend",
+            source: "remote",
           });
         }
       }
@@ -135,6 +136,18 @@ export default function RetosPage() {
   const [challenges, setChallenges] = useState<ChallengeCard[]>(FIXED_FRONTEND_CHALLENGES);
   const [weeklyContribution, setWeeklyContribution] = useState(0);
   const [warning, setWarning] = useState<string | null>(null);
+  const [dailyCountdown, setDailyCountdown] = useState("24:00:00");
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      setDailyCountdown(getDailyChallengeCountdownLabel());
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     async function loadRetos() {
@@ -205,7 +218,7 @@ export default function RetosPage() {
         <SectionHeader
           eyebrow="Disponible ahora"
           title="Retos activos"
-          description="Incluye retos backend y pruebas locales (Trivia + Snake)."
+          description="Incluye retos diarios y pruebas locales (Trivia + Snake)."
           action={<Link href="/retos/trivia/clasico" className="badge">Trivia Toka</Link>}
         />
         {challenges.length === 0 ? <p className="subtle">No hay retos activos sincronizados.</p> : null}
@@ -230,13 +243,13 @@ export default function RetosPage() {
         <Panel className="muted-card">
           <span className="status-pill">Aporte semanal</span>
           <h3>{weeklyContribution.toLocaleString("es-ES")} pts</h3>
-          <p>Este valor se calcula con tus sesiones registradas en backend.</p>
+          <p>Este valor se calcula con tus sesiones registradas.</p>
         </Panel>
 
         <Panel>
-          <SectionHeader eyebrow="Power-ups" title="Mejoras de partida" description="Catálogo pendiente de endpoint dedicado." />
+          <SectionHeader eyebrow="Power-ups" title="Mejoras de partida" description="Catálogo en preparación." />
           <div className="stack stack--tight">
-            <div className="reward-row"><div className="item-title">Sin endpoint de power-ups</div><div className="subtle">Backend aun no publica este catálogo</div></div>
+            <div className="reward-row"><div className="item-title">Sin catálogo de power-ups</div><div className="subtle">Aún no se publica este catálogo</div></div>
           </div>
         </Panel>
       </div>
@@ -274,7 +287,7 @@ export default function RetosPage() {
         <section className="fig-retos-daily">
           <div className="fig-retos-section-head">
             <strong>RETO ACTIVO</strong>
-            <span className="fig-retos-timer"><Clock size={13} /> Backend sincronizado</span>
+            <span className="fig-retos-timer"><Clock size={13} /> {dailyCountdown}</span>
           </div>
           <article className="fig-retos-daily-card">
             <div className="fig-retos-daily-card__top">
@@ -284,7 +297,7 @@ export default function RetosPage() {
               </div>
               <div className="fig-retos-quiz-icon"><Gamepad2 size={22} color="#2a55b9" /></div>
             </div>
-            <div className="fig-retos-alert"><AlertTriangle size={13} /> {dailyChallenge?.description ?? "No se encontraron retos en backend."}</div>
+            <div className="fig-retos-alert"><AlertTriangle size={13} /> {dailyChallenge?.description ?? "No se encontraron retos disponibles."}</div>
             <Link href={dailyChallenge?.href ?? "/retos/trivia/clasico"} className="fig-retos-play">
               {dailyChallenge?.href?.includes("trivia") ? "JUGAR TRIVIA" : dailyChallenge?.href?.includes("serpiente") ? "JUGAR SNAKE" : "JUGAR RETO"}
             </Link>
@@ -329,7 +342,7 @@ export default function RetosPage() {
           </div>
           <div className="fig-retos-multiplier">
             <Sparkles size={14} color="#2a55b9" />
-            <span>Multiplicadores dependen de tu tier en backend.</span>
+            <span>Multiplicadores dependen de tu tier actual.</span>
           </div>
           {warning ? <p className="subtle">{warning}</p> : null}
         </section>

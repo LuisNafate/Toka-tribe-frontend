@@ -29,14 +29,14 @@ function OnboardingContent() {
               <p>ESTADO DE TU TRIBE</p>
               <h2>Sincroniza tu sesión</h2>
             </div>
-            <span>RANKING BACKEND</span>
+            <span>RANKING EN VIVO</span>
           </div>
           <div className="fig-mobile-status-main">
             <div className="fig-mobile-avatar-ring">
               <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" />
             </div>
             <div>
-              <div className="fig-mobile-tier">Estado backend</div>
+              <div className="fig-mobile-tier">Estado sincronizado</div>
               <div className="fig-mobile-points">Sincronización requerida</div>
             </div>
             <img className="fig-mobile-status-mascot" src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />

@@ -12,7 +12,7 @@ import BottomNav from "@/components/BottomNav";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { TokaApi } from "@/services/toka-api.service";
 import { extractProfileSnapshot } from "@/services/user-contracts";
-import { formatAppPoints, refreshAppPointsFromBackend, useAppPoints } from "@/components/use-app-points";
+import { formatAppPoints, refreshAppPointsFromRemote, useAppPoints } from "@/components/use-app-points";
 
 type ProfileViewModel = {
   displayName: string;
@@ -60,7 +60,7 @@ export default function PerfilPage() {
       setIsLoadingProfile(true);
       setProfileWarning(null);
 
-      const syncedPoints = await refreshAppPointsFromBackend();
+      const syncedPoints = await refreshAppPointsFromRemote();
 
       const responses = await Promise.allSettled([
         TokaApi.usersMe(),

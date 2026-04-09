@@ -28,7 +28,7 @@ export function TokaLoginButton({
   const [status, setStatus] = useState<string>("idle");
   const hasAutoStarted = useRef(false);
 
-  /** Detecta si un username parece un ID provisional generado por el backend (no un nombre real). */
+  /** Detecta si un username parece un ID provisional generado automáticamente (no un nombre real). */
   function looksLikeProvisionalId(username: string | null | undefined): boolean {
     if (!username) return true;
     const u = username.trim();

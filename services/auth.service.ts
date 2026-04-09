@@ -1,4 +1,4 @@
-import type { BackendAuthEnvelope } from "@/types/toka";
+import type { AuthEnvelope } from "@/types/toka";
 
 export const SESSION_TOKEN_KEY = "tokatribe.session.jwt";
 
@@ -10,11 +10,11 @@ function getApiBaseUrl(): string {
   return baseUrl.replace(/\/$/, "");
 }
 
-function extractToken(payload: BackendAuthEnvelope): string | null {
+function extractToken(payload: AuthEnvelope): string | null {
   return payload.data?.accessToken ?? payload.accessToken ?? payload.token ?? payload.jwt ?? null;
 }
 
-export async function exchangeAuthCode(code: string): Promise<{ token: string; raw: BackendAuthEnvelope }> {
+export async function exchangeAuthCode(code: string): Promise<{ token: string; raw: AuthEnvelope }> {
   const apiBase = getApiBaseUrl();
 
   const response = await fetch(`${apiBase}/auth/toka/login`, {
@@ -25,9 +25,9 @@ export async function exchangeAuthCode(code: string): Promise<{ token: string; r
     body: JSON.stringify({ authCode: code }),
   });
 
-  let payload: BackendAuthEnvelope = {};
+  let payload: AuthEnvelope = {};
   try {
-    payload = (await response.json()) as BackendAuthEnvelope;
+    payload = (await response.json()) as AuthEnvelope;
   } catch {
     payload = {};
   }
@@ -39,7 +39,7 @@ export async function exchangeAuthCode(code: string): Promise<{ token: string; r
 
   const token = extractToken(payload);
   if (!token) {
-    throw new Error("El backend no devolvió un token JWT válido.");
+    throw new Error("El servicio no devolvió un token JWT válido.");
   }
 
   return { token, raw: payload };

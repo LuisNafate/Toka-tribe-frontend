@@ -10,6 +10,7 @@ import { Panel, SectionHeader } from "@/components/common";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { TokaApi } from "@/services/toka-api.service";
+import { getDailyChallengeCountdownLabel } from "@/utils/daily-challenge";
 
 type LeaderboardItem = {
   rank: number;
@@ -83,16 +84,27 @@ export default function DashboardPage() {
   const { points } = useAppPoints();
   const [tribeName, setTribeName] = useState("Cuenta sin sincronizar");
   const [challengeTitle, setChallengeTitle] = useState("Reto pendiente de sincronizacion");
-  const [challengeDescription, setChallengeDescription] = useState("Este bloque se actualiza cuando el backend devuelve un reto activo.");
-  const [challengeCountdown, setChallengeCountdown] = useState("Horario no disponible");
+  const [challengeDescription, setChallengeDescription] = useState("Este bloque se actualiza con el reto activo.");
+  const [challengeCountdown, setChallengeCountdown] = useState("24:00:00");
   const [challengePointsLabel, setChallengePointsLabel] = useState("0 pts");
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardItem[]>([]);
   const [rewardTitle, setRewardTitle] = useState("Recompensas pendientes de sincronizacion");
-  const [rewardDescription, setRewardDescription] = useState("Este bloque se actualiza cuando el backend devuelve recompensas.");
+  const [rewardDescription, setRewardDescription] = useState("Este bloque se actualiza con las recompensas disponibles.");
   const [seasonTitle, setSeasonTitle] = useState("Temporada no sincronizada");
-  const [seasonDescription, setSeasonDescription] = useState("La informacion de temporada se muestra al recibir datos del backend.");
+  const [seasonDescription, setSeasonDescription] = useState("La informacion de temporada se muestra al cargar el ciclo vigente.");
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
   const [warning, setWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      setChallengeCountdown(getDailyChallengeCountdownLabel());
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -121,12 +133,10 @@ export default function DashboardPage() {
         const rec = toRecord(Array.isArray(challengeData) ? challengeData[0] : challengeData);
         const title = toText(rec?.title) ?? toText(rec?.name);
         const desc = toText(rec?.description);
-        const closeAt = toText(rec?.endsAt) ?? toText(rec?.closeAt) ?? toText(rec?.countdown);
         const pts = toNumber(rec?.points) ?? toNumber(rec?.rewardPoints) ?? toNumber(rec?.score);
 
         if (title) setChallengeTitle(title);
         if (desc) setChallengeDescription(desc);
-        if (closeAt) setChallengeCountdown(closeAt);
         if (pts !== null) setChallengePointsLabel(`${pts.toLocaleString("es-ES")} pts`);
       }
 
@@ -344,7 +354,7 @@ export default function DashboardPage() {
           <article className="fig-unified-card fig-unified-card--dark">
             <div className="fig-unified-head">
               <strong>Recompensa</strong>
-              <span>Estado backend</span>
+                <span>Estado sincronizado</span>
             </div>
             <p>{rewardTitle}</p>
             <a className="fig-retos-play" href="/recompensas">VER RECOMPENSAS</a>

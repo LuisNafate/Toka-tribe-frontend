@@ -30,7 +30,7 @@ export type TokaBridgeResponse = {
   startTime?: number;
 };
 
-export type BackendAuthEnvelope = {
+export type AuthEnvelope = {
   success?: boolean;
   statusCode?: number;
   message?: string;

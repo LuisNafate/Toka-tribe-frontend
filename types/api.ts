@@ -8,7 +8,7 @@ export type UserIdentityDto = ApiRecord & {
   displayName?: string;
   name?: string;
   nickname?: string;
-  // Extended personal info (returned by backend since Juego Infinito)
+  // Extended personal info (returned by the service since Juego Infinito)
   fullName?: string;
   firstName?: string;
   lastName?: string;
@@ -96,7 +96,7 @@ export type GameSessionDto = ApiRecord & {
   isChallengeBonusAwarded?: boolean; // true only on the first winning attempt
   durationMs?: number | string;
   createdAt?: string;
-  playedAt?: string; // alias for createdAt used in newer backend versions
+  playedAt?: string; // alias for createdAt used in newer service versions
   metadata?: ApiRecord;
 };
 

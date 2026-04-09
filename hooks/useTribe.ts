@@ -154,12 +154,12 @@ export function useTribe() {
     let alive = true;
     async function load() {
       try {
-        // GET /users/me/summary is the ONLY backend endpoint that returns tribe.id.
+        // GET /users/me/summary is the only endpoint that returns tribe.id.
         // GET /users/me and GET /auth/me do NOT include tribeId.
         const summaryEnv = await TokaApi.usersMeSummary();
         if (!alive) return;
 
-        // Backend may return data at root or nested under .data
+        // The service may return data at root or nested under .data
         const summary = (summaryEnv.data ?? summaryEnv) as Record<string, unknown> | null | undefined;
         const userRec = summary?.user as Record<string, unknown> | null | undefined;
         const tribeRec = summary?.tribe as Record<string, unknown> | null | undefined;
@@ -230,7 +230,7 @@ export function useTribe() {
       const env = await TokaApi.tribesCreate(input as Record<string, unknown>);
 
       // Extract the new tribe id from the create response.
-      // Some backends wrap it under data.id, others under data._id or data.tribeId.
+      // Some services wrap it under data.id, others under data._id or data.tribeId.
       const raw = env.data as Record<string, unknown> | null | undefined;
       const newId =
         toText(raw?.id) ??

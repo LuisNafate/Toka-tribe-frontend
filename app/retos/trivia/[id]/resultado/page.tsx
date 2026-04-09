@@ -6,7 +6,7 @@ import { Trophy, Users, Zap, Tag } from "lucide-react";
 import type { TriviaResult } from "@/types/trivia";
 import { getSessionToken } from "@/services/auth.service";
 import { ApiError, TokaApi } from "@/services/toka-api.service";
-import { refreshAppPointsFromBackend, writeAppPoints } from "@/components/use-app-points";
+import { refreshAppPointsFromRemote, writeAppPoints } from "@/components/use-app-points";
 import { buildGameSessionRequest, resolveActiveChallengeId } from "@/services/game-session-sync";
 const RESULT_KEY = "toka_trivia_result";
 
@@ -19,7 +19,7 @@ function toText(value: unknown): string | null {
   return null;
 }
 
-async function findTriviaBackendChallengeId(): Promise<string | null> {
+async function findActiveTriviaChallengeId(): Promise<string | null> {
   return resolveActiveChallengeId(["trivia", "quiz"]);
 }
 
@@ -36,7 +36,7 @@ export default function TriviaResultadoPage({
 }) {
   const [result, setResult] = useState<TriviaResult | null>(null);
   const [posted, setPosted] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<string>("Puntaje local guardado. Pendiente de sincronizar con liga.");
+  const [syncMessage, setSyncMessage] = useState<string>("Puntaje local guardado. Pendiente de enviar a la liga.");
 
   useEffect(() => {
     try {
@@ -59,18 +59,18 @@ export default function TriviaResultadoPage({
       let challengeId = params.id && params.id !== "clasico" ? params.id : null;
 
       if (!challengeId) {
-        challengeId = await findTriviaBackendChallengeId();
+        challengeId = await findActiveTriviaChallengeId();
       }
 
       if (!challengeId) {
-        setSyncMessage("No hay challenge de Trivia activo en backend. Resultado guardado solo en frontend.");
+        setSyncMessage("No hay challenge de Trivia activo. Resultado guardado solo en frontend.");
         return;
       }
 
-      setSyncMessage("Sincronizando puntaje de Trivia con backend...");
+      setSyncMessage("Enviando puntaje de Trivia...");
 
       try {
-        // Juego Infinito: el backend acepta múltiples sesiones del mismo reto.
+        // Juego Infinito: el servicio acepta múltiples sesiones del mismo reto.
         // score debe ser ≥ 1 para evitar errores de validación.
         const safeScore = Math.max(1, result.finalScore);
 
@@ -101,15 +101,15 @@ export default function TriviaResultadoPage({
           localStorage.setItem("toka_current_streak", String(newStreak));
         }
 
-        // Fallback si el response no trajo totalPoints
-        if (newTotal === null) await refreshAppPointsFromBackend();
+        // Fallback si la respuesta no trajo totalPoints
+        if (newTotal === null) await refreshAppPointsFromRemote();
 
         const earnedLabel = pointsEarned !== null ? pointsEarned : safeScore;
         const bonusLabel = bonusAwarded ? " 🎉 ¡Bono de reto acreditado!" : " (reintento: solo pts base)";
         setSyncMessage(`Puntaje sincronizado: +${earnedLabel} pts${bonusLabel}`);
       } catch (error) {
-        // Fallback: actualizar puntos desde backend aunque el POST haya fallado
-        void refreshAppPointsFromBackend();
+        // Fallback: actualizar puntos desde la fuente remota aunque el POST haya fallado
+        void refreshAppPointsFromRemote();
 
         // Mostrar mensaje de error con el mayor detalle posible para debugging
         let detail = "Error desconocido";
@@ -118,7 +118,7 @@ export default function TriviaResultadoPage({
         } else if (error instanceof Error) {
           detail = error.message;
         }
-        setSyncMessage(`No se pudo sincronizar con backend: ${detail}`);
+        setSyncMessage(`No se pudo sincronizar: ${detail}`);
       }
     };
 
