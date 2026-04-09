@@ -105,7 +105,7 @@ export function extractHeaderIdentity(usersData: unknown, authData: unknown): Us
   const root = { usersData, authData };
   return {
     displayName:
-      (findValueByKeys(root, ["username", "displayName", "name", "nickname"], "string") as string | null) ??
+      (findValueByKeys(root, ["fullName", "username", "displayName", "name", "nickname", "firstName"], "string") as string | null) ??
       "Cuenta sin sincronizar",
     tribeName:
       (findValueByKeys(root, ["tribeName", "tribe", "squadName", "teamName"], "string") as string | null) ??
@@ -134,7 +134,7 @@ export function extractProfileSnapshot(args: {
 
   return {
     displayName:
-      (findValueByKeys(baseRoot, ["username", "displayName", "name", "nickname", "firstName"], "string") as string | null) ??
+      (findValueByKeys(baseRoot, ["fullName", "username", "displayName", "name", "nickname", "firstName"], "string") as string | null) ??
       "Cuenta sin sincronizar",
     avatarUrl:
       (findValueByKeys(baseRoot, ["avatarUrl", "avatar", "profileImage", "imageUrl"], "string") as string | null) ??

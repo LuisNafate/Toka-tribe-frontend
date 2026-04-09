@@ -118,9 +118,9 @@ export default function TribePage() {
           for (const item of list) {
             const rec = toRecord(item);
             if (!rec) continue;
-            const name = toText(rec.username) ?? toText(rec.name) ?? toText(rec.displayName) ?? "Miembro";
-            const score = toNumber(rec.points) ?? toNumber(rec.score) ?? 0;
-            const tier = toText(rec.tier) ?? "";
+            const name = toText(rec.fullName) ?? toText(rec.username) ?? toText(rec.name) ?? toText(rec.displayName) ?? "Miembro";
+            const score = toNumber(rec.pointsContributed) ?? toNumber(rec.points) ?? toNumber(rec.score) ?? 0;
+            const tier = toText(rec.activeTier) ?? toText(rec.tier) ?? "";
             const avatar = toText(rec.avatarUrl) ?? toText(rec.avatar) ?? "/images/ajolotes_1.png";
 
             parsedMembers.push({

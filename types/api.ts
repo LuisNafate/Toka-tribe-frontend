@@ -2,11 +2,23 @@ export type ApiRecord = Record<string, unknown>;
 
 export type UserIdentityDto = ApiRecord & {
   id?: string;
+  tokaUserId?: string;
   userId?: string;
   username?: string;
   displayName?: string;
   name?: string;
   nickname?: string;
+  // Extended personal info (returned by backend since Juego Infinito)
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: string;
+  email?: string;
+  mobilePhone?: string;
+  birthday?: number;
+  nationality?: string;
+  birthState?: string;
+  kycState?: string; // e.g. "VERIFIED" | "PENDING" | "REJECTED"
   avatarUrl?: string;
   avatar?: string;
   tribeId?: string;
@@ -80,8 +92,11 @@ export type GameSessionDto = ApiRecord & {
   challengeId?: string;
   gameType?: string;
   score?: number | string;
+  pointsEarned?: number | string; // actual points credited (base ± bonus)
+  isChallengeBonusAwarded?: boolean; // true only on the first winning attempt
   durationMs?: number | string;
   createdAt?: string;
+  playedAt?: string; // alias for createdAt used in newer backend versions
   metadata?: ApiRecord;
 };
 

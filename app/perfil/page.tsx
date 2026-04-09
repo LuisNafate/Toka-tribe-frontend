@@ -28,6 +28,7 @@ type ProfileViewModel = {
   bestRank: number;
   seasonCurrentPoints: number;
   seasonGoalPoints: number;
+  kycState: string | null;
 };
 
 const DEFAULT_PROFILE: ProfileViewModel = {
@@ -44,6 +45,7 @@ const DEFAULT_PROFILE: ProfileViewModel = {
   bestRank: 0,
   seasonCurrentPoints: 0,
   seasonGoalPoints: 0,
+  kycState: null,
 };
 
 export default function PerfilPage() {
@@ -62,21 +64,20 @@ export default function PerfilPage() {
 
       const responses = await Promise.allSettled([
         TokaApi.usersMe(),
-        TokaApi.authMe(),
         TokaApi.gameSessionsMe(),
         TokaApi.leaderboardCurrent(),
         TokaApi.seasonsCurrent(),
       ]);
 
       const usersMeData = responses[0].status === "fulfilled" ? responses[0].value.data ?? null : null;
-      const authMeData = responses[1].status === "fulfilled" ? responses[1].value.data ?? null : null;
-      const sessionsData = responses[2].status === "fulfilled" ? responses[2].value.data ?? null : null;
-      const leaderboardData = responses[3].status === "fulfilled" ? responses[3].value.data ?? null : null;
-      const seasonData = responses[4].status === "fulfilled" ? responses[4].value.data ?? null : null;
+      // authMe() ya no es necesario — /users/me devuelve todos los datos personales (Juego Infinito)
+      const sessionsData = responses[1].status === "fulfilled" ? responses[1].value.data ?? null : null;
+      const leaderboardData = responses[2].status === "fulfilled" ? responses[2].value.data ?? null : null;
+      const seasonData = responses[3].status === "fulfilled" ? responses[3].value.data ?? null : null;
 
       const snapshot = extractProfileSnapshot({
         usersMeData,
-        authMeData,
+        authMeData: null, // /users/me ya incluye toda la info personal desde Juego Infinito
         leaderboardData,
         seasonData,
         sessionsData,
@@ -84,10 +85,16 @@ export default function PerfilPage() {
         fallbackAvatarUrl: DEFAULT_PROFILE.avatarUrl,
       });
 
+      // Preferir tribe.activeTier desde /users/me extendido
+      const userRec = usersMeData as Record<string, unknown> | null;
+      const tribeRec = userRec?.tribe as Record<string, unknown> | null | undefined;
+      const activeTier = (tribeRec?.activeTier as string | undefined) ?? snapshot.tierLabel;
+      const kycState = (userRec?.kycState as string | undefined) ?? null;
+
       const nextProfile: ProfileViewModel = {
         displayName: snapshot.displayName,
         avatarUrl: snapshot.avatarUrl,
-        tierLabel: snapshot.tierLabel,
+        tierLabel: activeTier,
         planLabel: snapshot.planLabel,
         tribeName: snapshot.tribeName,
         totalPoints: snapshot.totalPoints,
@@ -98,6 +105,7 @@ export default function PerfilPage() {
         bestRank: snapshot.bestRank,
         seasonCurrentPoints: snapshot.seasonCurrentPoints,
         seasonGoalPoints: snapshot.seasonGoalPoints,
+        kycState,
       };
 
       setProfile(nextProfile);
@@ -166,6 +174,12 @@ export default function PerfilPage() {
                 </div>
                 <h3>Single Sign-On Toka</h3>
                 <p>Acceso directo, sin registro adicional, con progreso sincronizado en todo el ecosistema.</p>
+                {profile.kycState === "VERIFIED" && (
+                  <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                    <ShieldCheck size={14} color="#006a62" />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#006a62", letterSpacing: "0.04em" }}>IDENTIDAD VERIFICADA</span>
+                  </div>
+                )}
               </Panel>
               <Panel>
                 <SectionHeader eyebrow="Preferencias" title="Visibilidad y alertas" description="Controla tu experiencia dentro de TokaTribe." />

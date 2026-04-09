@@ -50,3 +50,21 @@ export function buildGameSessionRequest(input: GameSessionCreateRequest): GameSe
     metadata: input.metadata,
   };
 }
+
+/**
+ * Extrae la info de bonus de una sesión de juego (Juego Infinito).
+ * - `bonusAwarded`: true si esta partida fue la que cobró el bono del reto.
+ * - `pointsEarned`: puntos reales acreditados (base + bono, o solo base en reintentos).
+ */
+export function extractBonusInfo(session: unknown): { bonusAwarded: boolean; pointsEarned: number } {
+  const rec = session && typeof session === "object" && !Array.isArray(session)
+    ? (session as Record<string, unknown>)
+    : null;
+  if (!rec) return { bonusAwarded: false, pointsEarned: 0 };
+
+  const bonusAwarded = Boolean(rec.isChallengeBonusAwarded ?? false);
+  const raw = rec.pointsEarned ?? rec.points ?? rec.score ?? 0;
+  const pointsEarned = typeof raw === "number" && Number.isFinite(raw) ? raw : Number(String(raw).replace(/,/g, "")) || 0;
+
+  return { bonusAwarded, pointsEarned };
+}
