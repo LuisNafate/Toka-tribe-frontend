@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ShieldCheck, Sparkles, X } from "lucide-react";
 import { TokaLoginButton } from "@/components/toka-login-button";
 import { getSessionToken } from "@/services/auth.service";
 
 export function LandingAccessPopup() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
     const token = getSessionToken();
@@ -36,6 +37,16 @@ export function LandingAccessPopup() {
     );
   }
 
+  if (isDismissed) {
+    return (
+      <main className="landing-gate landing-gate--dismissed">
+        <button type="button" className="landing-gate__reopen" onClick={() => setIsDismissed(false)}>
+          Mostrar aviso de acceso
+        </button>
+      </main>
+    );
+  }
+
   return (
     <main className="landing-gate">
       <div className="landing-gate__glow landing-gate__glow--one" aria-hidden="true" />
@@ -43,6 +54,15 @@ export function LandingAccessPopup() {
       <div className="landing-gate__glow landing-gate__glow--three" aria-hidden="true" />
 
       <section className="landing-gate__modal" role="dialog" aria-modal="true" aria-labelledby="landing-gate-title" aria-describedby="landing-gate-desc">
+        <button
+          type="button"
+          className="landing-gate__close"
+          aria-label="Cerrar aviso"
+          onClick={() => setIsDismissed(true)}
+        >
+          <X size={16} />
+        </button>
+
         <div className="landing-gate__badge">
           <Sparkles size={14} />
           <span>Aviso de acceso</span>
