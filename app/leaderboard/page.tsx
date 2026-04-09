@@ -8,7 +8,6 @@ import { AppPointsBadge } from "@/components/app-points-badge";
 import BottomNav from "@/components/BottomNav";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, SectionHeader } from "@/components/common";
-import { FIGMA_ASSETS } from "@/lib/data";
 import { TokaApi } from "@/services/toka-api.service";
 
 type Division = "bronce" | "plata" | "oro";
@@ -79,6 +78,45 @@ function normalizeDivision(raw: string): Division {
   return "plata";
 }
 
+function extractRowsWithDivision(payload: unknown): { row: TribeRank; division: Division }[] {
+  const queue: unknown[] = [payload];
+  const results: { row: TribeRank; division: Division }[] = [];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        const rec = toRecord(item);
+        if (!rec) continue;
+        const rank = toNumber(rec.rank) ?? toNumber(rec.position) ?? null;
+        const name = toText(rec.name) ?? toText(rec.tribeName) ?? toText(rec.teamName) ?? null;
+        const pts = toNumber(rec.points) ?? toNumber(rec.score) ?? toNumber(rec.totalPoints) ?? null;
+        const divRaw = toText(rec.division) ?? toText(rec.tier) ?? null;
+        if (rank !== null && name && pts !== null) {
+          const division: Division = divRaw ? normalizeDivision(divRaw) : "plata";
+          results.push({
+            row: {
+              rank, name, pts,
+              initials: initialsFromName(name),
+              color: palette[(rank - 1 + palette.length) % palette.length],
+              isUser: Boolean(rec.isMine ?? rec.isCurrentUser ?? rec.me ?? false),
+              zone: zoneForRank(rank),
+            },
+            division,
+          });
+        }
+      }
+      continue;
+    }
+    const rec = toRecord(current);
+    if (!rec) continue;
+    for (const value of Object.values(rec)) {
+      if (value && typeof value === "object") queue.push(value);
+    }
+  }
+  return results;
+}
+
 function extractRows(payload: unknown): TribeRank[] {
   const queue: unknown[] = [payload];
   const rows: TribeRank[] = [];
@@ -133,51 +171,60 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     async function loadLeaderboard() {
-      const [current, bronce, plata, oro] = await Promise.allSettled([
+      const [current, bronceRes, plataRes, oroRes] = await Promise.allSettled([
         TokaApi.leaderboardCurrent(),
         TokaApi.leaderboardByDivision("bronce"),
         TokaApi.leaderboardByDivision("plata"),
         TokaApi.leaderboardByDivision("oro"),
       ]);
 
-      const next: Record<Division, TribeRank[]> = {
-        bronce: [],
-        plata: [],
-        oro: [],
-      };
+      const next: Record<Division, TribeRank[]> = { bronce: [], plata: [], oro: [] };
 
-      if (bronce.status === "fulfilled") {
-        const rows = extractRows(bronce.value.data);
+      // Process division-specific endpoints first (most accurate)
+      if (bronceRes.status === "fulfilled") {
+        const raw = bronceRes.value.data ?? bronceRes.value;
+        const rows = extractRows(raw);
         if (rows.length > 0) next.bronce = rows;
       }
-      if (plata.status === "fulfilled") {
-        const rows = extractRows(plata.value.data);
+      if (plataRes.status === "fulfilled") {
+        const raw = plataRes.value.data ?? plataRes.value;
+        const rows = extractRows(raw);
         if (rows.length > 0) next.plata = rows;
       }
-      if (oro.status === "fulfilled") {
-        const rows = extractRows(oro.value.data);
+      if (oroRes.status === "fulfilled") {
+        const raw = oroRes.value.data ?? oroRes.value;
+        const rows = extractRows(raw);
         if (rows.length > 0) next.oro = rows;
       }
 
+      // /leaderboard/current — distribute tribes by their division field
       if (current.status === "fulfilled") {
-        const currentRows = extractRows(current.value.data);
-        if (currentRows.length > 0) {
-          const rawDiv = toText((toRecord(current.value.data)?.division ?? "") as unknown);
-          const inferredDiv = rawDiv ? normalizeDivision(rawDiv) : "plata";
-          next[inferredDiv] = currentRows;
-          setActiveDiv(inferredDiv);
+        const raw = current.value.data ?? current.value;
+        const rec = toRecord(raw);
+        const seasonName = toText(rec?.seasonName ?? rec?.name ?? null);
+        if (seasonName) setWeekLabel(seasonName);
+
+        // Try to distribute all entries from current into their division buckets
+        const allRows = extractRowsWithDivision(raw);
+        for (const { row, division } of allRows) {
+          const bucket = next[division];
+          if (!bucket.some((r: TribeRank) => r.name === row.name)) {
+            bucket.push(row);
+          }
+        }
+        for (const div of ["bronce", "plata", "oro"] as Division[]) {
+          next[div].sort((a: TribeRank, b: TribeRank) => a.rank - b.rank);
         }
 
-        const seasonName = toText((toRecord(current.value.data)?.seasonName ?? null) as unknown);
-        if (seasonName) setWeekLabel(seasonName);
+        // Set active tab to first division that has data
+        const firstWithData = (["oro", "plata", "bronce"] as Division[]).find((d) => next[d].length > 0);
+        if (firstWithData) setActiveDiv(firstWithData);
       }
 
       setDivisions(next);
 
-      const failed = [current, bronce, plata, oro].filter((item) => item.status === "rejected").length;
-      if (failed > 0) {
-        setWarning("Algunos datos del leaderboard no pudieron sincronizarse.");
-      }
+      const allEmpty = Object.values(next).every((arr) => arr.length === 0);
+      if (allEmpty) setWarning("No hay datos de ranking disponibles aún. El snapshot se genera al finalizar la temporada.");
     }
 
     void loadLeaderboard();
@@ -244,7 +291,7 @@ export default function LeaderboardPage() {
             <span className="fig-lb-brand">TokaTribe</span>
           </div>
           <div className="fig-retos-avatar">
-            <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" />
+            <img src="/images/ajolote_2.png" alt="Avatar" />
           </div>
         </header>
 
