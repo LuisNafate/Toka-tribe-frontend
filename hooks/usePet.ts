@@ -1,24 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { TokaApi } from "@/services/toka-api.service";
+import { getSessionToken } from "@/services/auth.service";
 import type { Pet, PetItem, PetItemState } from "@/types/pet";
-
-const API = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-function authHeaders() {
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, { ...init, headers: authHeaders() });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  const json = await res.json();
-  return json.data as T;
-}
 
 export function usePet() {
   const [pet, setPet] = useState<Pet | null>(null);
@@ -34,21 +19,28 @@ export function usePet() {
   }
 
   useEffect(() => {
+    if (!getSessionToken()) {
+      setError("No hay sesión activa. Inicia sesión para personalizar tu mascota.");
+      setLoading(false);
+      return;
+    }
+
     let alive = true;
     async function load() {
       try {
-        const [petData, catalogData, userData] = await Promise.all([
-          apiFetch<Pet>("/api/v1/pets/me"),
-          apiFetch<PetItem[]>("/api/v1/pets/items/store"),
-          apiFetch<{ totalPoints: number }>("/api/v1/users/me"),
+        const [petEnv, catalogEnv, userEnv] = await Promise.all([
+          TokaApi.petsMe(),
+          TokaApi.petsStore(),
+          TokaApi.usersMe(),
         ]);
         if (!alive) return;
-        setPet(petData);
-        setCatalog(catalogData);
-        setTotalPoints(userData.totalPoints);
+        setPet(petEnv.data as Pet);
+        setCatalog((catalogEnv.data as PetItem[]) ?? []);
+        setTotalPoints((userEnv.data as { totalPoints: number })?.totalPoints ?? 0);
       } catch (e) {
         if (!alive) return;
-        setError("No se pudo cargar la mascota. Intenta de nuevo.");
+        const msg = e instanceof Error ? e.message : "No se pudo cargar la mascota.";
+        setError(msg);
       } finally {
         if (alive) setLoading(false);
       }
@@ -73,18 +65,19 @@ export function usePet() {
   const buyItem = useCallback(
     async (item: PetItem) => {
       if (!pet) return;
-      // Optimistic update
       const prevPet = pet;
       const prevPoints = totalPoints;
+      // Optimistic update
       setPet({ ...pet, unlockedItems: [...pet.unlockedItems, item._id] });
       setTotalPoints((p) => p - item.pointCost);
       try {
-        await apiFetch(`/api/v1/pets/items/${item.itemId}/unlock`, { method: "POST" });
+        await TokaApi.petsUnlockItem(item.itemId);
         showToast("ok", `¡${item.name} desbloqueado!`);
-      } catch {
+      } catch (e) {
         setPet(prevPet);
         setTotalPoints(prevPoints);
-        showToast("error", "No se pudo comprar el ítem. Inténtalo de nuevo.");
+        const msg = e instanceof Error ? e.message : "No se pudo comprar el ítem.";
+        showToast("error", msg);
       }
     },
     [pet, totalPoints],
@@ -104,13 +97,11 @@ export function usePet() {
         },
       });
       try {
-        await apiFetch("/api/v1/pets/me/equip", {
-          method: "POST",
-          body: JSON.stringify({ itemId: item.itemId }),
-        });
-      } catch {
+        await TokaApi.petsEquip(item.itemId);
+      } catch (e) {
         setPet(prevPet);
-        showToast("error", "No se pudo equipar el ítem. Inténtalo de nuevo.");
+        const msg = e instanceof Error ? e.message : "No se pudo equipar el ítem.";
+        showToast("error", msg);
       }
     },
     [pet],
