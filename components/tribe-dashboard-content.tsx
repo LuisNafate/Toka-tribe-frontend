@@ -45,13 +45,13 @@ export type ActivityItem = {
 export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDashboardContentProps) {
   const [feedback, setFeedback] = useState<{ tone: "info" | "ok" | "warn"; text: string } | null>(null);
 
-  const tierText = runtime?.tierText ?? "SIN DATOS";
-  const tribeName = runtime?.tribeName ?? "Sin tribe";
+  const tierText = runtime?.tierText ?? "NO SINCRONIZADO";
+  const tribeName = runtime?.tribeName ?? "Tribe no sincronizada";
   const pointsText = runtime?.pointsText ?? "0 pts";
-  const statusText = runtime?.statusText ?? "Sin datos de tribe sincronizados";
+  const statusText = runtime?.statusText ?? "Sin respuesta de tribe desde backend";
   const progressPercent = runtime?.progressPercent ?? 0;
-  const progressHint = runtime?.progressHint ?? "Sin datos de progresión disponibles";
-  const rankingLabel = runtime?.rankingLabel ?? "Sin división";
+  const progressHint = runtime?.progressHint ?? "La progresion se muestra al recibir datos de backend";
+  const rankingLabel = runtime?.rankingLabel ?? "Division no sincronizada";
   const membersTitle = runtime?.membersTitle ?? "Tu Tribe";
   const currentStreakLabel = runtime?.currentStreakLabel ?? "0 días";
   const retosLabel = runtime?.retosLabel ?? "0/0 jugados";
@@ -149,7 +149,7 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
                     <div className="fig-member-note-row">
                       <h3>{member.name}</h3>
                       {member.noTier ? (
-                        <span className="fig-member-tier-chip fig-member-tier-chip--none">(Sin Tier)</span>
+                        <span className="fig-member-tier-chip fig-member-tier-chip--none">(Sin tier backend)</span>
                       ) : member.tierVariant === "oro" ? (
                         <span className="fig-member-tier-chip fig-member-tier-chip--oro">{member.tierLabel}</span>
                       ) : member.tierVariant === "plata" ? (

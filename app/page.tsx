@@ -46,16 +46,16 @@ export default function LandingPage() {
             <h2>Sincroniza tu sesión</h2>
             <div className="fig-home-rank-row">
               <div>
-                <strong>--</strong>
-                <span>RANKING DISPONIBLE AL INICIAR</span>
+                <strong>Inicia sesión</strong>
+                <span>RANKING DISPONIBLE CON DATOS BACKEND</span>
               </div>
-              <span className="fig-home-tier-chip">Sin tier</span>
+              <span className="fig-home-tier-chip">Estado backend</span>
             </div>
-            <div className="fig-home-progress-copy">Sin datos competitivos hasta autenticar usuario</div>
+            <div className="fig-home-progress-copy">Este panel se completa al autenticar la cuenta en Toka.</div>
             <div className="fig-mobile-progress-track"><div style={{ width: "0%" }} /></div>
             <div className="fig-home-score-row">
-              <strong>0 pts</strong>
-              <span>Sin meta sincronizada</span>
+              <strong>Sincronización requerida</strong>
+              <span>Meta visible con respuesta de temporada</span>
             </div>
             <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
           </aside>
@@ -135,7 +135,7 @@ export default function LandingPage() {
               <p>ESTADO DE TU TRIBE</p>
               <h2>Sincroniza tu sesión</h2>
             </div>
-            <span>RANKING --</span>
+            <span>RANKING BACKEND</span>
           </div>
 
           <div className="fig-mobile-status-main">
@@ -143,15 +143,15 @@ export default function LandingPage() {
               <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" />
             </div>
             <div>
-              <div className="fig-mobile-tier">Sin tier</div>
-              <div className="fig-mobile-points">0 pts</div>
+              <div className="fig-mobile-tier">Estado backend</div>
+              <div className="fig-mobile-points">Sincronización requerida</div>
             </div>
             <img className="fig-mobile-status-mascot" src="/images/ajolote_2.png" alt="Mascot" draggable="false" />
           </div>
 
           <div className="fig-mobile-progress-labels">
-            <span>Sin datos de ascenso</span>
-            <strong>0%</strong>
+            <span>Progreso disponible al iniciar sesión</span>
+            <strong>--</strong>
           </div>
           <div className="fig-mobile-progress-track"><div style={{ width: "0%" }} /></div>
         </section>

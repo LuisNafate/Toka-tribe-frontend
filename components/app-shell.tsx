@@ -20,8 +20,8 @@ type AppShellProps = {
 export function AppShell({ title, subtitle, children, aside, headerBadge }: AppShellProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [displayName, setDisplayName] = useState("Usuario");
-  const [tribeName, setTribeName] = useState("Sin tribe");
+  const [displayName, setDisplayName] = useState("Cuenta sin sincronizar");
+  const [tribeName, setTribeName] = useState("Tribe no sincronizada");
 
   useEffect(() => {
     async function loadHeaderIdentity() {

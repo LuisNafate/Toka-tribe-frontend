@@ -81,16 +81,16 @@ function extractLeaderboard(payload: unknown): LeaderboardItem[] {
 
 export default function DashboardPage() {
   const { points } = useAppPoints();
-  const [tribeName, setTribeName] = useState("Sin tribe");
-  const [challengeTitle, setChallengeTitle] = useState("Sin reto activo");
-  const [challengeDescription, setChallengeDescription] = useState("Aún no hay un reto sincronizado para tu sesión.");
-  const [challengeCountdown, setChallengeCountdown] = useState("Sin horario");
+  const [tribeName, setTribeName] = useState("Cuenta sin sincronizar");
+  const [challengeTitle, setChallengeTitle] = useState("Reto pendiente de sincronizacion");
+  const [challengeDescription, setChallengeDescription] = useState("Este bloque se actualiza cuando el backend devuelve un reto activo.");
+  const [challengeCountdown, setChallengeCountdown] = useState("Horario no disponible");
   const [challengePointsLabel, setChallengePointsLabel] = useState("0 pts");
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardItem[]>([]);
-  const [rewardTitle, setRewardTitle] = useState("Sin recompensa disponible");
-  const [rewardDescription, setRewardDescription] = useState("No hay recompensas sincronizadas por ahora.");
-  const [seasonTitle, setSeasonTitle] = useState("Temporada sin datos");
-  const [seasonDescription, setSeasonDescription] = useState("Sin información de cierre por el momento.");
+  const [rewardTitle, setRewardTitle] = useState("Recompensas pendientes de sincronizacion");
+  const [rewardDescription, setRewardDescription] = useState("Este bloque se actualiza cuando el backend devuelve recompensas.");
+  const [seasonTitle, setSeasonTitle] = useState("Temporada no sincronizada");
+  const [seasonDescription, setSeasonDescription] = useState("La informacion de temporada se muestra al recibir datos del backend.");
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
   const [warning, setWarning] = useState<string | null>(null);
 
@@ -344,7 +344,7 @@ export default function DashboardPage() {
           <article className="fig-unified-card fig-unified-card--dark">
             <div className="fig-unified-head">
               <strong>Recompensa</strong>
-              <span>Sin simulación</span>
+              <span>Estado backend</span>
             </div>
             <p>{rewardTitle}</p>
             <a className="fig-retos-play" href="/recompensas">VER RECOMPENSAS</a>

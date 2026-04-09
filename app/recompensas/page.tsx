@@ -180,8 +180,8 @@ export default function RecompensasPage() {
             <div className="dashboard-side">
               <Panel className="muted-card">
                 <span className="status-pill">Disponible ahora</span>
-                <h3>{claimableRewards[0]?.title ?? "Sin recompensa disponible"}</h3>
-                <p>{claimableRewards[0]?.description ?? "No hay recompensas reclamables en este momento."}</p>
+                <h3>{claimableRewards[0]?.title ?? "Sin recompensas sincronizadas"}</h3>
+                <p>{claimableRewards[0]?.description ?? "No hay recompensas reclamables en la respuesta actual del backend."}</p>
                 <button
                   className="button button--primary full-width"
                   style={{ marginTop: 14 }}
@@ -221,7 +221,7 @@ export default function RecompensasPage() {
                   disabled={!item.claimable || isClaiming !== null}
                   onClick={() => void handleClaim(item.id)}
                 >
-                  {isClaiming === item.id ? "Reclamando..." : item.claimable ? "Reclamar" : "No disponible"}
+                  {isClaiming === item.id ? "Reclamando..." : item.claimable ? "Reclamar" : "Bloqueada"}
                 </button>
               </article>
             ))}
@@ -272,7 +272,7 @@ export default function RecompensasPage() {
                 disabled={!item.claimable || isClaiming !== null}
                 onClick={() => void handleClaim(item.id)}
               >
-                {isClaiming === item.id ? "Reclamando..." : item.claimable ? "Reclamar" : "No disponible"}
+                {isClaiming === item.id ? "Reclamando..." : item.claimable ? "Reclamar" : "Bloqueada"}
               </button>
             </article>
           ))}

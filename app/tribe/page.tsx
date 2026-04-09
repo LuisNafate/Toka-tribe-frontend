@@ -72,7 +72,7 @@ export default function TribePage() {
         toText(toRecord(usersData)?.tier) ??
         toText(toRecord(toRecord(usersData)?.tribe)?.tier) ??
         toText(toRecord(authData)?.tier) ??
-        "Sin Tier";
+        "No sincronizado";
 
       const hasNoTier = tierLabel.toLowerCase().includes("sin") || tierLabel.toLowerCase().includes("none");
       setWithoutTier(hasNoTier);
@@ -80,12 +80,12 @@ export default function TribePage() {
       let tribeName =
         toText(toRecord(usersData)?.tribeName) ??
         toText(toRecord(toRecord(usersData)?.tribe)?.name) ??
-        "Sin tribe";
+        "Tribe no sincronizada";
 
       let members: Member[] = [];
       let memberCount = toNumber(toRecord(toRecord(usersData)?.tribe)?.memberCount) ?? 0;
       let maxMembers = toNumber(toRecord(toRecord(usersData)?.tribe)?.maxMembers) ?? 10;
-      let rankingLabel = "Sin división";
+      let rankingLabel = "Division no sincronizada";
 
       if (tribeId) {
         const [detailResult, membersResult, historyResult] = await Promise.allSettled([

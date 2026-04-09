@@ -28,11 +28,11 @@ type ProfileViewModel = {
 };
 
 const DEFAULT_PROFILE: ProfileViewModel = {
-  displayName: "Usuario",
+  displayName: "Cuenta sin sincronizar",
   avatarUrl: FIGMA_ASSETS.landing.hero,
-  tierLabel: "SIN DATOS",
-  planLabel: "Sin plan",
-  tribeName: "Sin tribe",
+  tierLabel: "NO SINCRONIZADO",
+  planLabel: "No sincronizado",
+  tribeName: "No sincronizada",
   totalPoints: 0,
   maxStreakDays: 0,
   currentStreakDays: 0,
@@ -229,7 +229,7 @@ export default function PerfilPage() {
                 <article className="mini-card">
                   <div className="mini-icon"><Trophy size={18} /></div>
                   <h3>Mejor posición</h3>
-                  <p>#{profile.bestRank}</p>
+                  <p>{profile.bestRank > 0 ? `#${profile.bestRank}` : "--"}</p>
                 </article>
               </div>
             </Panel>
@@ -353,7 +353,7 @@ export default function PerfilPage() {
             <article className="fig-perfil-stat-card">
               <Star size={20} className="fig-perfil-stat-icon fig-perfil-stat-icon--purple" />
               <span className="fig-perfil-stat-card-label">MEJOR POSICIÓN</span>
-              <span className="fig-perfil-stat-card-value">#{profile.bestRank}</span>
+              <span className="fig-perfil-stat-card-value">{profile.bestRank > 0 ? `#${profile.bestRank}` : "--"}</span>
             </article>
           </div>
 

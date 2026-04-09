@@ -16,7 +16,35 @@ type ChallengeCard = {
   title: string;
   description: string;
   points: number;
+  href: string;
+  source: "backend" | "frontend";
 };
+
+const FRONTEND_TRIVIA_CHALLENGE: ChallengeCard = {
+  id: "frontend-trivia",
+  title: "Trivia Toka",
+  description: "Preguntas locales cargadas desde el frontend.",
+  points: 120,
+  href: "/retos/trivia/clasico",
+  source: "frontend",
+};
+
+function resolveChallengeHref(title: string, description: string): string {
+  const text = `${title} ${description}`.toLowerCase();
+  if (text.includes("trivia")) return "/retos/trivia/clasico";
+  if (text.includes("snake") || text.includes("serpiente")) return "/retos/serpiente";
+  return "/retos";
+}
+
+function withFrontendTrivia(challenges: ChallengeCard[]): ChallengeCard[] {
+  const hasTrivia = challenges.some((item) => {
+    const text = `${item.title} ${item.description}`.toLowerCase();
+    return text.includes("trivia");
+  });
+
+  if (hasTrivia) return challenges;
+  return [FRONTEND_TRIVIA_CHALLENGE, ...challenges];
+}
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -55,7 +83,14 @@ function extractChallenges(payload: unknown): ChallengeCard[] {
         const points = toNumber(rec.points) ?? toNumber(rec.rewardPoints) ?? toNumber(rec.score) ?? 0;
 
         if (id && title) {
-          result.push({ id, title, description, points });
+          result.push({
+            id,
+            title,
+            description,
+            points,
+            href: resolveChallengeHref(title, description),
+            source: "backend",
+          });
         }
       }
       continue;
@@ -72,8 +107,8 @@ function extractChallenges(payload: unknown): ChallengeCard[] {
 }
 
 export default function RetosPage() {
-  const [tribeName, setTribeName] = useState("Sin tribe");
-  const [challenges, setChallenges] = useState<ChallengeCard[]>([]);
+  const [tribeName, setTribeName] = useState("Tribe no sincronizada");
+  const [challenges, setChallenges] = useState<ChallengeCard[]>([FRONTEND_TRIVIA_CHALLENGE]);
   const [weeklyContribution, setWeeklyContribution] = useState(0);
   const [warning, setWarning] = useState<string | null>(null);
 
@@ -94,7 +129,9 @@ export default function RetosPage() {
 
       if (challengesResult.status === "fulfilled") {
         const parsed = extractChallenges(challengesResult.value.data);
-        setChallenges(parsed);
+        setChallenges(withFrontendTrivia(parsed));
+      } else {
+        setChallenges([FRONTEND_TRIVIA_CHALLENGE]);
       }
 
       if (sessionsResult.status === "fulfilled") {
@@ -140,7 +177,7 @@ export default function RetosPage() {
               <p>{item.description}</p>
               <div className="inline-row" style={{ justifyContent: "space-between", marginTop: 18 }}>
                 <strong>+{item.points.toLocaleString("es-ES")} pts</strong>
-                <span><TimerReset size={16} /></span>
+                <Link href={item.href} className="badge">Jugar</Link>
               </div>
             </article>
           ))}
@@ -157,7 +194,7 @@ export default function RetosPage() {
         <Panel>
           <SectionHeader eyebrow="Power-ups" title="Mejoras de partida" description="Catálogo pendiente de endpoint dedicado." />
           <div className="stack stack--tight">
-            <div className="reward-row"><div className="item-title">Sin datos sincronizados</div><div className="subtle">Esperando API de power-ups</div></div>
+            <div className="reward-row"><div className="item-title">Sin endpoint de power-ups</div><div className="subtle">Backend aun no publica este catálogo</div></div>
           </div>
         </Panel>
       </div>
@@ -206,7 +243,9 @@ export default function RetosPage() {
               <div className="fig-retos-quiz-icon"><Gamepad2 size={22} color="#2a55b9" /></div>
             </div>
             <div className="fig-retos-alert"><AlertTriangle size={13} /> {dailyChallenge?.description ?? "No se encontraron retos en backend."}</div>
-            <Link href="/retos/serpiente" className="fig-retos-play">JUGAR SNAKE</Link>
+            <Link href={dailyChallenge?.href ?? "/retos/trivia/clasico"} className="fig-retos-play">
+              {dailyChallenge?.href?.includes("trivia") ? "JUGAR TRIVIA" : "JUGAR RETO"}
+            </Link>
           </article>
         </section>
 
@@ -226,9 +265,9 @@ export default function RetosPage() {
                   <h3>{challenge.title}</h3>
                   <p><span className="fig-retos-pts-inline">+{challenge.points.toLocaleString("es-ES")} pts</span></p>
                 </div>
-                <button type="button" className="fig-retos-btn fig-retos-btn--navy" disabled>
-                  Pendiente
-                </button>
+                <Link href={challenge.href} className="fig-retos-btn fig-retos-btn--navy">
+                  Jugar
+                </Link>
               </article>
             ))}
           </div>

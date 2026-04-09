@@ -28,10 +28,10 @@ function toNumber(value: unknown): number | null {
 }
 
 export default function TemporadaPage() {
-  const [seasonTitle, setSeasonTitle] = useState("Temporada sin datos");
-  const [seasonStatus, setSeasonStatus] = useState("Sin información de cierre disponible");
+  const [seasonTitle, setSeasonTitle] = useState("Temporada no sincronizada");
+  const [seasonStatus, setSeasonStatus] = useState("Sin respuesta de estado desde backend");
   const [progressPct, setProgressPct] = useState(0);
-  const [remainingLabel, setRemainingLabel] = useState("Sin datos de tiempo");
+  const [remainingLabel, setRemainingLabel] = useState("Tiempo no sincronizado");
   const [warning, setWarning] = useState<string | null>(null);
 
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function TemporadaPage() {
               <strong>Estado</strong>
               <TimerReset size={16} style={{ color: "#5ef6e6" }} />
             </div>
-            <h3 style={{ marginTop: 8 }}>Sin simulación</h3>
+            <h3 style={{ marginTop: 8 }}>Estado backend</h3>
             <p className="fig-small-text" style={{ color: "rgba(255,255,255,0.7)" }}>{seasonStatus}</p>
           </article>
 

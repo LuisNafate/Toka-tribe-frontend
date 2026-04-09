@@ -66,21 +66,21 @@ export default function ActivarTierPage() {
             <h2>Sin catálogo de tiers</h2>
             <p>Backend pendiente para precios, multiplicadores y validaciones.</p>
           </div>
-          <strong>No disponible</strong>
+          <strong>Pendiente backend</strong>
         </div>
       </section>
 
       <section className="fig-tier-balance">
         <div>
           <span>Tu balance:</span>
-          <strong>{walletBalance === null ? "Sin datos" : `$${walletBalance.toLocaleString("es-ES")} Toka`}</strong>
+          <strong>{walletBalance === null ? "No sincronizado" : `$${walletBalance.toLocaleString("es-ES")} Toka`}</strong>
         </div>
       </section>
 
       <p className="fig-tier-feedback" role="status" aria-live="polite">{message}</p>
 
       <button type="button" className="fig-tier-activate" disabled>
-        Activación no disponible
+        Activación pendiente de backend
       </button>
     </main>
   );
