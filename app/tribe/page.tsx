@@ -233,12 +233,12 @@ export default function TribePage() {
         </div>
 
         <main className="fig-mobile-tribe fig-responsive-page fig-mobile-only">
-          <header className="fig-mobile-topbar">
+          <header className="fig-mobile-topbar fig-retos-topbar">
             <div className="fig-mobile-topbar__left">
               <MobileHamburgerMenu />
-              <strong>TokaTribe</strong>
+              <strong className="fig-retos-brand">TokaTribe</strong>
             </div>
-            <div style={{ width: 36 }} />
+            <div style={{ width: 40 }} />
           </header>
 
           <div className="fig-no-tribe-screen">
@@ -293,12 +293,14 @@ export default function TribePage() {
       </div>
 
       <main className="fig-mobile-tribe fig-responsive-page fig-mobile-only">
-        <header className="fig-mobile-topbar">
+        <header className="fig-mobile-topbar fig-retos-topbar">
           <div className="fig-mobile-topbar__left">
             <MobileHamburgerMenu />
-            <strong>TokaTribe</strong>
+            <strong className="fig-retos-brand">TokaTribe</strong>
           </div>
-          <img src={avatarUrl} alt="Perfil" />
+          <div className="fig-retos-avatar">
+            <img src={avatarUrl} alt="Perfil" />
+          </div>
         </header>
 
         {content}

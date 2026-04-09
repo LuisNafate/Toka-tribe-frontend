@@ -82,7 +82,7 @@ function extractLeaderboard(payload: unknown): LeaderboardItem[] {
 
 export default function DashboardPage() {
   const { points } = useAppPoints();
-  const [tribeName, setTribeName] = useState("Cuenta sin sincronizar");
+  const [tribeName, setTribeName] = useState("TokaTribe");
   const [challengeTitle, setChallengeTitle] = useState("Reto pendiente de sincronizacion");
   const [challengeDescription, setChallengeDescription] = useState("Este bloque se actualiza con el reto activo.");
   const [challengeCountdown, setChallengeCountdown] = useState("24:00:00");
