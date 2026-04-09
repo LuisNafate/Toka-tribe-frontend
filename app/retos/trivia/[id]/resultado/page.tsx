@@ -5,10 +5,46 @@ import Link from "next/link";
 import { Trophy, Users, Zap, Tag } from "lucide-react";
 import type { TriviaResult } from "@/types/trivia";
 import { getSessionToken } from "@/services/auth.service";
-import { TokaApi } from "@/services/toka-api.service";
+import { ApiError, TokaApi } from "@/services/toka-api.service";
 import { refreshAppPointsFromBackend } from "@/components/use-app-points";
-
 const RESULT_KEY = "toka_trivia_result";
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+function toText(value: unknown): string | null {
+  if (typeof value === "string" && value.trim() !== "") return value.trim();
+  return null;
+}
+
+async function findTriviaBackendChallengeId(): Promise<string | null> {
+  try {
+    const response = await TokaApi.challengesActive();
+    const payload = response.data;
+    const list = Array.isArray(payload)
+      ? payload
+      : Array.isArray(toRecord(payload)?.items)
+        ? (toRecord(payload)?.items as unknown[])
+        : [];
+
+    for (const item of list) {
+      const rec = toRecord(item);
+      if (!rec) continue;
+      const id = toText(rec.id) ?? toText(rec.challengeId);
+      const title = toText(rec.title) ?? toText(rec.name) ?? "";
+      const description = toText(rec.description) ?? "";
+      const haystack = `${title} ${description}`.toLowerCase();
+      if (id && haystack.includes("trivia")) {
+        return id;
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
 
 function getHeroMessage(accuracy: number): string {
   if (accuracy >= 80) return "¡Bien jugado!";
@@ -23,7 +59,7 @@ export default function TriviaResultadoPage({
 }) {
   const [result, setResult] = useState<TriviaResult | null>(null);
   const [posted, setPosted] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<string>("Pendiente de sincronizar puntos...");
+  const [syncMessage, setSyncMessage] = useState<string>("Puntaje local guardado. Pendiente de sincronizar con liga.");
 
   useEffect(() => {
     try {
@@ -35,35 +71,47 @@ export default function TriviaResultadoPage({
   useEffect(() => {
     if (!result || posted) return;
     setPosted(true);
-    const token = getSessionToken();
-    if (!token) {
-      setSyncMessage("No hay sesión activa. No se pudo sincronizar puntaje con backend.");
+
+    const sessionToken = getSessionToken();
+    if (!sessionToken) {
+      setSyncMessage("Sin sesión JWT. El resultado queda en modo local.");
       return;
     }
 
-    setSyncMessage("Sincronizando puntaje de trivia con backend...");
+    const runSync = async () => {
+      let challengeId = params.id && params.id !== "clasico" ? params.id : null;
 
-    TokaApi.gameSessionsCreate({
-      gameType: "trivia",
-      gameId: "trivia",
-      challengeId: params.id,
-      sessionId: params.id,
-      score: result.finalScore,
-      correctCount: result.correctCount,
-      totalQuestions: result.totalQuestions,
-      metadata: {
-        baseScore: result.baseScore,
-        multiplier: result.multiplier,
-      },
-    })
-      .then(async () => {
+      if (!challengeId) {
+        challengeId = await findTriviaBackendChallengeId();
+      }
+
+      if (!challengeId) {
+        setSyncMessage("No hay challenge de Trivia activo en backend. Resultado guardado solo en frontend.");
+        return;
+      }
+
+      setSyncMessage("Sincronizando puntaje de Trivia con backend...");
+
+      try {
+        await TokaApi.gameSessionsCreate({
+          challengeId,
+          score: result.finalScore,
+          durationMs: result.totalQuestions * 15000,
+        });
         await refreshAppPointsFromBackend();
-        setSyncMessage(`Puntos sincronizados correctamente: +${result.finalScore} pts`);
-      })
-      .catch((error) => {
-        const detail = error instanceof Error ? error.message : "Error externo desconocido.";
-        setSyncMessage(`No se pudo sincronizar puntaje con backend. Detalle: ${detail}`);
-      });
+        setSyncMessage(`Puntaje sincronizado correctamente: +${result.finalScore} pts`);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 409) {
+          setSyncMessage("Este challenge ya fue registrado anteriormente para tu cuenta.");
+          return;
+        }
+
+        const detail = error instanceof Error ? error.message : "Error desconocido";
+        setSyncMessage(`No se pudo sincronizar con backend: ${detail}`);
+      }
+    };
+
+    void runSync();
   }, [result, posted, params.id]);
 
   if (!result) {
@@ -88,7 +136,7 @@ export default function TriviaResultadoPage({
       {/* ── Hero card con gradiente ── */}
       <section className="fig-trivia-result-hero-card">
         <div className="fig-trivia-result-hero-text">
-          <span className="fig-trivia-result-hero-subtitle">TOKA TRIVIA</span>
+          <span className="fig-trivia-result-hero-subtitle">AXO SQUAD · TOKA TRIVIA</span>
           <h1>{heroMessage}</h1>
           <p className="fig-trivia-result-hero-pts">
             <strong>{finalScore.toLocaleString()}</strong>
