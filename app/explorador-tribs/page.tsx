@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { X, Users } from "lucide-react";
 import { FIGMA_ASSETS } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 import { AppShell } from "@/components/app-shell";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { TokaApi } from "@/services/toka-api.service";
+import { useTribe } from "@/hooks/useTribe";
 
 type TribeCard = {
   id: string;
@@ -23,12 +25,10 @@ function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
 }
-
 function toText(value: unknown): string | null {
   if (typeof value === "string" && value.trim() !== "") return value.trim();
   return null;
 }
-
 function toNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -37,13 +37,11 @@ function toNumber(value: unknown): number | null {
   }
   return null;
 }
-
 function normalizeTier(raw: string): string {
-  const value = raw.toLowerCase();
-  if (value.includes("diam")) return "Diamante";
-  if (value.includes("oro")) return "Oro";
-  if (value.includes("plat")) return "Plata";
-  if (value.includes("bron")) return "Bronce";
+  const v = raw.toLowerCase();
+  if (v.includes("diam")) return "Diamante";
+  if (v.includes("oro"))  return "Oro";
+  if (v.includes("plat")) return "Plata";
   return "Bronce";
 }
 
@@ -51,95 +49,177 @@ function extractTribes(payload: unknown): TribeCard[] {
   const queue: unknown[] = [payload];
   const tribes: TribeCard[] = [];
   let imageCursor = 0;
-
   while (queue.length > 0) {
     const current = queue.shift();
-
     if (Array.isArray(current)) {
       for (const item of current) {
         const rec = toRecord(item);
         if (!rec) continue;
-
         const id = toText(rec.id) ?? toText(rec.tribeId) ?? null;
         const name = toText(rec.name) ?? toText(rec.tribeName) ?? null;
         if (!id || !name) continue;
-
         const tierRaw = toText(rec.tier) ?? toText(rec.division) ?? "Bronce";
-        const memberCount = toNumber(rec.memberCount) ?? toNumber(rec.membersCount) ?? toNumber(toRecord(rec.members)?.count) ?? 0;
-        const maxMembers = toNumber(rec.maxMembers) ?? toNumber(rec.capacity) ?? 50;
+        const memberCount = toNumber(rec.memberCount) ?? toNumber(rec.membersCount) ?? 0;
+        const maxMembers = toNumber(rec.maxMembers) ?? toNumber(rec.capacity) ?? 10;
         const pointsWeek = toNumber(rec.pointsWeek) ?? toNumber(rec.scoreWeek) ?? toNumber(rec.points) ?? 0;
         const avatarUrl =
-          toText(rec.avatarUrl) ??
-          toText(rec.imageUrl) ??
+          toText(rec.avatarUrl) ?? toText(rec.imageUrl) ??
           FIGMA_ASSETS.explorador.tribePhotos[imageCursor % FIGMA_ASSETS.explorador.tribePhotos.length];
-
-        tribes.push({
-          id,
-          name,
-          avatarUrl,
-          tier: normalizeTier(tierRaw),
-          memberCount,
-          maxMembers,
-          pointsWeek,
-        });
+        tribes.push({ id, name, avatarUrl, tier: normalizeTier(tierRaw), memberCount, maxMembers, pointsWeek });
         imageCursor += 1;
       }
       continue;
     }
-
     const rec = toRecord(current);
     if (!rec) continue;
-
     for (const value of Object.values(rec)) {
       if (value && typeof value === "object") queue.push(value);
     }
   }
-
   return tribes.filter((item, idx, arr) => arr.findIndex((x) => x.id === item.id) === idx);
 }
 
+function slugify(text: string): string {
+  return text.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 30);
+}
+
+// ── Create Tribe Modal ─────────────────────────────────────────────────────────
+function CreateTribeModal({ onClose, onCreate }: {
+  onClose: () => void;
+  onCreate: (name: string, slug: string, description?: string) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  function handleNameChange(val: string) {
+    setName(val);
+    setSlug(slugify(val));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (name.trim().length < 3) return;
+    setSubmitting(true);
+    await onCreate(name.trim(), slug || slugify(name), description.trim() || undefined);
+    setSubmitting(false);
+  }
+
+  return (
+    <div className="fig-tribe-modal-overlay" onClick={onClose}>
+      <div className="fig-tribe-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="fig-tribe-modal-header">
+          <h3>Crear mi Tribe</h3>
+          <button type="button" onClick={onClose} className="fig-tribe-modal-close">
+            <X size={18} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="fig-tribe-modal-form">
+          <label className="fig-tribe-modal-label">
+            Nombre *
+            <input
+              className="fig-tribe-modal-input"
+              type="text"
+              placeholder="Ej: Axo Squad"
+              value={name}
+              maxLength={30}
+              onChange={(e) => handleNameChange(e.target.value)}
+              required
+            />
+          </label>
+          <label className="fig-tribe-modal-label">
+            Slug (identificador)
+            <input
+              className="fig-tribe-modal-input"
+              type="text"
+              placeholder="axo-squad"
+              value={slug}
+              maxLength={30}
+              onChange={(e) => setSlug(e.target.value)}
+            />
+          </label>
+          <label className="fig-tribe-modal-label">
+            Descripción (opcional)
+            <input
+              className="fig-tribe-modal-input"
+              type="text"
+              placeholder="¿De qué trata tu Tribe?"
+              value={description}
+              maxLength={120}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </label>
+          <button
+            type="submit"
+            className="fig-tribe-modal-submit"
+            disabled={name.trim().length < 3 || submitting}
+          >
+            {submitting ? "Creando..." : "Crear Tribe"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
 export default function ExplorerPage() {
+  const { myTribe, isMember, loading: tribeLoading, toast, joinTribe, createTribe } = useTribe();
+
   const [selectedTier, setSelectedTier] = useState<string>("Todos");
   const [searchText, setSearchText] = useState("");
   const [tribes, setTribes] = useState<TribeCard[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingTribes, setLoadingTribes] = useState(false);
   const [joiningTribeId, setJoiningTribeId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   async function loadTribes() {
-    setLoading(true);
+    setLoadingTribes(true);
     try {
       const response = await TokaApi.tribesList();
       const parsed = extractTribes(response.data);
-      if (parsed.length > 0) {
-        setTribes(parsed);
-      }
+      if (parsed.length > 0) setTribes(parsed);
       setMessage(null);
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Error desconocido";
       setMessage(`No se pudo sincronizar explorador. ${detail}`);
     } finally {
-      setLoading(false);
+      setLoadingTribes(false);
     }
   }
 
-  useEffect(() => {
-    void loadTribes();
-  }, []);
+  useEffect(() => { void loadTribes(); }, []);
 
   async function handleJoin(tribeId: string) {
     setJoiningTribeId(tribeId);
-    setMessage(null);
-    try {
-      await TokaApi.tribesJoin(tribeId);
-      setMessage("Te uniste a la Tribe correctamente.");
+    const result = await joinTribe(tribeId);
+    if (result.success) await loadTribes();
+    setJoiningTribeId(null);
+  }
+
+  async function handleCreate(name: string, slug: string, description?: string) {
+    const result = await createTribe({ name, slug, description });
+    if (result.success) {
+      setShowCreate(false);
       await loadTribes();
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : "Error desconocido";
-      setMessage(`No se pudo unir a la Tribe. ${detail}`);
-    } finally {
-      setJoiningTribeId(null);
     }
+  }
+
+  function getJoinLabel(tribe: TribeCard): string {
+    if (joiningTribeId === tribe.id) return "Uniendo...";
+    if (myTribe?.id === tribe.id) return "Tu Tribe";
+    if (tribe.memberCount >= tribe.maxMembers) return "Lleno";
+    if (isMember) return "Unirse";
+    return "Unirse";
+  }
+
+  function isJoinDisabled(tribe: TribeCard): boolean {
+    if (joiningTribeId !== null) return true;
+    if (myTribe?.id === tribe.id) return true;
+    if (tribe.memberCount >= tribe.maxMembers) return true;
+    return false;
   }
 
   const filteredTribes = useMemo(() => {
@@ -166,6 +246,14 @@ export default function ExplorerPage() {
         <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" draggable="false" />
       </header>
 
+      {/* User's current tribe banner */}
+      {!tribeLoading && myTribe && (
+        <div className="fig-explorer-my-tribe-banner">
+          <Users size={14} />
+          <span>Eres miembro de <strong>{myTribe.name}</strong></span>
+        </div>
+      )}
+
       <section className="fig-mobile-filter-strip">
         <div className="filter-pills-container">
           {tiers.map((tier) => (
@@ -184,73 +272,103 @@ export default function ExplorerPage() {
         <section className="fig-mobile-recommended">
           <h2>Tribes recomendadas</h2>
           <div className="fig-mobile-reco-scroll">
-            {filteredTribes.slice(0, 3).map((tribe) => (
-              <article key={tribe.id} className="fig-mobile-reco-card">
-                <div>
-                  <img src={tribe.avatarUrl} alt={tribe.name} />
+            {filteredTribes.slice(0, 3).map((tribe) => {
+              const isMyTribe = myTribe?.id === tribe.id;
+              return (
+                <article key={tribe.id} className={`fig-mobile-reco-card${isMyTribe ? " fig-mobile-reco-card--mine" : ""}`}>
                   <div>
-                    <h3>{tribe.name}</h3>
-                    <p>
-                      <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
-                    </p>
+                    <img src={tribe.avatarUrl} alt={tribe.name} />
+                    <div>
+                      <h3>{tribe.name}</h3>
+                      <p>
+                        <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="fig-mobile-reco-bottom">
-                  <div>
-                    <small>PUNTOS SEMANA</small>
-                    <strong>{new Intl.NumberFormat("es-ES").format(tribe.pointsWeek)} pts</strong>
+                  <div className="fig-mobile-reco-bottom">
+                    <div>
+                      <small>PUNTOS SEMANA</small>
+                      <strong>{new Intl.NumberFormat("es-ES").format(tribe.pointsWeek)} pts</strong>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isJoinDisabled(tribe)}
+                      className={isMyTribe ? "fig-explorer-btn-mine" : ""}
+                      onClick={() => !isMyTribe && !isMember && void handleJoin(tribe.id)}
+                    >
+                      {getJoinLabel(tribe)}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    disabled={tribe.memberCount >= tribe.maxMembers || joiningTribeId !== null}
-                    onClick={() => void handleJoin(tribe.id)}
-                  >
-                    {joiningTribeId === tribe.id ? "Uniendo..." : "Unirse"}
-                  </button>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         </section>
 
         <section className="fig-mobile-popular">
           <h2>Tribes populares esta semana</h2>
-          {filteredTribes.map((tribe) => (
-            <article key={tribe.id}>
-              <div>
-                <img src={tribe.avatarUrl} alt={tribe.name} />
+          {filteredTribes.map((tribe) => {
+            const isMyTribe = myTribe?.id === tribe.id;
+            return (
+              <article key={tribe.id} className={isMyTribe ? "fig-mobile-popular-mine" : ""}>
                 <div>
-                  <h3>{tribe.name}</h3>
-                  <p>
-                    <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
-                  </p>
+                  <img src={tribe.avatarUrl} alt={tribe.name} />
+                  <div>
+                    <h3>{tribe.name}{isMyTribe && <span className="fig-explorer-you-badge">Tú</span>}</h3>
+                    <p>
+                      <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <button
-                type="button"
-                disabled={tribe.memberCount >= tribe.maxMembers || joiningTribeId !== null}
-                onClick={() => void handleJoin(tribe.id)}
-              >
-                {joiningTribeId === tribe.id ? "Uniendo..." : tribe.memberCount >= tribe.maxMembers ? "Lleno" : "Unirse"}
-              </button>
-            </article>
-          ))}
+                <button
+                  type="button"
+                  disabled={isJoinDisabled(tribe)}
+                  className={isMyTribe ? "fig-explorer-btn-mine" : ""}
+                  onClick={() => !isMyTribe && !isMember && void handleJoin(tribe.id)}
+                >
+                  {getJoinLabel(tribe)}
+                </button>
+              </article>
+            );
+          })}
         </section>
       </div>
 
-      <button type="button" className="fig-mobile-create-tribe-btn" onClick={() => setMessage("Creación de Tribe se habilita en el siguiente paso de producto.")}>
-        + Crear mi Tribe
-      </button>
+      {/* Create tribe — only if not already a member */}
+      {!isMember && (
+        <button
+          type="button"
+          className="fig-mobile-create-tribe-btn"
+          onClick={() => setShowCreate(true)}
+        >
+          + Crear mi Tribe
+        </button>
+      )}
 
-      {loading ? <p className="subtle">Sincronizando Tribes...</p> : null}
-      {message ? <p className="subtle">{message}</p> : null}
+      {loadingTribes && <p className="subtle">Sincronizando Tribes...</p>}
+      {message && <p className="subtle">{message}</p>}
 
-      {filteredTribes.length === 0 ? (
+      {filteredTribes.length === 0 && !loadingTribes && (
         <div className="explorer-empty">
           <div className="empty-icon">🔍</div>
           <h3 className="empty-title">No se encontraron tribus</h3>
         </div>
-      ) : null}
+      )}
+
+      {/* Toast from useTribe */}
+      {toast && (
+        <div className={`fig-mascota-toast fig-mascota-toast--${toast.type}`} role="status">
+          {toast.text}
+        </div>
+      )}
+
+      {/* Create tribe modal */}
+      {showCreate && (
+        <CreateTribeModal
+          onClose={() => setShowCreate(false)}
+          onCreate={handleCreate}
+        />
+      )}
     </>
   );
 
@@ -270,9 +388,7 @@ export default function ExplorerPage() {
           </div>
           <div style={{ width: 36, height: 36 }} />
         </header>
-
         {content}
-
         <BottomNav active="inicio" />
       </main>
     </>

@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import BottomNav from "@/components/BottomNav";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { TribeDashboardContent, type ActivityItem, type Member } from "@/components/tribe-dashboard-content";
 import { TokaApi } from "@/services/toka-api.service";
 import { readAppPoints } from "@/components/use-app-points";
+import { useTribe } from "@/hooks/useTribe";
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -35,6 +38,9 @@ function tierVariant(label: string): "oro" | "plata" | undefined {
 }
 
 export default function TribePage() {
+  const router = useRouter();
+  const { isLeader, leaveTribe, toast } = useTribe();
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const [withoutTier, setWithoutTier] = useState(false);
   const [runtimeData, setRuntimeData] = useState<{
     tribeName?: string;
@@ -196,6 +202,12 @@ export default function TribePage() {
     void loadTribe();
   }, []);
 
+  async function handleLeave() {
+    const result = await leaveTribe();
+    if (result.success) router.push("/explorador-tribs");
+    setConfirmLeave(false);
+  }
+
   const content = <TribeDashboardContent withoutTier={withoutTier} runtime={runtimeData} />;
 
   const avatarUrl = useMemo(() => runtimeData?.members?.[0]?.avatar ?? "/images/ajolotes_1.png", [runtimeData]);
@@ -218,6 +230,38 @@ export default function TribePage() {
         </header>
 
         {content}
+
+        {/* Leave tribe — solo para miembros no-líderes */}
+        {!isLeader && (
+          <button
+            type="button"
+            className="fig-tribe-leave-btn"
+            onClick={() => setConfirmLeave(true)}
+          >
+            <LogOut size={15} />
+            Salir de la Tribe
+          </button>
+        )}
+
+        {/* Confirm dialog */}
+        {confirmLeave && (
+          <div className="fig-tribe-modal-overlay" onClick={() => setConfirmLeave(false)}>
+            <div className="fig-tribe-modal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="fig-tribe-modal-title">¿Salir de la Tribe?</h3>
+              <p className="fig-tribe-modal-body">Perderás tu progreso en esta temporada y tendrás que unirte a una nueva Tribe.</p>
+              <div className="fig-tribe-modal-actions">
+                <button type="button" className="fig-tribe-modal-cancel" onClick={() => setConfirmLeave(false)}>Cancelar</button>
+                <button type="button" className="fig-tribe-modal-danger" onClick={() => void handleLeave()}>Sí, salir</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {toast && (
+          <div className={`fig-mascota-toast fig-mascota-toast--${toast.type}`} role="status">
+            {toast.text}
+          </div>
+        )}
 
         <BottomNav active="squad" />
       </main>

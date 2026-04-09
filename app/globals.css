@@ -7761,4 +7761,198 @@ img {
   letter-spacing: 0.06em;
 }
 
+/* ─────────────────────────────────────────
+   TRIBES FLOW (explorer + create + leave)
+   ───────────────────────────────────────── */
+
+/* "Ya eres miembro" banner in explorer */
+.fig-explorer-my-tribe-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 10px 16px;
+  background: #eff4ff;
+  border-left: 3px solid #2a55b9;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: #2a55b9;
+  font-weight: 600;
+}
+
+/* Your tribe card highlight */
+.fig-mobile-reco-card--mine {
+  border: 1.5px solid #2a55b9 !important;
+  background: #f5f8ff !important;
+}
+
+.fig-mobile-popular-mine {
+  background: #f5f8ff;
+  border-radius: 12px;
+}
+
+/* "Tu Tribe" badge in list */
+.fig-explorer-you-badge {
+  display: inline-flex;
+  margin-left: 6px;
+  background: #2a55b9;
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* "Tu Tribe" button state */
+.fig-explorer-btn-mine {
+  background: #eff4ff !important;
+  color: #2a55b9 !important;
+  border: 1.5px solid #2a55b9 !important;
+  cursor: default !important;
+}
+
+/* Create / Leave tribe modal */
+.fig-tribe-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(14, 26, 43, 0.55);
+  display: flex;
+  align-items: flex-end;
+}
+
+.fig-tribe-modal {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  padding: 24px 20px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fig-tribe-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fig-tribe-modal-header h3 {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #0e1a2b;
+  margin: 0;
+}
+
+.fig-tribe-modal-close {
+  background: none;
+  border: none;
+  color: #7a8fa6;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.fig-tribe-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fig-tribe-modal-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4a5568;
+}
+
+.fig-tribe-modal-input {
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 0.9rem;
+  color: #0e1a2b;
+  outline: none;
+}
+
+.fig-tribe-modal-input:focus { border-color: #2a55b9; }
+
+.fig-tribe-modal-submit {
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  background: #2a55b9;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.fig-tribe-modal-submit:disabled { opacity: 0.45; cursor: default; }
+
+/* Confirm modal (leave) */
+.fig-tribe-modal-title {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #0e1a2b;
+  margin: 0;
+}
+
+.fig-tribe-modal-body {
+  font-size: 0.82rem;
+  color: #4a5568;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.fig-tribe-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.fig-tribe-modal-cancel {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #7a8fa6;
+  cursor: pointer;
+}
+
+.fig-tribe-modal-danger {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Leave tribe button */
+.fig-tribe-leave-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 32px);
+  margin: 8px 16px 16px;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1.5px solid #fca5a5;
+  background: #fff5f5;
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 
