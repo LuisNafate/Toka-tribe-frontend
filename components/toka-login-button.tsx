@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useTokaBridge } from "@/hooks/useTokaBridge";
 import { exchangeAuthCode, saveSessionToken } from "@/services/auth.service";
+import { TokaApi } from "@/services/toka-api.service";
 
 const AUTH_CODES_DEBUG_KEY = "tokatribe.debug.authcodes";
 
@@ -69,7 +70,17 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
 
       const { token } = await exchangeAuthCode(authCode);
       saveSessionToken(token);
-      setStatus("Login completado. JWT guardado y redirigiendo...");
+
+      // Sync no bloqueante: si falla, el login principal continua para no romper UX.
+      setStatus("JWT guardado. Sincronizando perfil...");
+      try {
+        await TokaApi.authSyncProfile([authCode]);
+        setStatus("Perfil sincronizado. Redirigiendo...");
+      } catch (syncErr) {
+        const syncMessage = syncErr instanceof Error ? syncErr.message : "Error desconocido en sync-profile.";
+        setStatus(`JWT guardado. Sync perfil omitido: ${syncMessage}. Redirigiendo...`);
+      }
+
       router.push(redirectTo);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error externo no tipificado.";
