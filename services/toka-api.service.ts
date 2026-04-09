@@ -41,6 +41,8 @@ export class ApiError extends Error {
   }
 }
 
+
+
 const API_ERROR_MESSAGES: Record<string, string> = {
   AUTH_UNAUTHORIZED: "Tu sesión expiró. Vuelve a iniciar sesión.",
   CHALLENGE_ALREADY_PLAYED: "Este reto ya fue registrado.",
