@@ -29,6 +29,17 @@ const FRONTEND_TRIVIA_CHALLENGE: ChallengeCard = {
   source: "frontend",
 };
 
+const FRONTEND_SNAKE_CHALLENGE: ChallengeCard = {
+  id: "frontend-snake",
+  title: "Snake Tribe",
+  description: "Arcade local para pruebas rápidas de score.",
+  points: 150,
+  href: "/retos/serpiente",
+  source: "frontend",
+};
+
+const FIXED_FRONTEND_CHALLENGES: ChallengeCard[] = [FRONTEND_TRIVIA_CHALLENGE, FRONTEND_SNAKE_CHALLENGE];
+
 function resolveChallengeHref(title: string, description: string): string {
   const text = `${title} ${description}`.toLowerCase();
   if (text.includes("trivia")) return "/retos/trivia/clasico";
@@ -36,14 +47,27 @@ function resolveChallengeHref(title: string, description: string): string {
   return "/retos";
 }
 
-function withFrontendTrivia(challenges: ChallengeCard[]): ChallengeCard[] {
-  const hasTrivia = challenges.some((item) => {
-    const text = `${item.title} ${item.description}`.toLowerCase();
-    return text.includes("trivia");
-  });
+function withFixedFrontendChallenges(challenges: ChallengeCard[]): ChallengeCard[] {
+  const byHref = new Map<string, ChallengeCard>();
 
-  if (hasTrivia) return challenges;
-  return [FRONTEND_TRIVIA_CHALLENGE, ...challenges];
+  for (const item of FIXED_FRONTEND_CHALLENGES) {
+    byHref.set(item.href, item);
+  }
+
+  for (const item of challenges) {
+    byHref.set(item.href, item);
+  }
+
+  const trivia = byHref.get("/retos/trivia/clasico");
+  const snake = byHref.get("/retos/serpiente");
+  const rest = Array.from(byHref.values()).filter((item) => item.href !== "/retos/trivia/clasico" && item.href !== "/retos/serpiente");
+
+  const ordered: ChallengeCard[] = [];
+  if (trivia) ordered.push(trivia);
+  if (snake) ordered.push(snake);
+  ordered.push(...rest);
+
+  return ordered;
 }
 
 function toRecord(value: unknown): Record<string, unknown> | null {
@@ -108,7 +132,7 @@ function extractChallenges(payload: unknown): ChallengeCard[] {
 
 export default function RetosPage() {
   const [tribeName, setTribeName] = useState("Tribe no sincronizada");
-  const [challenges, setChallenges] = useState<ChallengeCard[]>([FRONTEND_TRIVIA_CHALLENGE]);
+  const [challenges, setChallenges] = useState<ChallengeCard[]>(FIXED_FRONTEND_CHALLENGES);
   const [weeklyContribution, setWeeklyContribution] = useState(0);
   const [warning, setWarning] = useState<string | null>(null);
 
@@ -129,9 +153,9 @@ export default function RetosPage() {
 
       if (challengesResult.status === "fulfilled") {
         const parsed = extractChallenges(challengesResult.value.data);
-        setChallenges(withFrontendTrivia(parsed));
+        setChallenges(withFixedFrontendChallenges(parsed));
       } else {
-        setChallenges([FRONTEND_TRIVIA_CHALLENGE]);
+        setChallenges(FIXED_FRONTEND_CHALLENGES);
       }
 
       if (sessionsResult.status === "fulfilled") {
@@ -163,8 +187,8 @@ export default function RetosPage() {
         <SectionHeader
           eyebrow="Disponible ahora"
           title="Retos activos"
-          description="Los retos mostrados vienen directamente del backend activo."
-          action={<Link href="/retos/serpiente" className="badge">Snake Tribe</Link>}
+          description="Incluye retos backend y pruebas locales (Trivia + Snake)."
+          action={<Link href="/retos/trivia/clasico" className="badge">Trivia Toka</Link>}
         />
         {challenges.length === 0 ? <p className="subtle">No hay retos activos sincronizados.</p> : null}
         <div className="challenge-grid">
@@ -244,7 +268,7 @@ export default function RetosPage() {
             </div>
             <div className="fig-retos-alert"><AlertTriangle size={13} /> {dailyChallenge?.description ?? "No se encontraron retos en backend."}</div>
             <Link href={dailyChallenge?.href ?? "/retos/trivia/clasico"} className="fig-retos-play">
-              {dailyChallenge?.href?.includes("trivia") ? "JUGAR TRIVIA" : "JUGAR RETO"}
+              {dailyChallenge?.href?.includes("trivia") ? "JUGAR TRIVIA" : dailyChallenge?.href?.includes("serpiente") ? "JUGAR SNAKE" : "JUGAR RETO"}
             </Link>
           </article>
         </section>

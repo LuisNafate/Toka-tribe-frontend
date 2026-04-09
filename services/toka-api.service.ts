@@ -4,9 +4,44 @@ export type ApiEnvelope<T = unknown> = {
   success?: boolean;
   statusCode?: number;
   message?: string;
+  errorCode?: string;
+  traceId?: string;
   data?: T;
   [key: string]: unknown;
 };
+
+export class ApiError extends Error {
+  status: number;
+  path: string;
+  code?: string;
+  traceId?: string;
+
+  constructor(message: string, options: { status: number; path: string; code?: string; traceId?: string }) {
+    super(message);
+    this.name = "ApiError";
+    this.status = options.status;
+    this.path = options.path;
+    this.code = options.code;
+    this.traceId = options.traceId;
+  }
+}
+
+function getMessageFromPayload(payload: ApiEnvelope<unknown>, status: number, path: string): string {
+  const rawMessage = payload.message;
+  if (typeof rawMessage === "string" && rawMessage.trim() !== "") {
+    return rawMessage;
+  }
+
+  const messageArray = payload["messages"];
+  if (Array.isArray(messageArray) && messageArray.length > 0) {
+    const joined = messageArray.filter((item) => typeof item === "string").join(" ").trim();
+    if (joined !== "") {
+      return joined;
+    }
+  }
+
+  return `Error HTTP ${status} al consumir ${path}.`;
+}
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -45,8 +80,13 @@ async function apiRequest<T = unknown>(path: string, options: RequestOptions = {
   }
 
   if (!response.ok) {
-    const message = payload.message || `Error HTTP ${response.status} al consumir ${path}.`;
-    throw new Error(message);
+    const message = getMessageFromPayload(payload, response.status, path);
+    throw new ApiError(message, {
+      status: response.status,
+      path,
+      code: typeof payload.errorCode === "string" ? payload.errorCode : undefined,
+      traceId: typeof payload.traceId === "string" ? payload.traceId : undefined,
+    });
   }
 
   return payload;
