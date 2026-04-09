@@ -129,7 +129,6 @@ export default function ExplorerPage() {
     if (joiningTribeId === tribe.id) return "Uniendo...";
     if (myTribe?.id === tribe.id) return "Tu Tribe";
     if (tribe.memberCount >= tribe.maxMembers) return "Lleno";
-    if (isMember) return "Unirse";
     return "Unirse";
   }
 
@@ -192,26 +191,33 @@ export default function ExplorerPage() {
           <div className="fig-mobile-reco-scroll">
             {filteredTribes.slice(0, 3).map((tribe) => {
               const isMyTribe = myTribe?.id === tribe.id;
+              const tierKey = tribe.tier.toLowerCase().replace("á","a").replace("é","e");
+              const joinBtnClass = isMyTribe
+                ? "fig-explorer-join-btn fig-explorer-join-btn--mine"
+                : tribe.memberCount >= tribe.maxMembers
+                  ? "fig-explorer-join-btn fig-explorer-join-btn--full"
+                  : "fig-explorer-join-btn";
               return (
                 <article key={tribe.id} className={`fig-mobile-reco-card${isMyTribe ? " fig-mobile-reco-card--mine" : ""}`}>
-                  <div>
+                  <div className="fig-mobile-reco-card__top">
                     <img src={tribe.avatarUrl} alt={tribe.name} />
-                    <div>
-                      <h3>{tribe.name}</h3>
-                      <p>
-                        <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
-                      </p>
+                    <div className="fig-mobile-reco-card__info">
+                      <div className="fig-mobile-reco-card__name">
+                        <h3>{tribe.name}</h3>
+                        <span className={`fig-tier-badge fig-tier-badge--${tierKey}`}>{tribe.tier}</span>
+                      </div>
+                      <p className="fig-mobile-reco-card__members">{tribe.memberCount}/{tribe.maxMembers} miembros</p>
                     </div>
                   </div>
                   <div className="fig-mobile-reco-bottom">
-                    <div>
+                    <div className="fig-mobile-reco-bottom__pts">
                       <small>PUNTOS SEMANA</small>
                       <strong>{new Intl.NumberFormat("es-ES").format(tribe.pointsWeek)} pts</strong>
                     </div>
                     <button
                       type="button"
                       disabled={isJoinDisabled(tribe)}
-                      className={isMyTribe ? "fig-explorer-btn-mine" : ""}
+                      className={joinBtnClass}
                       onClick={() => !isMyTribe && !isMember && void handleJoin(tribe.id)}
                     >
                       {getJoinLabel(tribe)}
@@ -227,21 +233,28 @@ export default function ExplorerPage() {
           <h2>Tribes populares esta semana</h2>
           {filteredTribes.map((tribe) => {
             const isMyTribe = myTribe?.id === tribe.id;
+            const tierKey = tribe.tier.toLowerCase().replace("á","a").replace("é","e");
+            const joinBtnClass = isMyTribe
+              ? "fig-explorer-join-btn fig-explorer-join-btn--mine"
+              : tribe.memberCount >= tribe.maxMembers
+                ? "fig-explorer-join-btn fig-explorer-join-btn--full"
+                : "fig-explorer-join-btn";
             return (
-              <article key={tribe.id} className={isMyTribe ? "fig-mobile-popular-mine" : ""}>
+              <article key={tribe.id}>
                 <div>
                   <img src={tribe.avatarUrl} alt={tribe.name} />
                   <div>
                     <h3>{tribe.name}{isMyTribe && <span className="fig-explorer-you-badge">Tú</span>}</h3>
                     <p>
-                      <span>{tribe.tier}</span> {tribe.memberCount}/{tribe.maxMembers} miembros
+                      <span className={`fig-tier-badge fig-tier-badge--${tierKey}`}>{tribe.tier}</span>
+                      {tribe.memberCount}/{tribe.maxMembers} miembros
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   disabled={isJoinDisabled(tribe)}
-                  className={isMyTribe ? "fig-explorer-btn-mine" : ""}
+                  className={joinBtnClass}
                   onClick={() => !isMyTribe && !isMember && void handleJoin(tribe.id)}
                 >
                   {getJoinLabel(tribe)}
