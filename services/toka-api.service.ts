@@ -49,6 +49,15 @@ type RequestOptions = {
   requiresAuth?: boolean;
 };
 
+export type GameSessionMetadata = Record<string, unknown>;
+
+export type GameSessionCreateRequest = {
+  challengeId: string;
+  score: number;
+  durationMs?: number;
+  metadata?: GameSessionMetadata;
+};
+
 function getApiBaseUrl(): string {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
   if (!baseUrl) throw new Error("NEXT_PUBLIC_API_BASE_URL no está configurado.");
@@ -149,7 +158,7 @@ export const TokaApi = {
   adminChallengesClose: (challengeId: string) => apiRequest(`/admin/challenges/${challengeId}/close`, { method: "POST" }),
 
   // Scoring
-  gameSessionsCreate: (body: Record<string, unknown>) => apiRequest("/game-sessions", { method: "POST", body }),
+  gameSessionsCreate: (body: GameSessionCreateRequest) => apiRequest("/game-sessions", { method: "POST", body }),
   gameSessionsMe: () => apiRequest("/game-sessions/me"),
 
   // Leaderboard

@@ -17,6 +17,7 @@ import { FIGMA_ASSETS } from "@/lib/data";
 import { getSessionToken } from "@/services/auth.service";
 import { TokaApi } from "@/services/toka-api.service";
 import { formatAppPoints, refreshAppPointsFromBackend, useAppPoints } from "@/components/use-app-points";
+import { buildGameSessionRequest, resolveActiveChallengeId } from "@/services/game-session-sync";
 
 type Cell = { x: number; y: number };
 type Direction = { x: number; y: number };
@@ -90,6 +91,7 @@ export function SnakeGame() {
   const scoreRef = useRef(score);
   const statusRef = useRef(status);
   const bestScoreRef = useRef(0);
+  const startedAtRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const syncSnakeScore = useCallback(async (applesEaten: number) => {
@@ -105,23 +107,28 @@ export function SnakeGame() {
       return;
     }
 
+    const challengeId = await resolveActiveChallengeId(["snake", "serpiente"]);
+    if (!challengeId) {
+      setLastReward("No hay challenge activo de Snake en backend. Resultado guardado en local.");
+      return;
+    }
+
+    const durationMs = startedAtRef.current ? Math.max(0, Date.now() - startedAtRef.current) : undefined;
+
     setLastReward("Sincronizando partida Snake con backend...");
 
     try {
-      await TokaApi.gameSessionsCreate({
-        gameType: "snake",
-        gameId: "snake",
-        challengeId: "snake-daily",
-        sessionId: `snake-${Date.now()}`,
+      await TokaApi.gameSessionsCreate(buildGameSessionRequest({
+        challengeId,
         score: sessionPoints,
-        correctCount: applesEaten,
-        totalQuestions: applesEaten,
+        durationMs,
         metadata: {
           applesEaten,
           pointsPerApple: CELL_POINTS,
           bestRun: bestScoreRef.current,
+          source: "snake",
         },
-      });
+      }));
 
       await refreshAppPointsFromBackend();
       setLastReward(`Partida sincronizada: +${sessionPoints} pts backend`);
@@ -177,6 +184,7 @@ export function SnakeGame() {
     foodRef.current = nextFood;
     directionRef.current = INITIAL_DIRECTION;
     scoreRef.current = 0;
+    startedAtRef.current = null;
 
     setSnake(nextSnake);
     setFood(nextFood);
@@ -238,6 +246,7 @@ export function SnakeGame() {
     if (countdown <= 1) {
       setStatus("running");
       setCountdown(null);
+      startedAtRef.current = Date.now();
       setLastReward("¡Corre! la partida está activa");
       return undefined;
     }

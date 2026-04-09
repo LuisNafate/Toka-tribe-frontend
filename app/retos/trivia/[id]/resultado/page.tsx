@@ -7,6 +7,7 @@ import type { TriviaResult } from "@/types/trivia";
 import { getSessionToken } from "@/services/auth.service";
 import { ApiError, TokaApi } from "@/services/toka-api.service";
 import { refreshAppPointsFromBackend } from "@/components/use-app-points";
+import { buildGameSessionRequest, resolveActiveChallengeId } from "@/services/game-session-sync";
 const RESULT_KEY = "toka_trivia_result";
 
 function toRecord(value: unknown): Record<string, unknown> | null {
@@ -19,31 +20,7 @@ function toText(value: unknown): string | null {
 }
 
 async function findTriviaBackendChallengeId(): Promise<string | null> {
-  try {
-    const response = await TokaApi.challengesActive();
-    const payload = response.data;
-    const list = Array.isArray(payload)
-      ? payload
-      : Array.isArray(toRecord(payload)?.items)
-        ? (toRecord(payload)?.items as unknown[])
-        : [];
-
-    for (const item of list) {
-      const rec = toRecord(item);
-      if (!rec) continue;
-      const id = toText(rec.id) ?? toText(rec.challengeId);
-      const title = toText(rec.title) ?? toText(rec.name) ?? "";
-      const description = toText(rec.description) ?? "";
-      const haystack = `${title} ${description}`.toLowerCase();
-      if (id && haystack.includes("trivia")) {
-        return id;
-      }
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
+  return resolveActiveChallengeId(["trivia", "quiz"]);
 }
 
 function getHeroMessage(accuracy: number): string {
@@ -93,11 +70,18 @@ export default function TriviaResultadoPage({
       setSyncMessage("Sincronizando puntaje de Trivia con backend...");
 
       try {
-        await TokaApi.gameSessionsCreate({
+        await TokaApi.gameSessionsCreate(buildGameSessionRequest({
           challengeId,
           score: result.finalScore,
           durationMs: result.totalQuestions * 15000,
-        });
+          metadata: {
+            source: "trivia",
+            correctCount: result.correctCount,
+            totalQuestions: result.totalQuestions,
+            baseScore: result.baseScore,
+            multiplier: result.multiplier,
+          },
+        }));
         await refreshAppPointsFromBackend();
         setSyncMessage(`Puntaje sincronizado correctamente: +${result.finalScore} pts`);
       } catch (error) {
