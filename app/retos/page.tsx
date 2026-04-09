@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Brain, Clock, Flame, Gamepad2, Sparkles, TimerReset, TrendingUp, Zap } from "lucide-react";
+import { AlertTriangle, Brain, Clock, Flame, Gamepad2, Sparkles, TrendingUp, Zap } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { AppPointsBadge } from "@/components/app-points-badge";
@@ -147,7 +147,7 @@ export default function RetosPage() {
 
       if (usersResult.status === "fulfilled") {
         const usersData = toRecord(usersResult.value.data);
-        const nextTribe = toText(usersData?.tribeName) ?? toText(toRecord(usersData?.tribe)?.name) ?? null;
+        const nextTribe = toText(usersData?.tribeName) ?? toText(toRecord(usersData?.tribe)?.tribeName) ?? toText(toRecord(usersData?.tribe)?.name) ?? null;
         if (nextTribe) setTribeName(nextTribe);
 
         // Sync tier + division to localStorage so Trivia can apply the correct score multiplier.

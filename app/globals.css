@@ -2337,7 +2337,8 @@ img {
 /* Figma mobile screens */
 .fig-mobile-home,
 .fig-mobile-explorer,
-.fig-mobile-tribe {
+.fig-mobile-tribe,
+.fig-mobile-dashboard {
   min-height: 100vh;
   margin: 0 auto;
   max-width: 420px;

@@ -187,8 +187,10 @@ export default function TribePage() {
         rankingLabel,
         membersTitle: `Tu Tribe (${memberCount}/${maxMembers})`,
         currentStreakLabel: (() => {
+          const summaryPoints = toRecord(summary?.points);
+          const apiStreak = toNumber(summaryPoints?.currentStreak);
           const stored = localStorage.getItem("toka_current_streak");
-          const streak = stored !== null ? Number(stored) : 0;
+          const streak = apiStreak ?? (stored !== null ? Number(stored) : 0);
           return `${streak} día${streak !== 1 ? "s" : ""}`;
         })(),
         retosLabel,
