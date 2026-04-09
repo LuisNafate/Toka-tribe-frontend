@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Flame, LayoutList, ShieldCheck, Sparkles, Star, Trophy, User } from "lucide-react";
+import { usePet } from "@/hooks/usePet";
+import { PetDisplay } from "@/components/organisms/PetDisplay";
+import { CheckCircle2, Flame, LayoutList, ShieldCheck, Sparkles, Star, Trophy } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Panel, SectionHeader } from "@/components/common";
@@ -46,6 +48,7 @@ const DEFAULT_PROFILE: ProfileViewModel = {
 
 export default function PerfilPage() {
   const { points } = useAppPoints();
+  const { pet, catalog, loading: petLoading } = usePet();
   const [profile, setProfile] = useState<ProfileViewModel>(DEFAULT_PROFILE);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [profileWarning, setProfileWarning] = useState<string | null>(null);
@@ -214,28 +217,38 @@ export default function PerfilPage() {
               <Link href="/perfil/mascota" className="fig-perfil-link">Personalizar →</Link>
             </div>
             <div className="fig-perfil-mascota-body">
-              <img src="/images/mascota.png" alt="Mascota Toky" className="fig-perfil-mascota-img" />
-              <p className="fig-perfil-mascota-name">Toky</p>
-              <div className="fig-perfil-mascota-items">
-                <button type="button" className="fig-perfil-item-btn" disabled>
-                  <div className="fig-perfil-item-icon">
-                    <User size={18} color="#b0b8c9" />
+              {petLoading ? (
+                <p className="subtle" style={{ textAlign: "center", padding: "16px 0" }}>Cargando mascota...</p>
+              ) : pet ? (
+                <>
+                  <PetDisplay equippedItems={pet.equippedItems} catalogItems={catalog} size="sm" />
+                  <p className="fig-perfil-mascota-name">{pet.name}</p>
+                  <div className="fig-perfil-mascota-items">
+                    {(["hat", "shirt", "accessory"] as const).map((slot) => {
+                      const equippedId = pet.equippedItems[slot];
+                      const item = catalog.find((i) => i._id === equippedId && i.slot === slot);
+                      return (
+                        <button key={slot} type="button" className="fig-perfil-item-btn" disabled>
+                          <div className="fig-perfil-item-icon">
+                            {item?.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.name} style={{ width: 18, height: 18, objectFit: "contain" }} />
+                            ) : (
+                              <span style={{ fontSize: 10, color: "#b0b8c9" }}>—</span>
+                            )}
+                          </div>
+                          <span>{slot.toUpperCase()}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <span>HAT</span>
-                </button>
-                <button type="button" className="fig-perfil-item-btn" disabled>
-                  <div className="fig-perfil-item-icon">
-                    <User size={18} color="#b0b8c9" />
-                  </div>
-                  <span>SHIRT</span>
-                </button>
-                <button type="button" className="fig-perfil-item-btn" disabled>
-                  <div className="fig-perfil-item-icon">
-                    <Star size={18} color="#b0b8c9" />
-                  </div>
-                  <span>ACCESSORY</span>
-                </button>
-              </div>
+                </>
+              ) : (
+                <>
+                  <img src="/images/mascota.png" alt="Mascota" className="fig-perfil-mascota-img" />
+                  <p className="fig-perfil-mascota-name">Sin mascota</p>
+                  <Link href="/perfil/mascota" className="fig-perfil-link" style={{ marginTop: 8 }}>Crear mascota →</Link>
+                </>
+              )}
             </div>
           </article>
 
