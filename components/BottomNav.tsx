@@ -8,7 +8,7 @@ type NavTab = "inicio" | "squad" | "retos" | "perfil";
 
 const NAV_ITEMS: { tab: NavTab; href: string; label: string; icon: React.ReactNode }[] = [
   { tab: "inicio", href: "/dashboard", label: "INICIO", icon: <Home size={20} /> },
-  { tab: "squad", href: "/tribe", label: "SQUAD", icon: <Users size={20} /> },
+  { tab: "squad", href: "/tribe", label: "TRIBE", icon: <Users size={20} /> },
   { tab: "retos", href: "/retos", label: "RETOS", icon: <Gamepad2 size={20} /> },
   { tab: "perfil", href: "/perfil", label: "PERFIL", icon: <User size={20} /> },
 ];

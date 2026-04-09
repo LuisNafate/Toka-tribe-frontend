@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Brain, ChevronRight, Gamepad2, Medal, PlayCircle, TrendingUp, Zap } from "lucide-react";
+import { BarChart3, Brain, ChevronRight, ChevronDown, Gamepad2, Medal, PlayCircle, TrendingUp, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type TribeDashboardContentProps = {
@@ -45,7 +45,7 @@ export type ActivityItem = {
 };
 
 export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDashboardContentProps) {
-  const [feedback, setFeedback] = useState<{ tone: "info" | "ok" | "warn"; text: string } | null>(null);
+  const [showAllMembers, setShowAllMembers] = useState(false);
 
   const tierText = runtime?.tierText ?? "NO SINCRONIZADO";
   const tribeName = runtime?.tribeName ?? "Tribe no sincronizada";
@@ -57,7 +57,8 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
   const membersTitle = runtime?.membersTitle ?? "Tu Tribe";
   const currentStreakLabel = runtime?.currentStreakLabel ?? "0 días";
   const retosLabel = runtime?.retosLabel ?? "0/0 jugados";
-  const members = runtime?.members ?? [];
+  const allMembers = runtime?.members ?? [];
+  const members = showAllMembers ? allMembers : allMembers.slice(0, 4);
   const activity = runtime?.activity ?? [];
   const memberCount = runtime?.memberCount ?? members.length;
   const maxMembers = Math.max(runtime?.maxMembers ?? Math.max(memberCount, members.length, 1), 1);
@@ -78,12 +79,6 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
 
     return "Gestionar membresías del tier";
   }, [withoutTier]);
-
-  const feedbackToneClass = feedback?.tone === "ok"
-    ? "fig-tribe-feedback--ok"
-    : feedback?.tone === "warn"
-      ? "fig-tribe-feedback--warn"
-      : "fig-tribe-feedback--info";
 
   return (
     <>
@@ -111,7 +106,7 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
           </small>
         </section>
 
-        <Link href="/tribe/activar-tier" className="fig-tribe-redirect-cta" aria-label={tierCtaLabel}>
+        <Link href="/membresia" className="fig-tribe-redirect-cta" aria-label={tierCtaLabel}>
           <span>{tierCtaLabel}</span>
           <ChevronRight size={10} strokeWidth={3} />
         </Link>
@@ -146,14 +141,16 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
               <h2>{membersTitle}</h2>
               <p>{membersSummary}</p>
             </div>
-            <button
-              type="button"
-              className="fig-tribe-link-btn"
-              onClick={() => setFeedback({ tone: "info", text: "La vista completa de miembros se abrirá en una próxima actualización." })}
-            >
-              <span>Ver todos</span>
-              <ChevronRight size={12} />
-            </button>
+            {allMembers.length > 4 && (
+              <button
+                type="button"
+                className="fig-tribe-link-btn"
+                onClick={() => setShowAllMembers((v) => !v)}
+              >
+                <span>{showAllMembers ? "Ver menos" : "Ver todos"}</span>
+                <ChevronDown size={12} style={{ transform: showAllMembers ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+              </button>
+            )}
           </div>
           <div className="fig-tribe-members-progress" aria-label={`Capacidad de miembros ${membersSummary}`}>
             <div className="fig-tribe-members-progress__track">
@@ -217,11 +214,6 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
 
       <p className="subtle" style={{ marginTop: 10 }}>{tierActivationLabel}</p>
 
-      {feedback ? (
-        <section className={`fig-tribe-feedback ${feedbackToneClass}`} role="status" aria-live="polite">
-          <p>{feedback.text}</p>
-        </section>
-      ) : null}
     </>
   );
 }
