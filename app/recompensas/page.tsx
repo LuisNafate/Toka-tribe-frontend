@@ -44,8 +44,8 @@ function extractRewards(payload: unknown): RewardItem[] {
         const id = toText(rec.id) ?? toText(rec.rewardId) ?? null;
         const title = toText(rec.title) ?? toText(rec.name) ?? null;
         const description = toText(rec.description) ?? "Recompensa del ecosistema Toka.";
-        const status = toText(rec.status) ?? (Boolean(rec.claimable ?? rec.available) ? "Disponible" : "Próxima recompensa");
-        const claimable = Boolean(rec.claimable ?? rec.available ?? status.toLowerCase().includes("disponible"));
+        const status = toText(rec.status) ?? (Boolean(rec.isClaimable ?? rec.claimable ?? rec.available) ? "Disponible" : "Próxima recompensa");
+        const claimable = Boolean(rec.isClaimable ?? rec.claimable ?? rec.available ?? status.toLowerCase().includes("disponible"));
 
         if (id && title) {
           rewards.push({ id, title, description, status, claimable });

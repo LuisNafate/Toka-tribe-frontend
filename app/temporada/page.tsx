@@ -37,17 +37,28 @@ export default function TemporadaPage() {
   useEffect(() => {
     async function loadSeason() {
       setWarning(null);
-      const [seasonResult, leaderboardResult] = await Promise.allSettled([
+      const [seasonResult, leaderboardResult, summaryResult] = await Promise.allSettled([
         TokaApi.seasonsCurrent(),
         TokaApi.leaderboardCurrent(),
+        TokaApi.usersMeSummary(),
       ]);
 
       if (seasonResult.status === "fulfilled") {
         const season = toRecord(seasonResult.value.data);
+        const summary = summaryResult.status === "fulfilled" ? toRecord(summaryResult.value.data) : null;
+        const summaryPoints = toRecord(summary?.points);
+        const summarySeason = toRecord(summary?.season);
+
         const title = toText(season?.name) ?? toText(season?.title);
         const status = toText(season?.status) ?? toText(season?.description) ?? toText(season?.endsAt);
-        const target = toNumber(season?.targetPoints) ?? toNumber(season?.goalPoints) ?? toNumber(season?.maxPoints) ?? 0;
-        const current = toNumber(season?.currentPoints) ?? toNumber(season?.points) ?? 0;
+        const target =
+          toNumber(summarySeason?.targetPoints) ??
+          toNumber(season?.targetPoints) ?? toNumber(season?.goalPoints) ?? toNumber(season?.maxPoints) ?? 0;
+        const current =
+          toNumber(summarySeason?.currentPoints) ??
+          toNumber(summaryPoints?.seasonPoints) ??
+          toNumber(summaryPoints?.currentPoints) ??
+          toNumber(season?.currentPoints) ?? toNumber(season?.points) ?? 0;
 
         if (title) setSeasonTitle(title);
         if (status) setSeasonStatus(status);

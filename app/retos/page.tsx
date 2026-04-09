@@ -104,7 +104,7 @@ function extractChallenges(payload: unknown): ChallengeCard[] {
         const id = toText(rec.id) ?? toText(rec.challengeId) ?? null;
         const title = toText(rec.title) ?? toText(rec.name) ?? null;
         const description = toText(rec.description) ?? "Sin descripción";
-        const points = toNumber(rec.points) ?? toNumber(rec.rewardPoints) ?? toNumber(rec.score) ?? 0;
+        const points = toNumber(rec.points) ?? toNumber(rec.maxPointsPerUser) ?? toNumber(rec.rewardPoints) ?? toNumber(rec.score) ?? 0;
 
         if (id && title) {
           result.push({
