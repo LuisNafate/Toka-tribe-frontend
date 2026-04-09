@@ -159,7 +159,8 @@ export function useTribe() {
         const summaryEnv = await TokaApi.usersMeSummary();
         if (!alive) return;
 
-        const summary = summaryEnv.data as Record<string, unknown> | null | undefined;
+        // Backend may return data at root or nested under .data
+        const summary = (summaryEnv.data ?? summaryEnv) as Record<string, unknown> | null | undefined;
         const userRec = summary?.user as Record<string, unknown> | null | undefined;
         const tribeRec = summary?.tribe as Record<string, unknown> | null | undefined;
 
@@ -174,8 +175,8 @@ export function useTribe() {
             TokaApi.tribesMembers(tribeId),
           ]);
           if (!alive) return;
-          if (detailEnv.status === "fulfilled") setMyTribe(normalizeTribe(detailEnv.value.data));
-          if (membersEnv.status === "fulfilled") setMembers(normalizeMembers(membersEnv.value.data));
+          if (detailEnv.status === "fulfilled") setMyTribe(normalizeTribe(detailEnv.value.data ?? detailEnv.value));
+          if (membersEnv.status === "fulfilled") setMembers(normalizeMembers(membersEnv.value.data ?? membersEnv.value));
         }
       } catch {
         // Unauthenticated or no tribe — leave state as null, loading stops in finally.
@@ -195,8 +196,8 @@ export function useTribe() {
         TokaApi.tribesDetail(tribeId),
         TokaApi.tribesMembers(tribeId),
       ]);
-      setMyTribe(normalizeTribe(detailEnv.data));
-      setMembers(normalizeMembers(membersEnv.data));
+      setMyTribe(normalizeTribe(detailEnv.data ?? detailEnv));
+      setMembers(normalizeMembers(membersEnv.data ?? membersEnv));
       showToast("ok", "¡Te uniste a la Tribe!");
       return { success: true };
     } catch (e) {
@@ -241,8 +242,8 @@ export function useTribe() {
           TokaApi.tribesDetail(newId),
           TokaApi.tribesMembers(newId),
         ]);
-        if (detailEnv.status === "fulfilled") setMyTribe(normalizeTribe(detailEnv.value.data));
-        if (membersEnv.status === "fulfilled") setMembers(normalizeMembers(membersEnv.value.data));
+        if (detailEnv.status === "fulfilled") setMyTribe(normalizeTribe(detailEnv.value.data ?? detailEnv.value));
+        if (membersEnv.status === "fulfilled") setMembers(normalizeMembers(membersEnv.value.data ?? membersEnv.value));
       } else {
         // Fallback: the create response may not include id — normalize whatever we got.
         const created = normalizeTribe(env.data);

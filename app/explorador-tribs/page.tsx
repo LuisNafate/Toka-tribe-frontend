@@ -56,7 +56,7 @@ function extractTribes(payload: unknown): TribeCard[] {
       for (const item of current) {
         const rec = toRecord(item);
         if (!rec) continue;
-        const id = toText(rec.id) ?? toText(rec.tribeId) ?? null;
+        const id = toText(rec.id) ?? toText(rec._id) ?? toText(rec.tribeId) ?? null;
         const name = toText(rec.name) ?? toText(rec.tribeName) ?? null;
         if (!id || !name) continue;
         const tierRaw = toText(rec.tier) ?? toText(rec.division) ?? "Bronce";
@@ -100,13 +100,14 @@ export default function ExplorerPage() {
       let parsed: TribeCard[] = [];
       try {
         const response = await TokaApi.tribesList();
-        parsed = extractTribes(response.data);
+        // Pass full response: backend may return array at root OR under .data
+        parsed = extractTribes(response.data ?? response);
       } catch (primaryErr) {
         const is404 = primaryErr instanceof ApiError && primaryErr.status === 404;
         if (!is404) throw primaryErr;
         // Fallback: extract tribes from leaderboard
         const lb = await TokaApi.leaderboardCurrent();
-        parsed = extractTribes(lb.data);
+        parsed = extractTribes(lb.data ?? lb);
       }
       if (parsed.length > 0) setTribes(parsed);
       setMessage(null);
