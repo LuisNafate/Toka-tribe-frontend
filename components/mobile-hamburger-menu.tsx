@@ -12,7 +12,6 @@ const MOBILE_MENU_ITEMS = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/recompensas", label: "Recompensas" },
   { href: "/perfil", label: "Perfil" },
-  { href: "/settings", label: "Ajustes" },
 ];
 
 export function MobileHamburgerMenu() {

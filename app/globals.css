@@ -1141,7 +1141,6 @@ img {
 .challenge-card,
 .timeline-card,
 .profile-card,
-.setting-card,
 .listing-card,
 .summary-card {
   border-radius: 24px;
@@ -1160,7 +1159,6 @@ img {
 .challenge-card:hover,
 .timeline-card:hover,
 .profile-card:hover,
-.setting-card:hover,
 .listing-card:hover,
 .summary-card:hover {
   transform: translateY(-4px);
@@ -1195,7 +1193,6 @@ img {
 .challenge-card h3,
 .timeline-card h3,
 .profile-card h3,
-.setting-card h3,
 .listing-card h3,
 .summary-card h3 {
   margin: 14px 0 8px;
@@ -1212,7 +1209,6 @@ img {
 .challenge-card p,
 .timeline-card p,
 .profile-card p,
-.setting-card p,
 .listing-card p,
 .summary-card p {
   margin: 0;
@@ -1537,8 +1533,7 @@ img {
 .season-grid,
 .challenge-grid,
 .reward-grid,
-.profile-grid,
-.settings-grid {
+.profile-grid {
   display: grid;
   gap: 16px;
 }
@@ -1549,7 +1544,6 @@ img {
 
 .mini-card,
 .summary-card,
-.setting-card,
 .timeline-card {
   padding: 20px;
 }
@@ -1638,14 +1632,12 @@ img {
 .challenge-grid,
 .reward-grid,
 .profile-grid,
-.settings-grid,
 .season-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .challenge-card,
 .reward-card,
-.setting-card,
 .timeline-card,
 .profile-card,
 .summary-card {
@@ -2414,7 +2406,6 @@ img {
   .challenge-grid,
   .reward-grid,
   .profile-grid,
-  .settings-grid,
   .season-grid {
     grid-template-columns: 1fr;
   }
@@ -2501,7 +2492,6 @@ img {
   .challenge-card,
   .timeline-card,
   .profile-card,
-  .setting-card,
   .listing-card,
   .summary-card {
     border-radius: 22px;
@@ -4880,7 +4870,6 @@ img {
 
 .fig-mobile-recompensas,
 .fig-mobile-perfil,
-.fig-mobile-settings,
 .fig-mobile-temporada {
   min-height: 100vh;
   margin: 0 auto;
@@ -4892,7 +4881,6 @@ img {
 
 .fig-unified-section,
 .fig-perfil-main,
-.fig-settings-main,
 .fig-temporada-main {
   margin-top: 14px;
   display: grid;
@@ -4997,13 +4985,11 @@ img {
 }
 
 .fig-perfil-topbar,
-.fig-settings-topbar,
 .fig-temporada-topbar {
   margin-bottom: 10px;
 }
 
 .fig-perfil-brand,
-.fig-settings-brand,
 .fig-temporada-brand {
   color: #1e40af;
   font-size: 1.1rem;
@@ -5018,7 +5004,6 @@ img {
 }
 
 .fig-perfil-hero,
-.fig-settings-hero,
 .fig-temporada-hero {
   border-radius: 24px;
   background: linear-gradient(118deg, #2a55b9 32%, #5d89e4 75%);
@@ -5027,7 +5012,6 @@ img {
 }
 
 .fig-perfil-hero h1,
-.fig-settings-hero h1,
 .fig-temporada-hero h2 {
   margin: 0;
   font-family: var(--font-manrope), sans-serif;
@@ -5036,7 +5020,6 @@ img {
 }
 
 .fig-perfil-subtitle,
-.fig-settings-hero p,
 .fig-temporada-hero p {
   margin: 8px 0 0;
   color: #dfe0ff;

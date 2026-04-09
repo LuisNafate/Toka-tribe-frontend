@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Bell, Menu, Plus, Settings, Sparkles } from "lucide-react";
+import { Bell, Menu, Plus } from "lucide-react";
 import { TokaApi } from "@/services/toka-api.service";
 import { extractHeaderIdentity } from "@/services/user-contracts";
 import { navItems } from "@/lib/data";
@@ -113,14 +113,6 @@ export function AppShell({ title, subtitle, children, aside, headerBadge }: AppS
             <Plus size={16} />
             New Activity
           </button>
-          <div className="sidebar__meta">
-            <Link href="/settings" className="inline-row">
-              <Settings size={16} /> Settings
-            </Link>
-            <Link href="/settings" className="inline-row">
-              <Sparkles size={16} /> Support
-            </Link>
-          </div>
         </div>
       </aside>
 

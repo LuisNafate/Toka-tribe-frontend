@@ -29,7 +29,6 @@ export const FIGMA_ASSETS = {
     playIcon: "",
     teamIcon: "",
     rewardIcon: "",
-    settingsIcon: "",
   },
 
   // Dashboard
@@ -62,7 +61,6 @@ export const FIGMA_ASSETS = {
   playIcon: "",
   teamIcon: "",
   rewardIcon: "",
-  settingsIcon: "",
   tokaLogo: "",
   andreaPic: "/images/ajolote_2.png",
   navHomeIcon: "",
@@ -111,11 +109,4 @@ export const featureCards = [
     title: "Recompensas dentro de Toka",
     description: "Los puntos ganados son canjeables por beneficios reales en todo el ecosistema.",
   },
-];
-
-export const settingsItems = [
-  { title: "Privacidad", description: "Controla el uso de tu perfil, actividad y visibilidad." },
-  { title: "Notificaciones", description: "Ajusta avisos de retos, rachas y cierre de temporada." },
-  { title: "Soporte", description: "Resuelve dudas de wallet, acceso y recompensa." },
-  { title: "Términos", description: "Consulta las reglas del ecosistema y lineamientos del juego." },
 ];
