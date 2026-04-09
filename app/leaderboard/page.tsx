@@ -23,6 +23,16 @@ type TribeRank = {
   zone: Zone;
 };
 
+type MemberRank = {
+  rank: number;
+  userId: string;
+  name: string;
+  contributed: number;
+  initials: string;
+  role: "LEADER" | "MEMBER";
+  isMe: boolean;
+};
+
 const DIV_LABELS: Record<Division, string> = {
   bronce: "Bronce",
   plata: "Plata",
@@ -145,6 +155,89 @@ function extractRowsWithDivision(payload: unknown): { row: TribeRank; division: 
     });
 }
 
+function extractUserId(usersData: unknown, authData: unknown): string | null {
+  const usersRec = toRecord(usersData);
+  const authRec = toRecord(authData);
+  return (
+    toText(usersRec?.id) ?? toText(usersRec?.userId) ?? toText(usersRec?._id) ??
+    toText(authRec?.id) ?? toText(authRec?.userId) ?? toText(authRec?._id) ??
+    null
+  );
+}
+
+function extractTribeId(usersData: unknown, authData: unknown): string | null {
+  const usersRec = toRecord(usersData);
+  const authRec = toRecord(authData);
+  return (
+    toText(usersRec?.tribeId) ??
+    toText(toRecord(usersRec?.tribe)?.id) ??
+    toText(toRecord(usersRec?.tribe)?._id) ??
+    toText(authRec?.tribeId) ??
+    toText(toRecord(authRec?.tribe)?.id) ??
+    toText(toRecord(authRec?.tribe)?._id) ??
+    null
+  );
+}
+
+function extractTribeName(usersData: unknown, authData: unknown): string {
+  const usersRec = toRecord(usersData);
+  const authRec = toRecord(authData);
+  return (
+    toText(usersRec?.tribeName) ??
+    toText(toRecord(usersRec?.tribe)?.name) ??
+    toText(authRec?.tribeName) ??
+    toText(toRecord(authRec?.tribe)?.name) ??
+    "Mi Tribe"
+  );
+}
+
+function extractMembers(payload: unknown, currentUserId: string | null): MemberRank[] {
+  const list = findArray(payload);
+  if (!list) return [];
+
+  const rows: MemberRank[] = [];
+  for (const item of list) {
+    const rec = toRecord(item);
+    if (!rec) continue;
+
+    const userId = toText(rec.userId) ?? toText(rec.id) ?? toText(rec._id) ?? "";
+    const name = toText(rec.username) ?? toText(rec.displayName) ?? toText(rec.name) ?? "Miembro";
+    const contributed =
+      toNumber(rec.pointsContributed) ??
+      toNumber(rec.points) ??
+      toNumber(rec.score) ??
+      toNumber(rec.totalPoints) ??
+      0;
+    const role = rec.role === "LEADER" ? "LEADER" : "MEMBER";
+
+    rows.push({
+      rank: 0,
+      userId,
+      name,
+      contributed,
+      initials: initialsFromName(name),
+      role,
+      isMe: !!currentUserId && userId === currentUserId,
+    });
+  }
+
+  rows.sort((a, b) => b.contributed - a.contributed);
+  return rows
+    .filter((item, idx, self) => self.findIndex((x) => x.userId !== "" ? x.userId === item.userId : x.name === item.name) === idx)
+    .map((item, idx) => ({ ...item, rank: idx + 1 }));
+}
+
+async function fetchDivisionRows(division: Division): Promise<unknown> {
+  const upperDivision = DIV_LABELS[division].toUpperCase();
+  try {
+    const upperResponse = await TokaApi.leaderboardByDivision(upperDivision);
+    return upperResponse.data ?? upperResponse;
+  } catch {
+    const lowerResponse = await TokaApi.leaderboardByDivision(division);
+    return lowerResponse.data ?? lowerResponse;
+  }
+}
+
 export default function LeaderboardPage() {
   const [activeDiv, setActiveDiv] = useState<Division>("plata");
   const [divisions, setDivisions] = useState<Record<Division, TribeRank[]>>({
@@ -154,31 +247,39 @@ export default function LeaderboardPage() {
   });
   const [weekLabel, setWeekLabel] = useState("Semana activa");
   const [warning, setWarning] = useState<string | null>(null);
+  const [membersPodium, setMembersPodium] = useState<MemberRank[]>([]);
+  const [memberWarning, setMemberWarning] = useState<string | null>(null);
+  const [memberTribeName, setMemberTribeName] = useState<string>("Mi Tribe");
 
   useEffect(() => {
     async function loadLeaderboard() {
-      const [current, bronceRes, plataRes, oroRes] = await Promise.allSettled([
+      setWarning(null);
+      setMemberWarning(null);
+
+      const [current, bronceRes, plataRes, oroRes, usersResult, authResult] = await Promise.allSettled([
         TokaApi.leaderboardCurrent(),
-        TokaApi.leaderboardByDivision("bronce"),
-        TokaApi.leaderboardByDivision("plata"),
-        TokaApi.leaderboardByDivision("oro"),
+        fetchDivisionRows("bronce"),
+        fetchDivisionRows("plata"),
+        fetchDivisionRows("oro"),
+        TokaApi.usersMe(),
+        TokaApi.authMe(),
       ]);
 
       const next: Record<Division, TribeRank[]> = { bronce: [], plata: [], oro: [] };
 
       // Process division-specific endpoints first (most accurate)
       if (bronceRes.status === "fulfilled") {
-        const raw = bronceRes.value.data ?? bronceRes.value;
+        const raw = bronceRes.value;
         const rows = extractRows(raw);
         if (rows.length > 0) next.bronce = rows;
       }
       if (plataRes.status === "fulfilled") {
-        const raw = plataRes.value.data ?? plataRes.value;
+        const raw = plataRes.value;
         const rows = extractRows(raw);
         if (rows.length > 0) next.plata = rows;
       }
       if (oroRes.status === "fulfilled") {
-        const raw = oroRes.value.data ?? oroRes.value;
+        const raw = oroRes.value;
         const rows = extractRows(raw);
         if (rows.length > 0) next.oro = rows;
       }
@@ -209,8 +310,42 @@ export default function LeaderboardPage() {
 
       setDivisions(next);
 
+      const usersData = usersResult.status === "fulfilled" ? usersResult.value.data ?? null : null;
+      const authData = authResult.status === "fulfilled" ? authResult.value.data ?? null : null;
+      const tribeId = extractTribeId(usersData, authData);
+      const currentUserId = extractUserId(usersData, authData);
+      setMemberTribeName(extractTribeName(usersData, authData));
+
+      if (tribeId) {
+        const [membersResult, tribeDetailResult] = await Promise.allSettled([
+          TokaApi.tribesMembers(tribeId),
+          TokaApi.tribesDetail(tribeId),
+        ]);
+
+        if (membersResult.status === "fulfilled") {
+          const parsed = extractMembers(membersResult.value.data ?? membersResult.value, currentUserId);
+          setMembersPodium(parsed.slice(0, 3));
+        } else {
+          setMembersPodium([]);
+          setMemberWarning("No se pudo sincronizar el ranking interno de tu Tribe.");
+        }
+
+        if (tribeDetailResult.status === "fulfilled") {
+          const detail = toRecord(tribeDetailResult.value.data ?? tribeDetailResult.value);
+          const detailName = toText(detail?.name) ?? toText(detail?.tribeName);
+          if (detailName) setMemberTribeName(detailName);
+        }
+      } else {
+        setMembersPodium([]);
+      }
+
       const allEmpty = Object.values(next).every((arr) => arr.length === 0);
-      if (allEmpty) setWarning("No hay datos de ranking disponibles aún. El snapshot se genera al finalizar la temporada.");
+      const failedMainCalls = [current, bronceRes, plataRes, oroRes].filter((res) => res.status === "rejected").length;
+      if (allEmpty) {
+        setWarning("No hay datos de ranking disponibles aún. El snapshot se genera al finalizar la temporada.");
+      } else if (failedMainCalls > 0) {
+        setWarning("Algunas divisiones no pudieron sincronizarse. Mostramos los datos disponibles.");
+      }
     }
 
     void loadLeaderboard();
@@ -264,6 +399,28 @@ export default function LeaderboardPage() {
                 <span className="status-pill">Top 3</span>
                 <h3 style={{ fontSize: "1.55rem" }}>Puntos por estabilidad</h3>
                 <p>La retención de la Tribe depende de la suma colectiva diaria y el cierre de temporada.</p>
+              </Panel>
+              <Panel>
+                <SectionHeader
+                  eyebrow="Ranking interno"
+                  title={`Top 3 de ${memberTribeName}`}
+                  description="Miembros con mayor aporte acumulado en la temporada."
+                />
+                {memberWarning ? <p className="subtle">{memberWarning}</p> : null}
+                {membersPodium.length === 0 ? <p className="subtle">No hay ranking interno disponible por ahora.</p> : null}
+                <div className="leaderboard-list">
+                  {membersPodium.map((member) => (
+                    <div key={`${member.userId || member.name}-${member.rank}`} className={`leaderboard-row ${member.isMe ? "leaderboard-row--highlight" : ""}`}>
+                      <div className="rank">{member.rank}</div>
+                      <div className="avatar" style={{ width: 40, height: 40 }}>{member.initials}</div>
+                      <div>
+                        <div className="team-name">{member.name}</div>
+                        <div className="subtle">{member.role === "LEADER" ? "Líder" : "Miembro"}</div>
+                      </div>
+                      <div className="score">{member.contributed.toLocaleString("es-ES")}</div>
+                    </div>
+                  ))}
+                </div>
               </Panel>
             </div>
           </div>
@@ -365,6 +522,28 @@ export default function LeaderboardPage() {
               <span className="fig-lb-row-pts">
                 {team.pts.toLocaleString("es-ES")}
               </span>
+            </div>
+          ))}
+        </section>
+
+        <section className="fig-lb-list">
+          <div className="fig-lb-row" style={{ fontWeight: 800 }}>
+            <span className="fig-lb-row-rank">#</span>
+            <span className="fig-lb-row-name" style={{ gridColumn: "3 / span 2" }}>Top interno · {memberTribeName}</span>
+            <span className="fig-lb-row-pts">Pts</span>
+          </div>
+          {memberWarning ? <p className="subtle">{memberWarning}</p> : null}
+          {membersPodium.length === 0 ? <p className="subtle">Sin podio interno disponible.</p> : null}
+          {membersPodium.map((member) => (
+            <div key={`${member.userId || member.name}-mobile-${member.rank}`} className={`fig-lb-row${member.isMe ? " fig-lb-row--user" : ""}`}>
+              <span className="fig-lb-row-rank">{member.rank}</span>
+              <div className="fig-lb-row-avatar-wrap">
+                <div className="fig-lb-row-avatar" style={{ background: "#4a77e3" }}>
+                  {member.initials}
+                </div>
+              </div>
+              <span className="fig-lb-row-name">{member.name}</span>
+              <span className="fig-lb-row-pts">{member.contributed.toLocaleString("es-ES")}</span>
             </div>
           ))}
         </section>
