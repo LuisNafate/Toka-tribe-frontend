@@ -30,13 +30,13 @@ export function PetDisplay({ equippedItems, catalogItems, size = "md" }: PetDisp
       style={{ width: px, height: px }}
     >
       {/* Layer 1 — base mascota */}
-      <img src="/images/mascota.png" alt="Mascota" draggable="false" />
+      <img src="/images/mascota.png" alt="Mascota" draggable="false" className="fig-pet-display__base" />
       {/* Layer 2 — hat */}
-      {hatUrl && <img src={hatUrl} alt="Hat" draggable="false" />}
+      {hatUrl && <img src={hatUrl} alt="Hat" draggable="false" className="fig-pet-display__hat" />}
       {/* Layer 3 — shirt */}
-      {shirtUrl && <img src={shirtUrl} alt="Shirt" draggable="false" />}
+      {shirtUrl && <img src={shirtUrl} alt="Shirt" draggable="false" className="fig-pet-display__shirt" />}
       {/* Layer 4 — accessory */}
-      {accessoryUrl && <img src={accessoryUrl} alt="Accessory" draggable="false" />}
+      {accessoryUrl && <img src={accessoryUrl} alt="Accessory" draggable="false" className="fig-pet-display__accessory" />}
     </div>
   );
 }

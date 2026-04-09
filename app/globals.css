@@ -7700,11 +7700,47 @@ img {
   flex-shrink: 0;
 }
 
-.fig-pet-display img {
+.fig-pet-display__base {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Hat — parte superior de la cabeza */
+.fig-pet-display__hat {
+  position: absolute;
+  top: 0%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Shirt — cuerpo, zona media */
+.fig-pet-display__shirt {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Accessory — zona cuello/cara */
+.fig-pet-display__accessory {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42%;
+  height: auto;
   object-fit: contain;
   pointer-events: none;
 }
