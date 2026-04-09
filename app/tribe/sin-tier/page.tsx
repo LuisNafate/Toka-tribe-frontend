@@ -19,7 +19,7 @@ export default function TribeSinTierPage() {
             <MobileHamburgerMenu />
             <strong>TokaTribe</strong>
           </div>
-          <img src={"http://localhost:3845/assets/339b32c23261ca4d6bee3f2fbd560b8fc7ba98a3.png"} alt="Perfil" />
+          <img src="/images/ajolotes_1.png" alt="Perfil" />
         </header>
 
         <TribeDashboardContent withoutTier />

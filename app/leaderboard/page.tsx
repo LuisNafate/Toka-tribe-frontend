@@ -38,27 +38,6 @@ const RANK_CIRCLE_CLASS: Record<number, string> = {
 
 const palette = ["#f97316", "#4a77e3", "#8b5cf6", "#10b981", "#ef4444", "#14b8a6", "#6366f1", "#64748b"];
 
-const FALLBACK_DIVISIONS: Record<Division, TribeRank[]> = {
-  bronce: [
-    { rank: 1, name: "Fire Squad", pts: 1850, initials: "FS", color: "#ef4444", zone: "up" },
-    { rank: 2, name: "Blue Hawks", pts: 1720, initials: "BH", color: "#3b82f6", zone: "up" },
-    { rank: 3, name: "Storm Tribe", pts: 1640, initials: "ST", color: "#6366f1", zone: "neutral" },
-    { rank: 4, name: "Night Owls", pts: 1520, initials: "NO", color: "#8b5cf6", zone: "up" },
-  ],
-  plata: [
-    { rank: 1, name: "Los Titanes", pts: 2450, initials: "LT", color: "#f97316", zone: "up" },
-    { rank: 2, name: "Axo Squad", pts: 2140, initials: "AX", color: "#4a77e3", isUser: true, zone: "up" },
-    { rank: 3, name: "Cyber Runners", pts: 1980, initials: "CR", color: "#8b5cf6", zone: "neutral" },
-    { rank: 4, name: "Digital Wolves", pts: 1820, initials: "DW", color: "#10b981", zone: "up" },
-  ],
-  oro: [
-    { rank: 1, name: "Elite Force", pts: 4820, initials: "EF", color: "#f59e0b", zone: "up" },
-    { rank: 2, name: "Thunder Clan", pts: 4510, initials: "TC", color: "#ef4444", zone: "up" },
-    { rank: 3, name: "Golden Wolves", pts: 4280, initials: "GW", color: "#10b981", zone: "neutral" },
-    { rank: 4, name: "Royal Squad", pts: 4050, initials: "RS", color: "#8b5cf6", zone: "up" },
-  ],
-};
-
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
@@ -144,7 +123,11 @@ function extractRows(payload: unknown): TribeRank[] {
 
 export default function LeaderboardPage() {
   const [activeDiv, setActiveDiv] = useState<Division>("plata");
-  const [divisions, setDivisions] = useState<Record<Division, TribeRank[]>>(FALLBACK_DIVISIONS);
+  const [divisions, setDivisions] = useState<Record<Division, TribeRank[]>>({
+    bronce: [],
+    plata: [],
+    oro: [],
+  });
   const [weekLabel, setWeekLabel] = useState("Semana activa");
   const [warning, setWarning] = useState<string | null>(null);
 
@@ -158,9 +141,9 @@ export default function LeaderboardPage() {
       ]);
 
       const next: Record<Division, TribeRank[]> = {
-        bronce: FALLBACK_DIVISIONS.bronce,
-        plata: FALLBACK_DIVISIONS.plata,
-        oro: FALLBACK_DIVISIONS.oro,
+        bronce: [],
+        plata: [],
+        oro: [],
       };
 
       if (bronce.status === "fulfilled") {
@@ -193,7 +176,7 @@ export default function LeaderboardPage() {
 
       const failed = [current, bronce, plata, oro].filter((item) => item.status === "rejected").length;
       if (failed > 0) {
-        setWarning("Algunos datos del leaderboard no pudieron sincronizarse y se muestran con fallback.");
+        setWarning("Algunos datos del leaderboard no pudieron sincronizarse.");
       }
     }
 
@@ -201,8 +184,7 @@ export default function LeaderboardPage() {
   }, []);
 
   const teams = divisions[activeDiv];
-  const podiumSource = teams.length >= 3 ? teams : FALLBACK_DIVISIONS[activeDiv];
-  const podium = [podiumSource[1], podiumSource[0], podiumSource[2]].filter(Boolean);
+  const podium = teams.length >= 3 ? [teams[1], teams[0], teams[2]] : [];
   const listTeams = teams.slice(3);
   const userTribe = teams.find((team) => team.isUser) ?? teams[1] ?? teams[0];
   const teamAbove = teams.find((team) => team.rank === Math.max(1, (userTribe?.rank ?? 2) - 1)) ?? teams[0] ?? userTribe;
@@ -226,6 +208,7 @@ export default function LeaderboardPage() {
                 action={<span className="badge">{weekLabel}</span>}
               />
               {warning ? <p className="subtle">{warning}</p> : null}
+              {teams.length === 0 ? <p className="subtle">No hay datos de ranking disponibles para esta división.</p> : null}
               <div className="leaderboard-list">
                 {teams.map((row) => (
                   <div
@@ -291,6 +274,7 @@ export default function LeaderboardPage() {
         </div>
 
         <section className="fig-lb-podium">
+          {podium.length === 0 ? <p className="subtle">Sin datos de podio por ahora.</p> : null}
           {podium.map((team, i) => {
             const isFirst = i === 1;
             return (

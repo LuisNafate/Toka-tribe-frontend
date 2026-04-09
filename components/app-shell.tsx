@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Bell, Menu, Plus, Settings, Sparkles } from "lucide-react";
+import { TokaApi } from "@/services/toka-api.service";
 import { navItems } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 
@@ -19,6 +20,45 @@ type AppShellProps = {
 export function AppShell({ title, subtitle, children, aside, headerBadge }: AppShellProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [displayName, setDisplayName] = useState("Usuario");
+  const [tribeName, setTribeName] = useState("Sin tribe");
+
+  useEffect(() => {
+    async function loadHeaderIdentity() {
+      try {
+        const [usersResult, authResult] = await Promise.allSettled([TokaApi.usersMe(), TokaApi.authMe()]);
+
+        const usersData = usersResult.status === "fulfilled" ? usersResult.value.data as Record<string, unknown> : null;
+        const authData = authResult.status === "fulfilled" ? authResult.value.data as Record<string, unknown> : null;
+
+        const nextDisplayName =
+          (usersData?.username as string | undefined) ??
+          (usersData?.displayName as string | undefined) ??
+          (usersData?.name as string | undefined) ??
+          (authData?.username as string | undefined) ??
+          null;
+
+        const nextTribeName =
+          (usersData?.tribeName as string | undefined) ??
+          ((usersData?.tribe as Record<string, unknown> | undefined)?.name as string | undefined) ??
+          (authData?.tribeName as string | undefined) ??
+          null;
+
+        if (nextDisplayName && nextDisplayName.trim() !== "") {
+          setDisplayName(nextDisplayName.trim());
+        }
+
+        if (nextTribeName && nextTribeName.trim() !== "") {
+          setTribeName(nextTribeName.trim());
+        }
+      } catch {
+        // ignore and keep neutral labels
+      }
+    }
+
+    void loadHeaderIdentity();
+  }, []);
+
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [pathname]);
@@ -121,8 +161,8 @@ export function AppShell({ title, subtitle, children, aside, headerBadge }: AppS
             </button>
             <div className="inline-row" style={{ gap: 10 }}>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontWeight: 800 }}>Andrea</div>
-                <div className="subtle">Axo Squad</div>
+                <div style={{ fontWeight: 800 }}>{displayName}</div>
+                <div className="subtle">{tribeName}</div>
               </div>
               <div className="avatar" aria-hidden="true">
                 AN

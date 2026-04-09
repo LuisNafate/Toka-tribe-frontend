@@ -27,26 +27,26 @@ function OnboardingContent() {
           <div className="fig-mobile-status-top">
             <div>
               <p>ESTADO DE TU TRIBE</p>
-              <h2>Axo Squad</h2>
+              <h2>Sincroniza tu sesión</h2>
             </div>
-            <span>RANKING #4</span>
+            <span>RANKING --</span>
           </div>
           <div className="fig-mobile-status-main">
             <div className="fig-mobile-avatar-ring">
               <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" />
             </div>
             <div>
-              <div className="fig-mobile-tier">Plata ♦</div>
-              <div className="fig-mobile-points">1480 pts</div>
+              <div className="fig-mobile-tier">Sin tier</div>
+              <div className="fig-mobile-points">0 pts</div>
             </div>
             <img className="fig-mobile-status-mascot" src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
           </div>
           <div className="fig-mobile-progress-labels">
-            <span>A 120 pts de ascender</span>
-            <strong>92%</strong>
+            <span>Sin datos de ascenso</span>
+            <strong>0%</strong>
           </div>
           <div className="fig-mobile-progress-track">
-            <div style={{ width: "92%" }} />
+            <div style={{ width: "0%" }} />
           </div>
         </section>
       </div>

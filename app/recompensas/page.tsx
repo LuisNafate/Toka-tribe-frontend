@@ -7,7 +7,7 @@ import { AppPointsBadge } from "@/components/app-points-badge";
 import BottomNav from "@/components/BottomNav";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
-import { FIGMA_ASSETS, rewardCards } from "@/lib/data";
+import { FIGMA_ASSETS } from "@/lib/data";
 import { TokaApi } from "@/services/toka-api.service";
 
 type RewardItem = {
@@ -17,14 +17,6 @@ type RewardItem = {
   status: string;
   claimable: boolean;
 };
-
-const FALLBACK_REWARDS: RewardItem[] = rewardCards.map((item, index) => ({
-  id: `fallback-${index + 1}`,
-  title: item.title,
-  description: item.description,
-  status: item.status,
-  claimable: item.status.toLowerCase().includes("disponible"),
-}));
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -82,8 +74,8 @@ function extractRewards(payload: unknown): RewardItem[] {
 }
 
 export default function RecompensasPage() {
-  const [rewards, setRewards] = useState<RewardItem[]>(FALLBACK_REWARDS);
-  const [walletBalance, setWalletBalance] = useState<number>(1240);
+  const [rewards, setRewards] = useState<RewardItem[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [myClaimsCount, setMyClaimsCount] = useState<number>(0);
   const [message, setMessage] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState<string | null>(null);
@@ -131,7 +123,7 @@ export default function RecompensasPage() {
 
       const failed = [listResult, claimsResult, paymentsResult].filter((item) => item.status === "rejected").length;
       if (failed > 0) {
-        setMessage("Parte de las recompensas no se pudo sincronizar. Se muestran datos de respaldo.");
+        setMessage("Parte de las recompensas no se pudo sincronizar.");
       }
     }
 
@@ -188,8 +180,8 @@ export default function RecompensasPage() {
             <div className="dashboard-side">
               <Panel className="muted-card">
                 <span className="status-pill">Disponible ahora</span>
-                <h3>{claimableRewards[0]?.title ?? "$50 en saldo Toka"}</h3>
-                <p>{claimableRewards[0]?.description ?? "Recompensa disponible por racha y consistencia semanal."}</p>
+                <h3>{claimableRewards[0]?.title ?? "Sin recompensa disponible"}</h3>
+                <p>{claimableRewards[0]?.description ?? "No hay recompensas reclamables en este momento."}</p>
                 <button
                   className="button button--primary full-width"
                   style={{ marginTop: 14 }}
@@ -216,6 +208,7 @@ export default function RecompensasPage() {
           </div>
 
           <div className="reward-grid" style={{ marginTop: 18 }}>
+            {rewards.length === 0 ? <p className="subtle">No hay recompensas sincronizadas por ahora.</p> : null}
             {rewards.map((item) => (
               <article key={item.id} className="reward-card">
                 <span className="reward-pill">{item.status}</span>

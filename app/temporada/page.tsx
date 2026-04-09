@@ -1,35 +1,95 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { CalendarRange, TimerReset, Flame } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import BottomNav from "@/components/BottomNav";
-import { seasonMilestones } from "@/lib/data";
+import { TokaApi } from "@/services/toka-api.service";
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function toText(value: unknown): string | null {
+  if (typeof value === "string" && value.trim() !== "") return value.trim();
+  return null;
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/,/g, ""));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
 
 export default function TemporadaPage() {
+  const [seasonTitle, setSeasonTitle] = useState("Temporada sin datos");
+  const [seasonStatus, setSeasonStatus] = useState("Sin información de cierre disponible");
+  const [progressPct, setProgressPct] = useState(0);
+  const [remainingLabel, setRemainingLabel] = useState("Sin datos de tiempo");
+  const [warning, setWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadSeason() {
+      setWarning(null);
+      const [seasonResult, leaderboardResult] = await Promise.allSettled([
+        TokaApi.seasonsCurrent(),
+        TokaApi.leaderboardCurrent(),
+      ]);
+
+      if (seasonResult.status === "fulfilled") {
+        const season = toRecord(seasonResult.value.data);
+        const title = toText(season?.name) ?? toText(season?.title);
+        const status = toText(season?.status) ?? toText(season?.description) ?? toText(season?.endsAt);
+        const target = toNumber(season?.targetPoints) ?? toNumber(season?.goalPoints) ?? toNumber(season?.maxPoints) ?? 0;
+        const current = toNumber(season?.currentPoints) ?? toNumber(season?.points) ?? 0;
+
+        if (title) setSeasonTitle(title);
+        if (status) setSeasonStatus(status);
+        if (target > 0) {
+          setProgressPct(Math.min(100, Math.max(0, Math.round((current / target) * 100))));
+        }
+      }
+
+      if (leaderboardResult.status === "fulfilled") {
+        const lb = toRecord(leaderboardResult.value.data);
+        const remaining = toText(lb?.remainingTime) ?? toText(lb?.endsAt) ?? null;
+        if (remaining) setRemainingLabel(remaining);
+      }
+
+      if (seasonResult.status === "rejected" || leaderboardResult.status === "rejected") {
+        setWarning("No se pudieron sincronizar todos los datos de temporada.");
+      }
+    }
+
+    void loadSeason();
+  }, []);
+
   return (
     <>
       <div className="fig-desktop-only">
         <AppShell title="Temporada" subtitle="Estado del ciclo semanal, progreso y cierre">
           <div className="workspace__grid">
             <Panel>
-              <SectionHeader eyebrow="Temporada activa" title="Semana 4" description="La liga se reinicia por ciclos, reforzando el compromiso de equipo." action={<span className="badge">Cierra en 2 días 14 h</span>} />
-              <ProgressBar value={80} label="A 120 pts de ascender" suffix="80%" muted />
+              <SectionHeader eyebrow="Temporada activa" title={seasonTitle} description="Datos sincronizados desde backend." action={<span className="badge">{remainingLabel}</span>} />
+              <ProgressBar value={progressPct} label="Progreso de temporada" suffix={`${progressPct}%`} muted />
               <div className="timeline-card" style={{ marginTop: 18 }}>
                 <div className="inline-row" style={{ justifyContent: "space-between" }}>
-                  <strong>Calendario semanal</strong>
+                  <strong>Estado</strong>
                   <CalendarRange size={16} />
                 </div>
-                <div className="chart-bars">
-                  {seasonMilestones.map((bar) => (
-                    <div key={bar.label} className={`chart-bar ${bar.active ? "chart-bar--active" : ""}`} style={{ height: `${bar.height}px` }} />
-                  ))}
-                </div>
+                <p className="subtle" style={{ marginTop: 10 }}>{seasonStatus}</p>
               </div>
             </Panel>
 
             <div className="dashboard-side">
               <Panel>
-                <SectionHeader eyebrow="Hitos" title="Reglas de ascenso" description="Qué debe cumplir la Tribe para subir de división." />
+                <SectionHeader eyebrow="Hitos" title="Reglas de ascenso" description="Reglas y objetivos definidos por backend." />
                 <div className="timeline">
                   <div className="timeline-row"><div className="timeline-dot" /><div><strong>Completar retos</strong><p>Sumar puntos diarios.</p></div><span className="subtle">1</span></div>
                   <div className="timeline-row"><div className="timeline-dot" /><div><strong>Sostener la racha</strong><p>Evitar perder el ritmo semanal.</p></div><span className="subtle">2</span></div>
@@ -40,15 +100,16 @@ export default function TemporadaPage() {
               <Panel className="muted-card">
                 <span className="status-pill">Actualización en vivo</span>
                 <h3>Leaderboard sincronizado</h3>
-                <p>El avance se recalcula con cada reto y con cada resultado confirmado.</p>
+                <p>El avance se recalcula con cada reto y resultado confirmado.</p>
               </Panel>
 
               <Panel>
-                <SectionHeader eyebrow="Tiempo" title="Recordatorio de cierre" description="El día de corte es el punto de mayor tensión competitiva." />
-                <div className="inline-row" style={{ gap: 8, color: "#5d89e4", fontWeight: 800 }}><TimerReset size={16} /> Quedan 2 días 14 h</div>
+                <SectionHeader eyebrow="Tiempo" title="Recordatorio de cierre" description="Este valor proviene del backend." />
+                <div className="inline-row" style={{ gap: 8, color: "#5d89e4", fontWeight: 800 }}><TimerReset size={16} /> {remainingLabel}</div>
               </Panel>
             </div>
           </div>
+          {warning ? <p className="subtle">{warning}</p> : null}
         </AppShell>
       </div>
 
@@ -65,8 +126,8 @@ export default function TemporadaPage() {
 
         <section className="fig-temporada-hero">
           <div className="fig-temporada-hero__badge">
-            <h2>Semana 4</h2>
-            <p>Cierra en <strong>2 días 14 h</strong></p>
+            <h2>{seasonTitle}</h2>
+            <p>Cierre: <strong>{remainingLabel}</strong></p>
           </div>
         </section>
 
@@ -76,70 +137,25 @@ export default function TemporadaPage() {
               <strong>Progreso</strong>
               <CalendarRange size={16} />
             </div>
-            <h3>A 120 pts de ascender</h3>
+            <h3>Progreso de temporada</h3>
             <div style={{ marginTop: 16 }}>
               <div style={{ width: "100%", height: 8, backgroundColor: "#e9ecf1", borderRadius: 4, overflow: "hidden" }}>
-                <div style={{ width: "80%", height: "100%", backgroundColor: "#5d89e4", transition: "width 0.3s" }} />
+                <div style={{ width: `${progressPct}%`, height: "100%", backgroundColor: "#5d89e4", transition: "width 0.3s" }} />
               </div>
               <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", fontSize: 12, color: "#666" }}>
-                <span>0 pts</span>
-                <strong style={{ color: "#2a55b9" }}>80%</strong>
+                <span>0%</span>
+                <strong style={{ color: "#2a55b9" }}>{progressPct}%</strong>
               </div>
             </div>
           </article>
 
           <article className="fig-unified-card fig-unified-card--dark">
             <div className="fig-unified-head">
-              <strong>Hitos</strong>
+              <strong>Estado</strong>
               <TimerReset size={16} style={{ color: "#5ef6e6" }} />
             </div>
-            <h3 style={{ marginTop: 8 }}>Reglas de ascenso</h3>
-            <div style={{ marginTop: 16 }}>
-              <div className="fig-timeline-row">
-                <div className="fig-timeline-dot" />
-                <div>
-                  <h4 style={{ margin: "0 0 2px", fontSize: 13 }}>Completar retos</h4>
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Sumar puntos diarios</p>
-                </div>
-              </div>
-              <div className="fig-timeline-row" style={{ marginTop: 12 }}>
-                <div className="fig-timeline-dot" />
-                <div>
-                  <h4 style={{ margin: "0 0 2px", fontSize: 13 }}>Sostener la racha</h4>
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Evitar perder el ritmo</p>
-                </div>
-              </div>
-              <div className="fig-timeline-row" style={{ marginTop: 12 }}>
-                <div className="fig-timeline-dot" />
-                <div>
-                  <h4 style={{ margin: "0 0 2px", fontSize: 13 }}>Superar rivales</h4>
-                  <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Escalar en división</p>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article className="fig-unified-card">
-            <div className="fig-unified-head">
-              <strong>Calendario</strong>
-              <CalendarRange size={16} />
-            </div>
-            <div style={{ marginTop: 16, display: "flex", justifyContent: "center", gap: 6, height: 60 }}>
-              {seasonMilestones.map((bar) => (
-                <div
-                  key={bar.label}
-                  className={`fig-chart-bar ${bar.active ? "fig-chart-bar--active" : ""}`}
-                  style={{
-                    flex: 1,
-                    height: `${bar.height}px`,
-                    backgroundColor: bar.active ? "#5d89e4" : "#e9ecf1",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                    transition: "background-color 0.2s"
-                  }}
-                />
-              ))}
-            </div>
+            <h3 style={{ marginTop: 8 }}>Sin simulación</h3>
+            <p className="fig-small-text" style={{ color: "rgba(255,255,255,0.7)" }}>{seasonStatus}</p>
           </article>
 
           <article className="fig-unified-card fig-unified-card--soft">
@@ -149,9 +165,7 @@ export default function TemporadaPage() {
             </div>
             <h3>Leaderboard en vivo</h3>
             <p className="fig-small-text">El avance se recalcula con cada reto completado y resultado confirmado.</p>
-            <div style={{ marginTop: 12 }}>
-              <span className="fig-status-pill">Actualización en vivo</span>
-            </div>
+            {warning ? <p className="subtle" style={{ marginTop: 10 }}>{warning}</p> : null}
           </article>
         </div>
 

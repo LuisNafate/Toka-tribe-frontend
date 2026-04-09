@@ -43,19 +43,19 @@ export default function LandingPage() {
 
           <aside className="fig-home-hero-right">
             <p>ESTADO DE TU TRIBE</p>
-            <h2>Axo Squad</h2>
+            <h2>Sincroniza tu sesión</h2>
             <div className="fig-home-rank-row">
               <div>
-                <strong>#4</strong>
-                <span>POSICIÓN SEMANAL</span>
+                <strong>--</strong>
+                <span>RANKING DISPONIBLE AL INICIAR</span>
               </div>
-              <span className="fig-home-tier-chip">Plata</span>
+              <span className="fig-home-tier-chip">Sin tier</span>
             </div>
-            <div className="fig-home-progress-copy">A 120 pts de ascender 92%</div>
-            <div className="fig-mobile-progress-track"><div style={{ width: "92%" }} /></div>
+            <div className="fig-home-progress-copy">Sin datos competitivos hasta autenticar usuario</div>
+            <div className="fig-mobile-progress-track"><div style={{ width: "0%" }} /></div>
             <div className="fig-home-score-row">
-              <strong>1,480 pts</strong>
-              <span>Meta: 1,600 pts</span>
+              <strong>0 pts</strong>
+              <span>Sin meta sincronizada</span>
             </div>
             <img src={FIGMA_ASSETS.landing.hero} alt="Mascot" draggable="false" />
           </aside>
@@ -133,9 +133,9 @@ export default function LandingPage() {
           <div className="fig-mobile-status-top">
             <div>
               <p>ESTADO DE TU TRIBE</p>
-              <h2>Axo Squad</h2>
+              <h2>Sincroniza tu sesión</h2>
             </div>
-            <span>RANKING #4</span>
+            <span>RANKING --</span>
           </div>
 
           <div className="fig-mobile-status-main">
@@ -143,17 +143,17 @@ export default function LandingPage() {
               <img src={FIGMA_ASSETS.dashboard.userPic} alt="Avatar" />
             </div>
             <div>
-              <div className="fig-mobile-tier">Plata</div>
-              <div className="fig-mobile-points">1,480 pts</div>
+              <div className="fig-mobile-tier">Sin tier</div>
+              <div className="fig-mobile-points">0 pts</div>
             </div>
             <img className="fig-mobile-status-mascot" src="/images/ajolote_2.png" alt="Mascot" draggable="false" />
           </div>
 
           <div className="fig-mobile-progress-labels">
-            <span>A 120 pts de ascender</span>
-            <strong>92%</strong>
+            <span>Sin datos de ascenso</span>
+            <strong>0%</strong>
           </div>
-          <div className="fig-mobile-progress-track"><div style={{ width: "92%" }} /></div>
+          <div className="fig-mobile-progress-track"><div style={{ width: "0%" }} /></div>
         </section>
 
         <section className="fig-mobile-ecosystem">

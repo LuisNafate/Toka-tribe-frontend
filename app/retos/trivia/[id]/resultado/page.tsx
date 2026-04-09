@@ -88,7 +88,7 @@ export default function TriviaResultadoPage({
       {/* ── Hero card con gradiente ── */}
       <section className="fig-trivia-result-hero-card">
         <div className="fig-trivia-result-hero-text">
-          <span className="fig-trivia-result-hero-subtitle">AXO SQUAD · TOKA TRIVIA</span>
+          <span className="fig-trivia-result-hero-subtitle">TOKA TRIVIA</span>
           <h1>{heroMessage}</h1>
           <p className="fig-trivia-result-hero-pts">
             <strong>{finalScore.toLocaleString()}</strong>

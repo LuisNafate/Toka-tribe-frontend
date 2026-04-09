@@ -80,7 +80,7 @@ export default function TribePage() {
       let tribeName =
         toText(toRecord(usersData)?.tribeName) ??
         toText(toRecord(toRecord(usersData)?.tribe)?.name) ??
-        "Axo Squad";
+        "Sin tribe";
 
       let members: Member[] = [];
       let memberCount = toNumber(toRecord(toRecord(usersData)?.tribe)?.memberCount) ?? 0;
@@ -121,7 +121,7 @@ export default function TribePage() {
             const name = toText(rec.username) ?? toText(rec.name) ?? toText(rec.displayName) ?? "Miembro";
             const score = toNumber(rec.points) ?? toNumber(rec.score) ?? 0;
             const tier = toText(rec.tier) ?? "";
-            const avatar = toText(rec.avatarUrl) ?? toText(rec.avatar) ?? "http://localhost:3845/assets/9f93a0889bfd14e518b986a7a998c6d22eff79dc.png";
+            const avatar = toText(rec.avatarUrl) ?? toText(rec.avatar) ?? "/images/ajolotes_1.png";
 
             parsedMembers.push({
               name,
@@ -198,7 +198,7 @@ export default function TribePage() {
 
   const content = <TribeDashboardContent withoutTier={withoutTier} runtime={runtimeData} />;
 
-  const avatarUrl = useMemo(() => runtimeData?.members?.[0]?.avatar ?? "http://localhost:3845/assets/339b32c23261ca4d6bee3f2fbd560b8fc7ba98a3.png", [runtimeData]);
+  const avatarUrl = useMemo(() => runtimeData?.members?.[0]?.avatar ?? "/images/ajolotes_1.png", [runtimeData]);
 
   return (
     <>

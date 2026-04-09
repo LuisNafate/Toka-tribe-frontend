@@ -19,12 +19,6 @@ type TribeCard = {
 
 const tiers = ["Todos", "Bronce", "Plata", "Oro", "Diamante"];
 
-const fallbackTribes: TribeCard[] = [
-  { id: "1", name: "Los Jaguares", avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[0], tier: "Oro", memberCount: 48, maxMembers: 50, pointsWeek: 125400 },
-  { id: "2", name: "Serpientes del Rio", avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[1], tier: "Plata", memberCount: 32, maxMembers: 50, pointsWeek: 98750 },
-  { id: "3", name: "Aguilas Nocturnas", avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[2], tier: "Diamante", memberCount: 45, maxMembers: 50, pointsWeek: 156200 },
-];
-
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
@@ -107,7 +101,7 @@ function extractTribes(payload: unknown): TribeCard[] {
 export default function ExplorerPage() {
   const [selectedTier, setSelectedTier] = useState<string>("Todos");
   const [searchText, setSearchText] = useState("");
-  const [tribes, setTribes] = useState<TribeCard[]>(fallbackTribes);
+  const [tribes, setTribes] = useState<TribeCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [joiningTribeId, setJoiningTribeId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);

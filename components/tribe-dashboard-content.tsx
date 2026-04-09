@@ -42,54 +42,21 @@ export type ActivityItem = {
   highlight?: boolean;
 };
 
-const defaultMembers: Member[] = [
-  {
-    name: "Alix",
-    note: "MVP de la semana",
-    pts: "+450 pts",
-    avatar: "http://localhost:3845/assets/9f93a0889bfd14e518b986a7a998c6d22eff79dc.png",
-    top: true,
-    tierLabel: "Oro",
-    tierVariant: "oro",
-  },
-  {
-    name: "Jeshua",
-    note: "Activo hace 2h",
-    pts: "+320 pts",
-    avatar: "http://localhost:3845/assets/b0bd42ef8ce8629861e4e063ca86a7450cb7d934.png",
-    tierLabel: "Plata",
-    tierVariant: "plata",
-  },
-  {
-    name: "Nafa",
-    note: "En racha",
-    pts: "+280 pts",
-    avatar: "http://localhost:3845/assets/5c07578cebccf945e0e1b8a63ae53c78bda8b1a5.png",
-    noTier: true,
-  },
-];
-
-const defaultActivity: ActivityItem[] = [
-  { actor: "Alix", action: "completó Toka Trivia", pointsLabel: "+40 pts", whenLabel: "hace 2h", variant: "navy" },
-  { actor: "Jeshua", action: "completó Reflejos Tribe", pointsLabel: "+25 pts", whenLabel: "Ayer", variant: "teal" },
-  { actor: "Tribe", action: "ascendió a Plata", pointsLabel: "Nueva división desbloqueada", whenLabel: "hace 3 días", variant: "blue", highlight: true },
-];
-
 export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDashboardContentProps) {
   const [feedback, setFeedback] = useState<{ tone: "info" | "ok" | "warn"; text: string } | null>(null);
 
-  const tierText = runtime?.tierText ?? (withoutTier ? "Sin Tier" : "PLATA");
-  const tribeName = runtime?.tribeName ?? "Axo Squad";
-  const pointsText = runtime?.pointsText ?? (withoutTier ? "1,640 pts" : "2,140 pts");
-  const statusText = runtime?.statusText ?? (withoutTier ? "Tu tribe aun no tiene tier asignado" : "Multiplicador x1,3 activo");
-  const progressPercent = runtime?.progressPercent ?? (withoutTier ? 61 : 92);
-  const progressHint = runtime?.progressHint ?? (withoutTier ? "Suma 360 pts para entrar a Bronce" : "A 120 pts de ascender · 92%");
-  const rankingLabel = runtime?.rankingLabel ?? (withoutTier ? "Sin división" : "#4 en Plata");
-  const membersTitle = runtime?.membersTitle ?? "Tu Tribe (7/10)";
-  const currentStreakLabel = runtime?.currentStreakLabel ?? "5 días";
-  const retosLabel = runtime?.retosLabel ?? "3/4 jugados";
-  const members = runtime?.members && runtime.members.length > 0 ? runtime.members : defaultMembers;
-  const activity = runtime?.activity && runtime.activity.length > 0 ? runtime.activity : defaultActivity;
+  const tierText = runtime?.tierText ?? "SIN DATOS";
+  const tribeName = runtime?.tribeName ?? "Sin tribe";
+  const pointsText = runtime?.pointsText ?? "0 pts";
+  const statusText = runtime?.statusText ?? "Sin datos de tribe sincronizados";
+  const progressPercent = runtime?.progressPercent ?? 0;
+  const progressHint = runtime?.progressHint ?? "Sin datos de progresión disponibles";
+  const rankingLabel = runtime?.rankingLabel ?? "Sin división";
+  const membersTitle = runtime?.membersTitle ?? "Tu Tribe";
+  const currentStreakLabel = runtime?.currentStreakLabel ?? "0 días";
+  const retosLabel = runtime?.retosLabel ?? "0/0 jugados";
+  const members = runtime?.members ?? [];
+  const activity = runtime?.activity ?? [];
 
   const tierActivationLabel = useMemo(() => {
     if (!withoutTier) {
@@ -173,6 +140,7 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
             </button>
           </div>
           <div className="fig-tribe-members-card">
+            {members.length === 0 ? <p className="subtle">Sin miembros sincronizados.</p> : null}
             {members.map((member) => (
               <article key={member.name} className={member.top ? "top" : ""}>
                 <div className="fig-member-main">
@@ -209,6 +177,7 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
 
         <section className="fig-tribe-activity">
           <h2>Actividad reciente</h2>
+          {activity.length === 0 ? <p className="subtle">Sin actividad sincronizada.</p> : null}
           {activity.map((item) => (
             <article key={`${item.actor}-${item.action}`} className={item.highlight ? "highlight" : ""}>
               <div className={`fig-tribe-activity-icon fig-tribe-activity-icon--${item.variant ?? "navy"}`}>

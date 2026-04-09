@@ -6,7 +6,7 @@ import { TokaApi, type ApiEnvelope } from "@/services/toka-api.service";
 
 export const APP_POINTS_STORAGE_KEY = "tokatribe.app.points";
 export const APP_POINTS_CHANGE_EVENT = "tokatribe:app-points-change";
-export const DEFAULT_APP_POINTS = 1480;
+export const DEFAULT_APP_POINTS = 0;
 
 const POINT_KEYS = [
   "individualPoints",

@@ -28,19 +28,19 @@ type ProfileViewModel = {
 };
 
 const DEFAULT_PROFILE: ProfileViewModel = {
-  displayName: "Alix",
+  displayName: "Usuario",
   avatarUrl: FIGMA_ASSETS.landing.hero,
-  tierLabel: "Plata",
-  planLabel: "Free",
-  tribeName: "Axo Squad",
-  totalPoints: 1480,
-  maxStreakDays: 12,
-  currentStreakDays: 5,
-  completedChallenges: 128,
-  seasonsPlayed: 4,
-  bestRank: 12,
-  seasonCurrentPoints: 1300,
-  seasonGoalPoints: 2000,
+  tierLabel: "SIN DATOS",
+  planLabel: "Sin plan",
+  tribeName: "Sin tribe",
+  totalPoints: 0,
+  maxStreakDays: 0,
+  currentStreakDays: 0,
+  completedChallenges: 0,
+  seasonsPlayed: 0,
+  bestRank: 0,
+  seasonCurrentPoints: 0,
+  seasonGoalPoints: 0,
 };
 
 function toRecord(value: unknown): Record<string, unknown> | null {
@@ -179,7 +179,7 @@ export default function PerfilPage() {
 
       const failedCalls = responses.filter((result) => result.status === "rejected").length;
       if (failedCalls > 0) {
-        setProfileWarning("Algunos datos del perfil no se pudieron sincronizar y se muestran con fallback.");
+        setProfileWarning("Algunos datos del perfil no se pudieron sincronizar.");
       }
 
       setIsLoadingProfile(false);

@@ -1,34 +1,48 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
+import { TokaApi } from "@/services/toka-api.service";
 
-type TierOption = {
-  id: "oro" | "plata" | "bronce";
-  name: string;
-  multiplier: string;
-  price: number;
-  popular?: boolean;
-};
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
 
-const tierOptions: TierOption[] = [
-  { id: "oro", name: "Tier Oro", multiplier: "Multiplicador 2.0x", price: 50, popular: true },
-  { id: "plata", name: "Tier Plata", multiplier: "Multiplicador 1.5x", price: 25 },
-  { id: "bronce", name: "Tier Bronce", multiplier: "Multiplicador 1.2x", price: 10 },
-];
-
-const walletBalance = 120;
+function toNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/,/g, ""));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
 
 export default function ActivarTierPage() {
-  const [selectedTier, setSelectedTier] = useState<TierOption>(tierOptions[0]);
-  const [feedback, setFeedback] = useState<string>("");
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [message, setMessage] = useState<string>("La activación de tiers requiere endpoint de backend dedicado.");
 
-  const finalBalance = useMemo(() => walletBalance - selectedTier.price, [selectedTier.price]);
+  useEffect(() => {
+    async function loadWallet() {
+      try {
+        const response = await TokaApi.paymentsMe();
+        const payload = toRecord(response.data);
+        const balance =
+          toNumber(payload?.balance) ??
+          toNumber(payload?.walletBalance) ??
+          toNumber(payload?.totalBalance) ??
+          toNumber(toRecord(payload?.summary)?.balance) ??
+          null;
 
-  function onActivateTier() {
-    setFeedback(`Tier activado: ${selectedTier.name}. Tu membresía ahora aplica ${selectedTier.multiplier}.`);
-  }
+        setWalletBalance(balance);
+      } catch {
+        setWalletBalance(null);
+      }
+    }
+
+    void loadWallet();
+  }, []);
 
   return (
     <main className="fig-tier-page">
@@ -41,54 +55,32 @@ export default function ActivarTierPage() {
       </header>
 
       <section className="fig-tier-hero">
-        <h1>Activa tu tier</h1>
-        <p>Invierte en tu temporada y multiplica tus recompensas al cierre.</p>
+        <h1>Activación de tier</h1>
+        <p>Esta funcionalidad no utiliza valores simulados y queda bloqueada hasta contar con endpoint oficial.</p>
         <img src="/images/ajolote_4.png" alt="Mascot" draggable="false" />
       </section>
 
       <section className="fig-tier-options">
-        {tierOptions.map((option) => {
-          const active = option.id === selectedTier.id;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              className={`fig-tier-option ${active ? "fig-tier-option--active" : ""}`}
-              onClick={() => {
-                setSelectedTier(option);
-                setFeedback(`Seleccionaste ${option.name}.`);
-              }}
-            >
-              <div>
-                <h2>{option.name}</h2>
-                <p>{option.multiplier}</p>
-                {option.popular ? <span>Más popular</span> : null}
-              </div>
-              <strong>${option.price} Toka</strong>
-            </button>
-          );
-        })}
+        <div className="fig-tier-option fig-tier-option--active" role="status">
+          <div>
+            <h2>Sin catálogo de tiers</h2>
+            <p>Backend pendiente para precios, multiplicadores y validaciones.</p>
+          </div>
+          <strong>No disponible</strong>
+        </div>
       </section>
 
       <section className="fig-tier-balance">
         <div>
           <span>Tu balance:</span>
-          <strong>${walletBalance} Toka</strong>
-        </div>
-        <div>
-          <span>Pagarás:</span>
-          <strong className="negative">-${selectedTier.price} Toka</strong>
-        </div>
-        <div className="fig-tier-balance-total">
-          <span>Balance después:</span>
-          <strong>${finalBalance} Toka</strong>
+          <strong>{walletBalance === null ? "Sin datos" : `$${walletBalance.toLocaleString("es-ES")} Toka`}</strong>
         </div>
       </section>
 
-      {feedback ? <p className="fig-tier-feedback" role="status" aria-live="polite">{feedback}</p> : null}
+      <p className="fig-tier-feedback" role="status" aria-live="polite">{message}</p>
 
-      <button type="button" className="fig-tier-activate" onClick={onActivateTier}>
-        Activar {selectedTier.name}
+      <button type="button" className="fig-tier-activate" disabled>
+        Activación no disponible
       </button>
     </main>
   );
