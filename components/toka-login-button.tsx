@@ -13,6 +13,7 @@ type TokaLoginButtonProps = {
   redirectTo?: string;
   showDiagnostics?: boolean;
   autoStart?: boolean;
+  onSuccess?: () => void;
 };
 
 export function TokaLoginButton({
@@ -21,6 +22,7 @@ export function TokaLoginButton({
   redirectTo = "/dashboard",
   showDiagnostics = false,
   autoStart = false,
+  onSuccess,
 }: TokaLoginButtonProps) {
   const router = useRouter();
   const { getDigitalIdentityCode, getPersonalInformationCode, isLoading, isBridgeReady, error: bridgeError } = useTokaBridge();
@@ -107,6 +109,12 @@ export function TokaLoginButton({
       })();
 
       setStatus("Redirigiendo...");
+
+      if (onSuccess) {
+        onSuccess();
+        return;
+      }
+
       router.push(redirectTo);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error externo no tipificado.";

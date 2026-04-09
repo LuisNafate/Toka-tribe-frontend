@@ -9,16 +9,12 @@ import { getSessionToken } from "@/services/auth.service";
 export function LandingAccessPopup() {
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [loginComplete, setLoginComplete] = useState(false);
 
   useEffect(() => {
     const token = getSessionToken();
-
-    if (token) {
-      router.replace("/dashboard");
-      return;
-    }
-
+    setHasSession(Boolean(token));
     setIsReady(true);
   }, [router]);
 
@@ -37,14 +33,13 @@ export function LandingAccessPopup() {
     );
   }
 
-  if (isDismissed) {
-    return (
-      <main className="landing-gate landing-gate--dismissed">
-        <button type="button" className="landing-gate__reopen" onClick={() => setIsDismissed(false)}>
-          Mostrar aviso de acceso
-        </button>
-      </main>
-    );
+  function handleContinue() {
+    if (getSessionToken() || hasSession || loginComplete) {
+      router.push("/dashboard");
+      return;
+    }
+
+    router.push("/onboarding");
   }
 
   return (
@@ -58,7 +53,7 @@ export function LandingAccessPopup() {
           type="button"
           className="landing-gate__close"
           aria-label="Cerrar aviso"
-          onClick={() => setIsDismissed(true)}
+          onClick={handleContinue}
         >
           <X size={16} />
         </button>
@@ -74,7 +69,7 @@ export function LandingAccessPopup() {
         <div className="landing-gate__copy">
           <h1 id="landing-gate-title">Juega, compite y sube con tu tribe</h1>
           <p id="landing-gate-desc">
-            TokaTribe reúne retos, ranking y recompensas en una sola experiencia. Entra con tu cuenta Toka para sincronizar tu progreso cuando estés listo.
+            TokaTribe reúne retos, ranking y recompensas en una sola experiencia. El anuncio se queda fijo hasta que lo cierres con la X.
           </p>
         </div>
 
@@ -102,12 +97,17 @@ export function LandingAccessPopup() {
           <span><ShieldCheck size={14} /> Acceso manual</span>
         </div>
 
-        <TokaLoginButton className="landing-gate__button">
+        <TokaLoginButton
+          className="landing-gate__button"
+          onSuccess={() => {
+            setLoginComplete(true);
+          }}
+        >
           Iniciar sesión con Toka
         </TokaLoginButton>
 
         <p className="landing-gate__hint">
-          Cuando quieras entrar, usa el botón. Si ya tienes sesión activa, te llevaremos directo al tablero.
+          Cuando cierres con la X, continuas al siguiente paso.
           <ArrowRight size={14} />
         </p>
       </section>
