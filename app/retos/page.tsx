@@ -165,7 +165,7 @@ export default function RetosPage() {
           : Array.isArray(toRecord(payload)?.sessions)
             ? (toRecord(payload)?.sessions as unknown[])
             : [];
-        const total = list.reduce((acc, item) => acc + (toNumber(toRecord(item)?.score) ?? 0), 0);
+        const total = list.reduce<number>((acc, item) => acc + (toNumber(toRecord(item)?.score) ?? 0), 0);
         setWeeklyContribution(total);
       }
 

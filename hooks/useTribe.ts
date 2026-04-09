@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { TokaApi } from "@/services/toka-api.service";
+import { getApiErrorMessage, TokaApi } from "@/services/toka-api.service";
 import { getSessionToken } from "@/services/auth.service";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -189,12 +189,9 @@ export function useTribe() {
       showToast("ok", "¡Te uniste a la Tribe!");
       return { success: true };
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "";
-      const alreadyMember = msg.includes("409") || msg.toLowerCase().includes("already") || msg.toLowerCase().includes("ya");
-      showToast("error", alreadyMember
-        ? "Ya perteneces a una Tribe esta temporada."
-        : `No se pudo unir: ${msg}`
-      );
+      const message = getApiErrorMessage(e, "No se pudo unir a la Tribe.");
+      const alreadyMember = message.toLowerCase().includes("ya fue") || message.toLowerCase().includes("ya perteneces");
+      showToast("error", message);
       return { success: false, alreadyMember };
     }
   }, []);
@@ -208,7 +205,7 @@ export function useTribe() {
       showToast("ok", "Saliste de la Tribe.");
       return { success: true };
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "No se pudo salir de la Tribe.";
+      const msg = getApiErrorMessage(e, "No se pudo salir de la Tribe.");
       showToast("error", msg);
       return { success: false };
     }
@@ -222,7 +219,7 @@ export function useTribe() {
       showToast("ok", `¡Tribe "${input.name}" creada!`);
       return { success: true };
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "No se pudo crear la Tribe.";
+      const msg = getApiErrorMessage(e, "No se pudo crear la Tribe.");
       showToast("error", msg);
       return { success: false };
     }

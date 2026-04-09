@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Bell, Menu, Plus, Settings, Sparkles } from "lucide-react";
 import { TokaApi } from "@/services/toka-api.service";
+import { extractHeaderIdentity } from "@/services/user-contracts";
 import { navItems } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 
@@ -28,28 +29,16 @@ export function AppShell({ title, subtitle, children, aside, headerBadge }: AppS
       try {
         const [usersResult, authResult] = await Promise.allSettled([TokaApi.usersMe(), TokaApi.authMe()]);
 
-        const usersData = usersResult.status === "fulfilled" ? usersResult.value.data as Record<string, unknown> : null;
-        const authData = authResult.status === "fulfilled" ? authResult.value.data as Record<string, unknown> : null;
+        const usersData = usersResult.status === "fulfilled" ? usersResult.value.data : null;
+        const authData = authResult.status === "fulfilled" ? authResult.value.data : null;
+        const identity = extractHeaderIdentity(usersData, authData);
 
-        const nextDisplayName =
-          (usersData?.username as string | undefined) ??
-          (usersData?.displayName as string | undefined) ??
-          (usersData?.name as string | undefined) ??
-          (authData?.username as string | undefined) ??
-          null;
-
-        const nextTribeName =
-          (usersData?.tribeName as string | undefined) ??
-          ((usersData?.tribe as Record<string, unknown> | undefined)?.name as string | undefined) ??
-          (authData?.tribeName as string | undefined) ??
-          null;
-
-        if (nextDisplayName && nextDisplayName.trim() !== "") {
-          setDisplayName(nextDisplayName.trim());
+        if (identity.displayName.trim() !== "") {
+          setDisplayName(identity.displayName);
         }
 
-        if (nextTribeName && nextTribeName.trim() !== "") {
-          setTribeName(nextTribeName.trim());
+        if (identity.tribeName.trim() !== "") {
+          setTribeName(identity.tribeName);
         }
       } catch {
         // ignore and keep neutral labels

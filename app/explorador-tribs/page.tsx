@@ -6,7 +6,7 @@ import { FIGMA_ASSETS } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 import { AppShell } from "@/components/app-shell";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
-import { TokaApi, ApiError } from "@/services/toka-api.service";
+import { ApiError, getApiErrorMessage, TokaApi } from "@/services/toka-api.service";
 import { useTribe } from "@/hooks/useTribe";
 import { CreateTribeModal } from "@/components/organisms/CreateTribeModal";
 
@@ -111,8 +111,7 @@ export default function ExplorerPage() {
       if (parsed.length > 0) setTribes(parsed);
       setMessage(null);
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "Error desconocido";
-      setMessage(`No se pudo sincronizar explorador. ${detail}`);
+      setMessage(`No se pudo sincronizar explorador. ${getApiErrorMessage(error, "Error desconocido")}`);
     } finally {
       setLoadingTribes(false);
     }

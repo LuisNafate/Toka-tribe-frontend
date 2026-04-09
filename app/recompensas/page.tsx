@@ -8,7 +8,8 @@ import BottomNav from "@/components/BottomNav";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, ProgressBar, SectionHeader } from "@/components/common";
 import { FIGMA_ASSETS } from "@/lib/data";
-import { TokaApi } from "@/services/toka-api.service";
+import { getApiErrorMessage, TokaApi } from "@/services/toka-api.service";
+import { extractPaymentSnapshot } from "@/services/payment-contracts";
 
 type RewardItem = {
   id: string;
@@ -25,15 +26,6 @@ function toRecord(value: unknown): Record<string, unknown> | null {
 
 function toText(value: unknown): string | null {
   if (typeof value === "string" && value.trim() !== "") return value.trim();
-  return null;
-}
-
-function toNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string") {
-    const parsed = Number(value.replace(/,/g, ""));
-    if (Number.isFinite(parsed)) return parsed;
-  }
   return null;
 }
 
@@ -75,7 +67,8 @@ function extractRewards(payload: unknown): RewardItem[] {
 
 export default function RecompensasPage() {
   const [rewards, setRewards] = useState<RewardItem[]>([]);
-  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [paymentHistoryCount, setPaymentHistoryCount] = useState<number>(0);
+  const [documentedBalance, setDocumentedBalance] = useState<number | null>(null);
   const [myClaimsCount, setMyClaimsCount] = useState<number>(0);
   const [message, setMessage] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState<string | null>(null);
@@ -108,17 +101,9 @@ export default function RecompensasPage() {
       }
 
       if (paymentsResult.status === "fulfilled") {
-        const payload = paymentsResult.value.data;
-        const rec = toRecord(payload);
-        const nextBalance =
-          toNumber(rec?.balance) ??
-          toNumber(rec?.walletBalance) ??
-          toNumber(rec?.totalBalance) ??
-          toNumber(toRecord(rec?.summary)?.balance) ??
-          null;
-        if (nextBalance !== null) {
-          setWalletBalance(nextBalance);
-        }
+        const snapshot = extractPaymentSnapshot(paymentsResult.value.data);
+        setPaymentHistoryCount(snapshot.historyCount);
+        setDocumentedBalance(snapshot.documentedBalance);
       }
 
       const failed = [listResult, claimsResult, paymentsResult].filter((item) => item.status === "rejected").length;
@@ -149,8 +134,7 @@ export default function RecompensasPage() {
         }
       }
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "Error desconocido";
-      setMessage(`No se pudo reclamar la recompensa. ${detail}`);
+      setMessage(`No se pudo reclamar la recompensa. ${getApiErrorMessage(error)}`);
     } finally {
       setIsClaiming(null);
     }
@@ -165,9 +149,13 @@ export default function RecompensasPage() {
         <AppShell title="Recompensas" subtitle="Wallet, canjes y beneficios del ecosistema" headerBadge={<AppPointsBadge />}>
           <div className="workspace__grid">
             <Panel>
-              <SectionHeader eyebrow="Wallet Toka" title={`$${walletBalance.toLocaleString("es-ES")} balance disponible`} description="Tus recompensas se acreditan en tu wallet y quedan listas para canje." />
+              <SectionHeader
+                eyebrow="Historial de pagos"
+                title={documentedBalance === null ? "Historial sincronizado" : `Saldo documentado: $${documentedBalance.toLocaleString("es-ES")}`}
+                description="payments/me se trata como historial. Solo se muestra saldo si el backend lo documenta explícitamente."
+              />
               <div className="metric-grid">
-                <article className="metric-card"><div className="metric-card__icon"><Wallet size={18} /></div><div className="metric-card__value">${walletBalance.toLocaleString("es-ES")}</div><div className="metric-card__label">Saldo actual</div></article>
+                <article className="metric-card"><div className="metric-card__icon"><Wallet size={18} /></div><div className="metric-card__value">{paymentHistoryCount}</div><div className="metric-card__label">Pagos sincronizados</div></article>
                 <article className="metric-card"><div className="metric-card__icon"><Gift size={18} /></div><div className="metric-card__value">{myClaimsCount}</div><div className="metric-card__label">Canjes realizados</div></article>
                 <article className="metric-card"><div className="metric-card__icon"><CircleDollarSign size={18} /></div><div className="metric-card__value">{progress}%</div><div className="metric-card__label">Recompensas disponibles</div></article>
               </div>
@@ -252,10 +240,10 @@ export default function RecompensasPage() {
         <section className="fig-unified-section">
           <article className="fig-unified-card">
             <div className="fig-unified-head">
-              <strong>Wallet Toka</strong>
+              <strong>Historial de pagos</strong>
               <AppPointsBadge className="fig-unified-badge" />
             </div>
-            <h3>${walletBalance.toLocaleString("es-ES")} balance disponible</h3>
+            <h3>{documentedBalance === null ? `${paymentHistoryCount} movimientos sincronizados` : `$${documentedBalance.toLocaleString("es-ES")} documentados`}</h3>
             <p>Canjes realizados: {myClaimsCount}. Recompensas disponibles: {claimableRewards.length}.</p>
           </article>
 

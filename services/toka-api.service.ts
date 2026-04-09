@@ -1,4 +1,19 @@
-import { getSessionToken } from "@/services/auth.service";
+import { clearSessionToken, getSessionToken } from "@/services/auth.service";
+import type {
+  ChallengeDto,
+  GameSessionCreateRequest,
+  GameSessionDto,
+  LeaderboardEntryDto,
+  PaymentHistoryDto,
+  RewardClaimDto,
+  RewardDto,
+  SeasonDto,
+  TribeDto,
+  TribeMemberDto,
+  UserIdentityDto,
+} from "@/types/api";
+
+export type { GameSessionCreateRequest } from "@/types/api";
 
 export type ApiEnvelope<T = unknown> = {
   success?: boolean;
@@ -26,6 +41,13 @@ export class ApiError extends Error {
   }
 }
 
+const API_ERROR_MESSAGES: Record<string, string> = {
+  AUTH_UNAUTHORIZED: "Tu sesión expiró. Vuelve a iniciar sesión.",
+  CHALLENGE_ALREADY_PLAYED: "Este reto ya fue registrado.",
+  REWARD_ALREADY_CLAIMED: "Esta recompensa ya fue reclamada.",
+  TRIBE_NOT_A_MEMBER: "No perteneces a esa Tribe.",
+};
+
 function getMessageFromPayload(payload: ApiEnvelope<unknown>, status: number, path: string): string {
   const rawMessage = payload.message;
   if (typeof rawMessage === "string" && rawMessage.trim() !== "") {
@@ -47,15 +69,6 @@ type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   requiresAuth?: boolean;
-};
-
-export type GameSessionMetadata = Record<string, unknown>;
-
-export type GameSessionCreateRequest = {
-  challengeId: string;
-  score: number;
-  durationMs?: number;
-  metadata?: GameSessionMetadata;
 };
 
 function getApiBaseUrl(): string {
@@ -89,6 +102,10 @@ async function apiRequest<T = unknown>(path: string, options: RequestOptions = {
   }
 
   if (!response.ok) {
+    if (response.status === 401 && token) {
+      clearSessionToken();
+    }
+
     const message = getMessageFromPayload(payload, response.status, path);
     throw new ApiError(message, {
       status: response.status,
@@ -101,6 +118,30 @@ async function apiRequest<T = unknown>(path: string, options: RequestOptions = {
   return payload;
 }
 
+export function getApiErrorMessage(error: unknown, fallback = "No se pudo completar la solicitud."): string {
+  if (error instanceof ApiError) {
+    if (error.code && API_ERROR_MESSAGES[error.code]) {
+      return API_ERROR_MESSAGES[error.code];
+    }
+
+    if (error.status === 401) {
+      return API_ERROR_MESSAGES.AUTH_UNAUTHORIZED;
+    }
+
+    if (error.status === 409) {
+      return error.code && API_ERROR_MESSAGES[error.code]
+        ? API_ERROR_MESSAGES[error.code]
+        : "La operación ya fue procesada.";
+    }
+  }
+
+  if (error instanceof Error && error.message.trim() !== "") {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 export const TokaApi = {
   // Health
   health: () => apiRequest("/health", { requiresAuth: false }),
@@ -109,11 +150,11 @@ export const TokaApi = {
 
   // Auth
   authLogin: (authCode: string) => apiRequest("/auth/toka/login", { method: "POST", requiresAuth: false, body: { authCode } }),
-  authMe: () => apiRequest("/auth/me"),
+  authMe: () => apiRequest<UserIdentityDto>("/auth/me"),
   authSyncProfile: (authCodes: string[]) => apiRequest("/auth/me/sync-profile", { method: "POST", body: { authCodes } }),
 
   // Users
-  usersMe: () => apiRequest("/users/me"),
+  usersMe: () => apiRequest<UserIdentityDto>("/users/me"),
   usersUpdateMe: (body: { username?: string; avatarUrl?: string }) => apiRequest("/users/me", { method: "PATCH", body }),
 
   // Pets
@@ -124,20 +165,20 @@ export const TokaApi = {
   petsUnlockItem: (itemId: string) => apiRequest(`/pets/items/${itemId}/unlock`, { method: "POST" }),
 
   // Seasons
-  seasonsCurrent: () => apiRequest("/seasons/current"),
-  seasonsById: (seasonId: string) => apiRequest(`/seasons/${seasonId}`),
+  seasonsCurrent: () => apiRequest<SeasonDto>("/seasons/current"),
+  seasonsById: (seasonId: string) => apiRequest<SeasonDto>(`/seasons/${seasonId}`),
 
   // Admin Seasons
   adminCreateSeason: () => apiRequest("/admin/seasons", { method: "POST" }),
   adminCloseSeason: (seasonId: string) => apiRequest(`/admin/seasons/${seasonId}/close`, { method: "POST" }),
 
   // Tribes
-  tribesList: () => apiRequest("/tribes"),
+  tribesList: () => apiRequest<TribeDto[]>("/tribes"),
   tribesCreate: (body: Record<string, unknown>) => apiRequest("/tribes", { method: "POST", body }),
-  tribesDetail: (tribeId: string) => apiRequest(`/tribes/${tribeId}`),
+  tribesDetail: (tribeId: string) => apiRequest<TribeDto>(`/tribes/${tribeId}`),
   tribesJoin: (tribeId: string) => apiRequest(`/tribes/${tribeId}/join`, { method: "POST" }),
   tribesLeave: (tribeId: string) => apiRequest(`/tribes/${tribeId}/leave`, { method: "POST" }),
-  tribesMembers: (tribeId: string) => apiRequest(`/tribes/${tribeId}/members`),
+  tribesMembers: (tribeId: string) => apiRequest<TribeMemberDto[]>(`/tribes/${tribeId}/members`),
 
   // Games
   gamesList: () => apiRequest("/games"),
@@ -149,8 +190,8 @@ export const TokaApi = {
   adminGamesDeactivate: (gameId: string) => apiRequest(`/admin/games/${gameId}`, { method: "DELETE" }),
 
   // Challenges
-  challengesActive: () => apiRequest("/challenges/active"),
-  challengesDetail: (challengeId: string) => apiRequest(`/challenges/${challengeId}`),
+  challengesActive: () => apiRequest<ChallengeDto[] | ChallengeDto>("/challenges/active"),
+  challengesDetail: (challengeId: string) => apiRequest<ChallengeDto>(`/challenges/${challengeId}`),
 
   // Admin Challenges
   adminChallengesCreate: (body: Record<string, unknown>) => apiRequest("/admin/challenges", { method: "POST", body }),
@@ -159,16 +200,16 @@ export const TokaApi = {
 
   // Scoring
   gameSessionsCreate: (body: GameSessionCreateRequest) => apiRequest("/game-sessions", { method: "POST", body }),
-  gameSessionsMe: () => apiRequest("/game-sessions/me"),
+  gameSessionsMe: () => apiRequest<GameSessionDto[] | { sessions?: GameSessionDto[]; items?: GameSessionDto[] }>("/game-sessions/me"),
 
   // Leaderboard
-  leaderboardCurrent: () => apiRequest("/leaderboard/current"),
-  leaderboardByDivision: (division: string) => apiRequest(`/leaderboard/divisions/${division}`),
+  leaderboardCurrent: () => apiRequest<LeaderboardEntryDto[] | { items?: LeaderboardEntryDto[]; division?: string; seasonName?: string }>("/leaderboard/current"),
+  leaderboardByDivision: (division: string) => apiRequest<LeaderboardEntryDto[] | { items?: LeaderboardEntryDto[] }>(`/leaderboard/divisions/${division}`),
   leaderboardTribeHistory: (tribeId: string) => apiRequest(`/leaderboard/tribes/${tribeId}/history`),
 
   // Rewards
-  rewardsList: () => apiRequest("/rewards"),
-  rewardsMyClaims: () => apiRequest("/rewards/my-claims"),
+  rewardsList: () => apiRequest<RewardDto[] | { items?: RewardDto[] }>("/rewards"),
+  rewardsMyClaims: () => apiRequest<RewardClaimDto[] | { items?: RewardClaimDto[] }>("/rewards/my-claims"),
   rewardsClaim: (rewardId: string) => apiRequest(`/rewards/${rewardId}/claim`, { method: "POST" }),
 
   // Admin Rewards
@@ -177,5 +218,5 @@ export const TokaApi = {
   // Payments
   paymentsCreateOrder: (body: Record<string, unknown>) => apiRequest("/payments", { method: "POST", body }),
   paymentsSync: (id: string) => apiRequest(`/payments/${id}/sync`, { method: "POST" }),
-  paymentsMe: () => apiRequest("/payments/me"),
+  paymentsMe: () => apiRequest<PaymentHistoryDto>("/payments/me"),
 };

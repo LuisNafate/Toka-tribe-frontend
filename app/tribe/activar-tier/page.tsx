@@ -4,40 +4,23 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { TokaApi } from "@/services/toka-api.service";
-
-function toRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return value as Record<string, unknown>;
-}
-
-function toNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string") {
-    const parsed = Number(value.replace(/,/g, ""));
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return null;
-}
+import { extractPaymentSnapshot } from "@/services/payment-contracts";
 
 export default function ActivarTierPage() {
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [message, setMessage] = useState<string>("La activación de tiers requiere endpoint de backend dedicado.");
+  const [paymentHistoryCount, setPaymentHistoryCount] = useState<number>(0);
+  const [documentedBalance, setDocumentedBalance] = useState<number | null>(null);
+  const [message, setMessage] = useState<string>("La activación de tiers requiere catálogo y validación oficial de backend.");
 
   useEffect(() => {
     async function loadWallet() {
       try {
         const response = await TokaApi.paymentsMe();
-        const payload = toRecord(response.data);
-        const balance =
-          toNumber(payload?.balance) ??
-          toNumber(payload?.walletBalance) ??
-          toNumber(payload?.totalBalance) ??
-          toNumber(toRecord(payload?.summary)?.balance) ??
-          null;
-
-        setWalletBalance(balance);
+        const snapshot = extractPaymentSnapshot(response.data);
+        setPaymentHistoryCount(snapshot.historyCount);
+        setDocumentedBalance(snapshot.documentedBalance);
       } catch {
-        setWalletBalance(null);
+        setPaymentHistoryCount(0);
+        setDocumentedBalance(null);
       }
     }
 
@@ -72,8 +55,13 @@ export default function ActivarTierPage() {
 
       <section className="fig-tier-balance">
         <div>
-          <span>Tu balance:</span>
-          <strong>{walletBalance === null ? "No sincronizado" : `$${walletBalance.toLocaleString("es-ES")} Toka`}</strong>
+          <span>Historial de pagos:</span>
+          <strong>{paymentHistoryCount === 0 ? "Sin registros" : `${paymentHistoryCount} movimientos sincronizados`}</strong>
+          <p style={{ marginTop: 8 }}>
+            {documentedBalance === null
+              ? "Saldo no documentado por el backend."
+              : `Saldo documentado: $${documentedBalance.toLocaleString("es-ES")} Toka`}
+          </p>
         </div>
       </section>
 
