@@ -78,85 +78,71 @@ function normalizeDivision(raw: string): Division {
   return "plata";
 }
 
-function extractRowsWithDivision(payload: unknown): { row: TribeRank; division: Division }[] {
-  const queue: unknown[] = [payload];
-  const results: { row: TribeRank; division: Division }[] = [];
+function parsePts(rec: Record<string, unknown>): number | null {
+  return (
+    toNumber(rec.seasonPoints) ??
+    toNumber(rec.points) ??
+    toNumber(rec.score) ??
+    toNumber(rec.totalPoints) ??
+    toNumber(rec.pointsWeek) ??
+    null
+  );
+}
 
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (Array.isArray(current)) {
-      for (const item of current) {
-        const rec = toRecord(item);
-        if (!rec) continue;
-        const rank = toNumber(rec.rank) ?? toNumber(rec.position) ?? null;
-        const name = toText(rec.name) ?? toText(rec.tribeName) ?? toText(rec.teamName) ?? null;
-        const pts = toNumber(rec.points) ?? toNumber(rec.score) ?? toNumber(rec.totalPoints) ?? null;
-        const divRaw = toText(rec.division) ?? toText(rec.tier) ?? null;
-        if (rank !== null && name && pts !== null) {
-          const division: Division = divRaw ? normalizeDivision(divRaw) : "plata";
-          results.push({
-            row: {
-              rank, name, pts,
-              initials: initialsFromName(name),
-              color: palette[(rank - 1 + palette.length) % palette.length],
-              isUser: Boolean(rec.isMine ?? rec.isCurrentUser ?? rec.me ?? false),
-              zone: zoneForRank(rank),
-            },
-            division,
-          });
-        }
-      }
-      continue;
-    }
-    const rec = toRecord(current);
+function parseArrayIntoRows(arr: unknown[]): TribeRank[] {
+  const rows: TribeRank[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rec = toRecord(arr[i]);
     if (!rec) continue;
-    for (const value of Object.values(rec)) {
-      if (value && typeof value === "object") queue.push(value);
-    }
+    const name = toText(rec.name) ?? toText(rec.tribeName) ?? toText(rec.teamName) ?? null;
+    if (!name) continue;
+    // rank: use field if present, otherwise use array index + 1
+    const rank = toNumber(rec.rank) ?? toNumber(rec.position) ?? (i + 1);
+    const pts = parsePts(rec) ?? 0;
+    rows.push({
+      rank, name, pts,
+      initials: initialsFromName(name),
+      color: palette[(rank - 1 + palette.length) % palette.length],
+      isUser: Boolean(rec.isMine ?? rec.isCurrentUser ?? rec.me ?? false),
+      zone: zoneForRank(rank),
+    });
   }
-  return results;
+  return rows;
+}
+
+function findArray(payload: unknown): unknown[] | null {
+  if (Array.isArray(payload)) return payload;
+  const rec = toRecord(payload);
+  if (!rec) return null;
+  for (const key of ["items", "data", "tribes", "results", "entries", "leaderboard"]) {
+    if (Array.isArray(rec[key])) return rec[key] as unknown[];
+  }
+  // last resort: first array value found
+  for (const val of Object.values(rec)) {
+    if (Array.isArray(val) && val.length > 0) return val as unknown[];
+  }
+  return null;
 }
 
 function extractRows(payload: unknown): TribeRank[] {
-  const queue: unknown[] = [payload];
-  const rows: TribeRank[] = [];
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (Array.isArray(current)) {
-      for (const item of current) {
-        const rec = toRecord(item);
-        if (!rec) continue;
-
-        const rank = toNumber(rec.rank) ?? toNumber(rec.position) ?? null;
-        const name = toText(rec.name) ?? toText(rec.tribeName) ?? toText(rec.teamName) ?? null;
-        const pts = toNumber(rec.points) ?? toNumber(rec.score) ?? toNumber(rec.totalPoints) ?? null;
-
-        if (rank !== null && name && pts !== null) {
-          rows.push({
-            rank,
-            name,
-            pts,
-            initials: initialsFromName(name),
-            color: palette[(rank - 1 + palette.length) % palette.length],
-            isUser: Boolean(rec.isMine ?? rec.isCurrentUser ?? rec.me ?? false),
-            zone: zoneForRank(rank),
-          });
-        }
-      }
-      continue;
-    }
-
-    const rec = toRecord(current);
-    if (!rec) continue;
-    for (const value of Object.values(rec)) {
-      if (value && typeof value === "object") queue.push(value);
-    }
-  }
-
-  return rows
-    .filter((item, idx, arr) => arr.findIndex((x) => x.rank === item.rank && x.name === item.name) === idx)
+  const arr = findArray(payload);
+  if (!arr) return [];
+  return parseArrayIntoRows(arr)
+    .filter((item, idx, self) => self.findIndex((x) => x.name === item.name) === idx)
     .sort((a, b) => a.rank - b.rank);
+}
+
+function extractRowsWithDivision(payload: unknown): { row: TribeRank; division: Division }[] {
+  const arr = findArray(payload);
+  if (!arr) return [];
+  const rows = parseArrayIntoRows(arr);
+  return rows
+    .filter((row, idx, self) => self.findIndex((x) => x.name === row.name) === idx)
+    .map((row, idx) => {
+      const rec = toRecord(arr[idx]);
+      const divRaw = rec ? (toText(rec.division) ?? toText(rec.tier) ?? null) : null;
+      return { row, division: divRaw ? normalizeDivision(divRaw) : "plata" as Division };
+    });
 }
 
 export default function LeaderboardPage() {
