@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { X, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { FIGMA_ASSETS } from "@/lib/data";
 import BottomNav from "@/components/BottomNav";
 import { AppShell } from "@/components/app-shell";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { TokaApi } from "@/services/toka-api.service";
 import { useTribe } from "@/hooks/useTribe";
+import { CreateTribeModal } from "@/components/organisms/CreateTribeModal";
 
 type TribeCard = {
   id: string;
@@ -79,89 +80,6 @@ function extractTribes(payload: unknown): TribeCard[] {
   return tribes.filter((item, idx, arr) => arr.findIndex((x) => x.id === item.id) === idx);
 }
 
-function slugify(text: string): string {
-  return text.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 30);
-}
-
-// ── Create Tribe Modal ─────────────────────────────────────────────────────────
-function CreateTribeModal({ onClose, onCreate }: {
-  onClose: () => void;
-  onCreate: (name: string, slug: string, description?: string) => Promise<void>;
-}) {
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  function handleNameChange(val: string) {
-    setName(val);
-    setSlug(slugify(val));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (name.trim().length < 3) return;
-    setSubmitting(true);
-    await onCreate(name.trim(), slug || slugify(name), description.trim() || undefined);
-    setSubmitting(false);
-  }
-
-  return (
-    <div className="fig-tribe-modal-overlay" onClick={onClose}>
-      <div className="fig-tribe-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="fig-tribe-modal-header">
-          <h3>Crear mi Tribe</h3>
-          <button type="button" onClick={onClose} className="fig-tribe-modal-close">
-            <X size={18} />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="fig-tribe-modal-form">
-          <label className="fig-tribe-modal-label">
-            Nombre *
-            <input
-              className="fig-tribe-modal-input"
-              type="text"
-              placeholder="Ej: Axo Squad"
-              value={name}
-              maxLength={30}
-              onChange={(e) => handleNameChange(e.target.value)}
-              required
-            />
-          </label>
-          <label className="fig-tribe-modal-label">
-            Slug (identificador)
-            <input
-              className="fig-tribe-modal-input"
-              type="text"
-              placeholder="axo-squad"
-              value={slug}
-              maxLength={30}
-              onChange={(e) => setSlug(e.target.value)}
-            />
-          </label>
-          <label className="fig-tribe-modal-label">
-            Descripción (opcional)
-            <input
-              className="fig-tribe-modal-input"
-              type="text"
-              placeholder="¿De qué trata tu Tribe?"
-              value={description}
-              maxLength={120}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </label>
-          <button
-            type="submit"
-            className="fig-tribe-modal-submit"
-            disabled={name.trim().length < 3 || submitting}
-          >
-            {submitting ? "Creando..." : "Crear Tribe"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function ExplorerPage() {

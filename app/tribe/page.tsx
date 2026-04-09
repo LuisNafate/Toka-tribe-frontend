@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Users, Compass } from "lucide-react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import BottomNav from "@/components/BottomNav";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
@@ -10,6 +11,7 @@ import { TribeDashboardContent, type ActivityItem, type Member } from "@/compone
 import { TokaApi } from "@/services/toka-api.service";
 import { readAppPoints } from "@/components/use-app-points";
 import { useTribe } from "@/hooks/useTribe";
+import { CreateTribeModal } from "@/components/organisms/CreateTribeModal";
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -39,8 +41,9 @@ function tierVariant(label: string): "oro" | "plata" | undefined {
 
 export default function TribePage() {
   const router = useRouter();
-  const { isLeader, leaveTribe, toast } = useTribe();
+  const { isMember, isLeader, leaveTribe, createTribe, loading: tribeLoading, toast } = useTribe();
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [withoutTier, setWithoutTier] = useState(false);
   const [runtimeData, setRuntimeData] = useState<{
     tribeName?: string;
@@ -208,9 +211,77 @@ export default function TribePage() {
     setConfirmLeave(false);
   }
 
-  const content = <TribeDashboardContent withoutTier={withoutTier} runtime={runtimeData} />;
+  async function handleCreate(name: string, slug: string, description?: string) {
+    const result = await createTribe({ name, slug, description });
+    if (result.success) setShowCreate(false);
+  }
 
   const avatarUrl = useMemo(() => runtimeData?.members?.[0]?.avatar ?? "/images/ajolotes_1.png", [runtimeData]);
+
+  // ── Sin Tribe screen ────────────────────────────────────────────────────────
+  if (!tribeLoading && !isMember) {
+    return (
+      <>
+        <div className="fig-desktop-only">
+          <AppShell title="Mi Tribe" subtitle="Aún no perteneces a ninguna Tribe">
+            <div className="fig-no-tribe-desktop">
+              <p>Únete o crea una Tribe para comenzar.</p>
+              <Link href="/explorador-tribs">Explorar Tribes</Link>
+            </div>
+          </AppShell>
+        </div>
+
+        <main className="fig-mobile-tribe fig-responsive-page fig-mobile-only">
+          <header className="fig-mobile-topbar">
+            <div className="fig-mobile-topbar__left">
+              <MobileHamburgerMenu />
+              <strong>TokaTribe</strong>
+            </div>
+            <div style={{ width: 36 }} />
+          </header>
+
+          <div className="fig-no-tribe-screen">
+            <img src="/images/ajolote_4.png" alt="Mascota" className="fig-no-tribe-img" draggable="false" />
+            <h2 className="fig-no-tribe-title">¡Aún no tienes Tribe!</h2>
+            <p className="fig-no-tribe-sub">
+              Únete a una Tribe existente o crea la tuya para competir, sumar puntos y escalar en el ranking.
+            </p>
+            <div className="fig-no-tribe-actions">
+              <Link href="/explorador-tribs" className="fig-no-tribe-btn fig-no-tribe-btn--primary">
+                <Compass size={16} />
+                Explorar Tribes
+              </Link>
+              <button
+                type="button"
+                className="fig-no-tribe-btn fig-no-tribe-btn--secondary"
+                onClick={() => setShowCreate(true)}
+              >
+                <Users size={16} />
+                Crear mi Tribe
+              </button>
+            </div>
+          </div>
+
+          {toast && (
+            <div className={`fig-mascota-toast fig-mascota-toast--${toast.type}`} role="status">
+              {toast.text}
+            </div>
+          )}
+
+          {showCreate && (
+            <CreateTribeModal
+              onClose={() => setShowCreate(false)}
+              onCreate={handleCreate}
+            />
+          )}
+
+          <BottomNav active="squad" />
+        </main>
+      </>
+    );
+  }
+
+  const content = <TribeDashboardContent withoutTier={withoutTier} runtime={runtimeData} />;
 
   return (
     <>

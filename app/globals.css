@@ -7956,3 +7956,70 @@ img {
   cursor: pointer;
 }
 
+/* ── Sin Tribe screen ──────────────────────────────── */
+.fig-no-tribe-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px 32px;
+  text-align: center;
+  flex: 1;
+  min-height: 60dvh;
+}
+
+.fig-no-tribe-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  margin-bottom: 20px;
+}
+
+.fig-no-tribe-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0e1a2b;
+  margin: 0 0 10px;
+}
+
+.fig-no-tribe-sub {
+  font-size: 0.85rem;
+  color: #7a8fa6;
+  line-height: 1.55;
+  margin: 0 0 28px;
+  max-width: 300px;
+}
+
+.fig-no-tribe-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.fig-no-tribe-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+}
+
+.fig-no-tribe-btn--primary {
+  background: #2a55b9;
+  color: #fff;
+}
+
+.fig-no-tribe-btn--secondary {
+  background: transparent;
+  border: 1.5px solid #2a55b9;
+  color: #2a55b9;
+}
+
