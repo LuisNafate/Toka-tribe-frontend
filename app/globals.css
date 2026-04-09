@@ -656,10 +656,9 @@
 }
 
 .tribe-badges {
-  display: flex;
-  align-items: center;
+  display: grid;
   gap: 8px;
-  flex-wrap: wrap;
+  justify-items: start;
 }
 
 .tribe-tier-badge {
@@ -3132,6 +3131,30 @@ img {
   margin: 0;
 }
 
+.fig-tribe-capacity-strip {
+  display: grid;
+  gap: 6px;
+}
+
+.fig-tribe-capacity-strip__track {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(7, 43, 105, 0.08);
+}
+
+.fig-tribe-capacity-strip__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent-strong) 100%);
+}
+
+.fig-tribe-capacity-strip--popular {
+  gap: 5px;
+  margin-top: 4px;
+}
+
 .fig-mobile-reco-bottom {
   display: flex;
   justify-content: space-between;
@@ -3403,14 +3426,88 @@ img {
 .fig-tribe-section-head {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.fig-tribe-section-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.fig-tribe-section-copy h2 {
+  margin: 0;
+}
+
+.fig-tribe-section-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fig-tribe-link-btn {
+  border: 0;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 9px 12px;
+  background: linear-gradient(135deg, rgba(74, 119, 227, 0.12), rgba(94, 246, 230, 0.16));
+  color: var(--nav);
+  font-weight: 800;
+  font-size: 0.82rem;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(12, 35, 65, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.fig-tribe-link-btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(74, 119, 227, 0.16), rgba(94, 246, 230, 0.2));
+  box-shadow: inset 0 0 0 1px rgba(12, 35, 65, 0.08), 0 8px 18px rgba(7, 43, 105, 0.08);
+}
+
+.fig-tribe-link-btn span {
+  white-space: nowrap;
+}
+
+.fig-tribe-members-progress {
+  display: grid;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
-.fig-tribe-section-head a {
-  color: #031dbe;
-  font-weight: 700;
-  font-size: 1rem;
+.fig-tribe-members-progress__track {
+  height: 11px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(7, 43, 105, 0.08);
+}
+
+.fig-tribe-members-progress__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent-strong) 100%);
+  box-shadow: 0 10px 22px rgba(74, 119, 227, 0.22);
+}
+
+.fig-tribe-members-progress__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.fig-tribe-members-progress__meta strong {
+  color: var(--text);
+  font-size: 0.78rem;
 }
 
 .fig-tribe-members-card {
@@ -3456,14 +3553,6 @@ img {
   margin: 2px 0 0;
   font-size: 0.75rem;
   color: #454655;
-}
-
-.fig-tribe-members-card > button {
-  border: 0;
-  background: transparent;
-  color: #031dbe;
-  font-weight: 700;
-  padding: 10px;
 }
 
 .fig-tribe-stats {
@@ -3610,22 +3699,6 @@ img {
 
 .fig-tribe-activity-icon--blue {
   background: var(--brand);
-}
-
-/* Invite button */
-.fig-tribe-invite-btn {
-  border: 0;
-  background: transparent;
-  color: #031dbe;
-  font-weight: 700;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 0.88rem;
-  cursor: pointer;
-  width: 100%;
 }
 
 /* Play CTA */
@@ -4530,13 +4603,14 @@ img {
   }
 
   .fig-tribe-link-btn {
-    border: 0;
-    background: transparent;
-    color: #031dbe;
-    font-weight: 700;
-    font-size: 1rem;
-    padding: 0;
-    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 8px 11px;
+  }
+
+  .fig-tribe-members-progress__meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 
   .fig-tribe-play-btn--responsive {
@@ -4596,6 +4670,33 @@ img {
 .fig-member-pts-top {
   color: var(--brand);
   font-weight: 800;
+}
+
+.tribe-members-progress {
+  display: grid;
+  gap: 6px;
+  min-width: 132px;
+  flex: 1;
+}
+
+.tribe-members-progress__track {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(7, 43, 105, 0.08);
+}
+
+.tribe-members-progress__track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand) 0%, var(--accent-strong) 100%);
+}
+
+.tribe-members-progress__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .fig-tribe-hero-subtitle {

@@ -20,6 +20,7 @@ export function TribeCard({
   onJoin,
 }: TribeCardProps) {
   const formattedPoints = new Intl.NumberFormat("es-ES").format(pointsWeek);
+  const memberFill = Math.min(100, Math.max(0, Math.round((memberCount / Math.max(maxMembers, 1)) * 100)));
 
   const getTierColor = () => {
     switch (tier) {
@@ -59,7 +60,12 @@ export function TribeCard({
             <span className="tribe-tier-badge" style={{ background: getTierColor(), color: getTierTextColor() }}>
               {tier}
             </span>
-            <span className="tribe-members-count">{memberCount}/{maxMembers} miembros</span>
+            <div className="tribe-members-progress" aria-label={`Capacidad de miembros ${memberCount}/${maxMembers}`}>
+              <div className="tribe-members-progress__track">
+                <span style={{ width: `${memberFill}%` }} />
+              </div>
+              <span className="tribe-members-progress__label">{memberCount}/{maxMembers} miembros</span>
+            </div>
           </div>
         </div>
       </div>

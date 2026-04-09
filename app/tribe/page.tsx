@@ -54,6 +54,8 @@ export default function TribePage() {
     progressHint?: string;
     rankingLabel?: string;
     membersTitle?: string;
+    memberCount?: number;
+    maxMembers?: number;
     currentStreakLabel?: string;
     retosLabel?: string;
     members?: Member[];
@@ -185,7 +187,9 @@ export default function TribePage() {
         progressPercent,
         progressHint: `A ${Math.max(0, 120).toLocaleString("es-ES")} pts de ascender · ${progressPercent}%`,
         rankingLabel,
-        membersTitle: `Tu Tribe (${memberCount}/${maxMembers})`,
+        membersTitle: "Tu Tribe",
+        memberCount,
+        maxMembers,
         currentStreakLabel: (() => {
           const summaryPoints = toRecord(summary?.points);
           const apiStreak = toNumber(summaryPoints?.currentStreak);

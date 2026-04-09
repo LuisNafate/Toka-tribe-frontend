@@ -199,6 +199,7 @@ export default function ExplorerPage() {
             {filteredTribes.slice(0, 3).map((tribe) => {
               const isMyTribe = myTribe?.id === tribe.id;
               const tierKey = tribe.tier.toLowerCase().replace("á","a").replace("é","e");
+              const memberFill = Math.min(100, Math.max(0, Math.round((tribe.memberCount / Math.max(tribe.maxMembers, 1)) * 100)));
               const joinBtnClass = isMyTribe
                 ? "fig-explorer-join-btn fig-explorer-join-btn--mine"
                 : tribe.memberCount >= tribe.maxMembers
@@ -213,7 +214,12 @@ export default function ExplorerPage() {
                         <h3>{tribe.name}</h3>
                         <span className={`fig-tier-badge fig-tier-badge--${tierKey}`}>{tribe.tier}</span>
                       </div>
-                      <p className="fig-mobile-reco-card__members">{tribe.memberCount}/{tribe.maxMembers} miembros</p>
+                      <div className="fig-tribe-capacity-strip">
+                        <div className="fig-tribe-capacity-strip__track" aria-hidden="true">
+                          <span style={{ width: `${memberFill}%` }} />
+                        </div>
+                        <p className="fig-mobile-reco-card__members">{tribe.memberCount}/{tribe.maxMembers} miembros</p>
+                      </div>
                     </div>
                   </div>
                   <div className="fig-mobile-reco-bottom">
@@ -241,6 +247,7 @@ export default function ExplorerPage() {
           {filteredTribes.map((tribe) => {
             const isMyTribe = myTribe?.id === tribe.id;
             const tierKey = tribe.tier.toLowerCase().replace("á","a").replace("é","e");
+            const memberFill = Math.min(100, Math.max(0, Math.round((tribe.memberCount / Math.max(tribe.maxMembers, 1)) * 100)));
             const joinBtnClass = isMyTribe
               ? "fig-explorer-join-btn fig-explorer-join-btn--mine"
               : tribe.memberCount >= tribe.maxMembers
@@ -252,10 +259,15 @@ export default function ExplorerPage() {
                   <img src={tribe.avatarUrl} alt={tribe.name} />
                   <div>
                     <h3>{tribe.name}{isMyTribe && <span className="fig-explorer-you-badge">Tú</span>}</h3>
-                    <p>
-                      <span className={`fig-tier-badge fig-tier-badge--${tierKey}`}>{tribe.tier}</span>
-                      {tribe.memberCount}/{tribe.maxMembers} miembros
-                    </p>
+                    <div className="fig-tribe-capacity-strip fig-tribe-capacity-strip--popular">
+                      <p>
+                        <span className={`fig-tier-badge fig-tier-badge--${tierKey}`}>{tribe.tier}</span>
+                      </p>
+                      <div className="fig-tribe-capacity-strip__track" aria-hidden="true">
+                        <span style={{ width: `${memberFill}%` }} />
+                      </div>
+                      <p className="fig-mobile-reco-card__members">{tribe.memberCount}/{tribe.maxMembers} miembros</p>
+                    </div>
                   </div>
                 </div>
                 <button

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BarChart3, Brain, ChevronRight, Gamepad2, Medal, PlayCircle, TrendingUp, UserPlus, Zap } from "lucide-react";
+import { BarChart3, Brain, ChevronRight, Gamepad2, Medal, PlayCircle, TrendingUp, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type TribeDashboardContentProps = {
@@ -15,6 +15,8 @@ type TribeDashboardContentProps = {
     progressHint?: string;
     rankingLabel?: string;
     membersTitle?: string;
+    memberCount?: number;
+    maxMembers?: number;
     currentStreakLabel?: string;
     retosLabel?: string;
     members?: Member[];
@@ -57,6 +59,10 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
   const retosLabel = runtime?.retosLabel ?? "0/0 jugados";
   const members = runtime?.members ?? [];
   const activity = runtime?.activity ?? [];
+  const memberCount = runtime?.memberCount ?? members.length;
+  const maxMembers = Math.max(runtime?.maxMembers ?? Math.max(memberCount, members.length, 1), 1);
+  const membersFill = Math.min(100, Math.max(0, Math.round((memberCount / maxMembers) * 100)));
+  const membersSummary = `${memberCount}/${maxMembers} miembros`;
 
   const tierActivationLabel = useMemo(() => {
     if (!withoutTier) {
@@ -136,14 +142,27 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
       <div className="fig-tribe-responsive-bottom">
         <section className="fig-tribe-members">
           <div className="fig-tribe-section-head">
-            <h2>{membersTitle}</h2>
+            <div className="fig-tribe-section-copy">
+              <h2>{membersTitle}</h2>
+              <p>{membersSummary}</p>
+            </div>
             <button
               type="button"
               className="fig-tribe-link-btn"
-              onClick={() => setFeedback({ tone: "info", text: "Vista completa de miembros habilitada para la próxima iteración." })}
+              onClick={() => setFeedback({ tone: "info", text: "La vista completa de miembros se abrirá en una próxima actualización." })}
             >
-              Ver todos
+              <span>Ver todos</span>
+              <ChevronRight size={12} />
             </button>
+          </div>
+          <div className="fig-tribe-members-progress" aria-label={`Capacidad de miembros ${membersSummary}`}>
+            <div className="fig-tribe-members-progress__track">
+              <span style={{ width: `${membersFill}%` }} />
+            </div>
+            <div className="fig-tribe-members-progress__meta">
+              <strong>{membersSummary}</strong>
+              <span>{maxMembers - memberCount > 0 ? `${maxMembers - memberCount} cupos libres` : "Capacidad completa"}</span>
+            </div>
           </div>
           <div className="fig-tribe-members-card">
             {members.length === 0 ? <p className="subtle">Sin miembros sincronizados.</p> : null}
@@ -170,14 +189,6 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
                 <strong className={member.top ? "fig-member-pts-top" : ""}>{member.pts}</strong>
               </article>
             ))}
-            <button
-              type="button"
-              className="fig-tribe-invite-btn"
-              onClick={() => setFeedback({ tone: "ok", text: "Invitación enviada. Te avisaremos cuando el miembro acepte." })}
-            >
-              <UserPlus size={15} />
-              Invitar miembro
-            </button>
           </div>
         </section>
 
