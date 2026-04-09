@@ -65,6 +65,14 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
     return "Membresía crítica: activa un tier para desbloquear multiplicador y recompensas de temporada.";
   }, [withoutTier]);
 
+  const tierCtaLabel = useMemo(() => {
+    if (withoutTier) {
+      return "Comprar membresías del tier";
+    }
+
+    return "Gestionar membresías del tier";
+  }, [withoutTier]);
+
   const feedbackToneClass = feedback?.tone === "ok"
     ? "fig-tribe-feedback--ok"
     : feedback?.tone === "warn"
@@ -97,12 +105,10 @@ export function TribeDashboardContent({ withoutTier = false, runtime }: TribeDas
           </small>
         </section>
 
-        {withoutTier ? (
-          <Link href="/tribe/activar-tier" className="fig-tribe-redirect-cta">
-            <span>Activa tu Tier esta temporada</span>
-            <ChevronRight size={10} strokeWidth={3} />
-          </Link>
-        ) : null}
+        <Link href="/tribe/activar-tier" className="fig-tribe-redirect-cta" aria-label={tierCtaLabel}>
+          <span>{tierCtaLabel}</span>
+          <ChevronRight size={10} strokeWidth={3} />
+        </Link>
 
         <section className="fig-tribe-stats">
           <article className="fig-tribe-stat-racha">

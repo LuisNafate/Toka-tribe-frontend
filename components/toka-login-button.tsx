@@ -1,80 +1,55 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useTokaBridge } from "@/hooks/useTokaBridge";
 import { exchangeAuthCode, saveSessionToken } from "@/services/auth.service";
 import { TokaApi } from "@/services/toka-api.service";
-
-const AUTH_CODES_DEBUG_KEY = "tokatribe.debug.authcodes";
 
 type TokaLoginButtonProps = {
   className?: string;
   children?: ReactNode;
   redirectTo?: string;
   showDiagnostics?: boolean;
+  autoStart?: boolean;
 };
 
-export function TokaLoginButton({ className, children, redirectTo = "/dashboard", showDiagnostics = false }: TokaLoginButtonProps) {
+export function TokaLoginButton({
+  className,
+  children,
+  redirectTo = "/dashboard",
+  showDiagnostics = false,
+  autoStart = false,
+}: TokaLoginButtonProps) {
   const router = useRouter();
   const { getDigitalIdentityCode, getPersonalInformationCode, isLoading, isBridgeReady, error: bridgeError } = useTokaBridge();
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("idle");
-  const [lastAuthCode, setLastAuthCode] = useState<string | null>(null);
-  const [authCodeHistory, setAuthCodeHistory] = useState<string[]>([]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(AUTH_CODES_DEBUG_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as string[];
-      if (Array.isArray(parsed)) {
-        setAuthCodeHistory(parsed);
-        setLastAuthCode(parsed[0] ?? null);
-      }
-    } catch {
-      // ignore localStorage parsing errors
-    }
-  }, []);
-
-  function persistAuthCode(code: string) {
-    setLastAuthCode(code);
-    setAuthCodeHistory((current) => {
-      const next = [code, ...current.filter((item) => item !== code)].slice(0, 8);
-      try {
-        localStorage.setItem(AUTH_CODES_DEBUG_KEY, JSON.stringify(next));
-      } catch {
-        // ignore localStorage failures
-      }
-      return next;
-    });
-  }
+  const hasAutoStarted = useRef(false);
 
   /** Detecta si un username parece un ID provisional generado por el backend (no un nombre real). */
   function looksLikeProvisionalId(username: string | null | undefined): boolean {
     if (!username) return true;
     const u = username.trim();
     if (u.length === 0) return true;
-    // Patrones conocidos de IDs provisionales: empieza con "toka_", uuid puro, solo hex, etc.
     if (/^toka_/i.test(u)) return true;
-    if (/^[0-9a-f\-]{32,}$/i.test(u)) return true; // UUID / solo hex largo
+    if (/^[0-9a-f\-]{32,}$/i.test(u)) return true;
     return false;
   }
 
   async function handleLogin() {
     setError(null);
-    setStatus("Solicitando authCode a Toka Bridge...");
+    setStatus("Solicitando autorización en Toka Bridge...");
 
     try {
       let authCode = "";
       try {
         authCode = await getDigitalIdentityCode();
-        persistAuthCode(authCode);
-        setStatus(`AuthCode recibido: ${authCode}. Enviando a NestJS...`);
+        setStatus("Autorización recibida. Enviando a NestJS...");
       } catch (bridgeErr) {
         const message = bridgeErr instanceof Error ? bridgeErr.message : "Error desconocido del bridge.";
-        setError(`[BRIDGE] No se pudo obtener authCode. Detalle: ${message}`);
+        setError(`[BRIDGE] No se pudo completar el acceso. Detalle: ${message}`);
         setStatus("Fallo en etapa BRIDGE");
         return;
       }
@@ -82,8 +57,7 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
       const { token } = await exchangeAuthCode(authCode);
       saveSessionToken(token);
 
-      // ── Paso 1: Sync de perfil con authCode de identidad. No bloqueante. ──
-      setStatus("JWT guardado. Sincronizando perfil...");
+      setStatus("Acceso validado. Sincronizando perfil...");
       const allAuthCodes: string[] = [authCode];
 
       try {
@@ -94,8 +68,6 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
         setStatus(`Sync inicial omitido: ${syncMessage}. Verificando nombre...`);
       }
 
-      // ── Paso 2: Verificar si el username es provisional y actualizar si es necesario. ──
-      // Esto se hace en background sin bloquear la redirección.
       void (async () => {
         try {
           const usersMeRes = await TokaApi.usersMe();
@@ -105,7 +77,6 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
             null;
 
           if (looksLikeProvisionalId(currentUsername)) {
-            // Pedir authCode con info personal para que el backend pueda resolver el nombre real.
             try {
               const personalAuthCode = await getPersonalInformationCode();
               await TokaApi.authSyncProfile([authCode, personalAuthCode]);
@@ -113,7 +84,6 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
               // Si el bridge de info personal falla (o el sync), es tolerable.
             }
 
-            // Fallback: intentar obtener el nombre desde /auth/me y hacer PATCH directo.
             try {
               const authMeRes = await TokaApi.authMe();
               const resolvedName =
@@ -140,16 +110,30 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
       router.push(redirectTo);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error externo no tipificado.";
-      setError(`[NEST_AUTH] Falló el intercambio de authCode con NestJS. Detalle: ${message}`);
+      setError(`[NEST_AUTH] Falló el acceso con NestJS. Detalle: ${message}`);
       setStatus("Fallo en etapa NEST_AUTH");
     }
   }
+
+  useEffect(() => {
+    if (!autoStart || hasAutoStarted.current || isLoading || !isBridgeReady) {
+      return;
+    }
+
+    hasAutoStarted.current = true;
+    void handleLogin();
+  }, [autoStart, isBridgeReady, isLoading]);
 
   return (
     <>
       <button type="button" className={className} onClick={handleLogin} disabled={isLoading}>
         {isLoading ? "Conectando..." : (children ?? "Entrar con Toka")}
       </button>
+      {(autoStart || showDiagnostics) && status !== "idle" ? (
+        <p style={{ marginTop: 8, color: "#24446d", fontSize: 12, fontWeight: 600 }} aria-live="polite">
+          {status}
+        </p>
+      ) : null}
       {(error || bridgeError) ? (
         <p style={{ marginTop: 8, color: "#b42318", fontSize: 12, fontWeight: 600 }} role="alert">
           {error ?? bridgeError}
@@ -173,14 +157,6 @@ export function TokaLoginButton({ className, children, redirectTo = "/dashboard"
           <div>App ID (env): <strong>{process.env.NEXT_PUBLIC_TOKA_APP_ID || "NO_CONFIGURADO"}</strong></div>
           <div>API base (env): <strong>{process.env.NEXT_PUBLIC_API_BASE_URL || "NO_CONFIGURADO"}</strong></div>
           <div>Estado: <strong>{status}</strong></div>
-          <div>Ultimo authCode: <strong>{lastAuthCode ?? "Aun no recibido"}</strong></div>
-          <div>Historial authCodes ({authCodeHistory.length}):</div>
-          <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
-            {authCodeHistory.length === 0 ? <li>Sin codigos capturados</li> : null}
-            {authCodeHistory.map((code) => (
-              <li key={code}>{code}</li>
-            ))}
-          </ul>
         </div>
       ) : null}
     </>

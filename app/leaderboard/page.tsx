@@ -15,6 +15,7 @@ type Zone = "up" | "down" | "neutral";
 
 type TribeRank = {
   rank: number;
+  tribeId: string;
   name: string;
   pts: number;
   initials: string;
@@ -66,6 +67,21 @@ function toText(value: unknown): string | null {
   return null;
 }
 
+function toObjectIdText(value: unknown): string | null {
+  const direct = toText(value);
+  if (direct) return direct;
+
+  const rec = toRecord(value);
+  if (!rec) return null;
+
+  return (
+    toText(rec.$oid) ??
+    toText(rec.id) ??
+    toText(rec._id) ??
+    null
+  );
+}
+
 function initialsFromName(name: string): string {
   return name
     .split(" ")
@@ -104,14 +120,19 @@ function parseArrayIntoRows(arr: unknown[]): TribeRank[] {
   for (let i = 0; i < arr.length; i++) {
     const rec = toRecord(arr[i]);
     if (!rec) continue;
+    const tribeId = toObjectIdText(rec.tribeId) ?? toObjectIdText(rec.id) ?? toObjectIdText(rec._id) ?? "";
     const name = toText(rec.name) ?? toText(rec.tribeName) ?? toText(rec.teamName) ?? null;
-    if (!name) continue;
+    if (!name && !tribeId) continue;
+    const safeName = name ?? `Tribe ${tribeId.slice(-6) || String(i + 1)}`;
     // rank: use field if present, otherwise use array index + 1
     const rank = toNumber(rec.rank) ?? toNumber(rec.position) ?? (i + 1);
     const pts = parsePts(rec) ?? 0;
     rows.push({
-      rank, name, pts,
-      initials: initialsFromName(name),
+      rank,
+      tribeId,
+      name: safeName,
+      pts,
+      initials: initialsFromName(safeName),
       color: palette[(rank - 1 + palette.length) % palette.length],
       isUser: Boolean(rec.isMine ?? rec.isCurrentUser ?? rec.me ?? false),
       zone: zoneForRank(rank),
@@ -138,7 +159,7 @@ function extractRows(payload: unknown): TribeRank[] {
   const arr = findArray(payload);
   if (!arr) return [];
   return parseArrayIntoRows(arr)
-    .filter((item, idx, self) => self.findIndex((x) => x.name === item.name) === idx)
+    .filter((item, idx, self) => self.findIndex((x) => (x.tribeId || x.name) === (item.tribeId || item.name)) === idx)
     .sort((a, b) => a.rank - b.rank);
 }
 
@@ -147,12 +168,53 @@ function extractRowsWithDivision(payload: unknown): { row: TribeRank; division: 
   if (!arr) return [];
   const rows = parseArrayIntoRows(arr);
   return rows
-    .filter((row, idx, self) => self.findIndex((x) => x.name === row.name) === idx)
+    .filter((row, idx, self) => self.findIndex((x) => (x.tribeId || x.name) === (row.tribeId || row.name)) === idx)
     .map((row, idx) => {
       const rec = toRecord(arr[idx]);
       const divRaw = rec ? (toText(rec.division) ?? toText(rec.tier) ?? null) : null;
       return { row, division: divRaw ? normalizeDivision(divRaw) : "plata" as Division };
     });
+}
+
+function buildTribeNameMap(payload: unknown): Map<string, string> {
+  const map = new Map<string, string>();
+  const list = findArray(payload);
+  if (!list) return map;
+
+  for (const item of list) {
+    const rec = toRecord(item);
+    if (!rec) continue;
+    const tribeId = toObjectIdText(rec.id) ?? toObjectIdText(rec._id) ?? toObjectIdText(rec.tribeId) ?? null;
+    const name = toText(rec.name) ?? toText(rec.tribeName) ?? null;
+    if (tribeId && name) {
+      map.set(tribeId, name);
+    }
+  }
+
+  return map;
+}
+
+function enrichRowsWithTribeNames(
+  rowsByDivision: Record<Division, TribeRank[]>,
+  tribeNameMap: Map<string, string>,
+  currentTribeId: string | null,
+): Record<Division, TribeRank[]> {
+  const next: Record<Division, TribeRank[]> = { bronce: [], plata: [], oro: [] };
+
+  for (const division of ["bronce", "plata", "oro"] as Division[]) {
+    next[division] = rowsByDivision[division].map((row) => {
+      const mappedName = row.tribeId ? tribeNameMap.get(row.tribeId) : null;
+      const finalName = mappedName ?? row.name;
+      return {
+        ...row,
+        name: finalName,
+        initials: initialsFromName(finalName),
+        isUser: !!currentTribeId && !!row.tribeId && row.tribeId === currentTribeId,
+      };
+    });
+  }
+
+  return next;
 }
 
 function extractUserId(usersData: unknown, authData: unknown): string | null {
@@ -256,13 +318,14 @@ export default function LeaderboardPage() {
       setWarning(null);
       setMemberWarning(null);
 
-      const [current, bronceRes, plataRes, oroRes, usersResult, authResult] = await Promise.allSettled([
+      const [current, bronceRes, plataRes, oroRes, usersResult, authResult, tribesResult] = await Promise.allSettled([
         TokaApi.leaderboardCurrent(),
         fetchDivisionRows("bronce"),
         fetchDivisionRows("plata"),
         fetchDivisionRows("oro"),
         TokaApi.usersMe(),
         TokaApi.authMe(),
+        TokaApi.tribesList(),
       ]);
 
       const next: Record<Division, TribeRank[]> = { bronce: [], plata: [], oro: [] };
@@ -308,13 +371,18 @@ export default function LeaderboardPage() {
         if (firstWithData) setActiveDiv(firstWithData);
       }
 
-      setDivisions(next);
-
       const usersData = usersResult.status === "fulfilled" ? usersResult.value.data ?? null : null;
       const authData = authResult.status === "fulfilled" ? authResult.value.data ?? null : null;
       const tribeId = extractTribeId(usersData, authData);
       const currentUserId = extractUserId(usersData, authData);
       setMemberTribeName(extractTribeName(usersData, authData));
+
+      const tribeNameMap = tribesResult.status === "fulfilled"
+        ? buildTribeNameMap(tribesResult.value.data ?? tribesResult.value)
+        : new Map<string, string>();
+
+      const enriched = enrichRowsWithTribeNames(next, tribeNameMap, tribeId);
+      setDivisions(enriched);
 
       if (tribeId) {
         const [membersResult, tribeDetailResult] = await Promise.allSettled([
@@ -339,7 +407,7 @@ export default function LeaderboardPage() {
         setMembersPodium([]);
       }
 
-      const allEmpty = Object.values(next).every((arr) => arr.length === 0);
+      const allEmpty = Object.values(enriched).every((arr) => arr.length === 0);
       const failedMainCalls = [current, bronceRes, plataRes, oroRes].filter((res) => res.status === "rejected").length;
       if (allEmpty) {
         setWarning("No hay datos de ranking disponibles aún. El snapshot se genera al finalizar la temporada.");
@@ -380,7 +448,7 @@ export default function LeaderboardPage() {
               <div className="leaderboard-list">
                 {teams.map((row) => (
                   <div
-                    key={`${row.rank}-${row.name}`}
+                    key={`${row.rank}-${row.tribeId || row.name}`}
                     className={`leaderboard-row ${row.isUser ? "leaderboard-row--highlight" : ""}`}
                   >
                     <div className="rank">{row.rank}</div>
@@ -469,7 +537,7 @@ export default function LeaderboardPage() {
             const isFirst = i === 1;
             return (
               <div
-                key={team.name}
+                key={`${team.tribeId || team.name}-${team.rank}`}
                 className={`fig-lb-podium-slot${isFirst ? " fig-lb-podium-slot--first" : ""}`}
               >
                 {isFirst && (
@@ -497,7 +565,7 @@ export default function LeaderboardPage() {
         <section className="fig-lb-list">
           {listTeams.map((team) => (
             <div
-              key={team.name}
+              key={`${team.tribeId || team.name}-${team.rank}`}
               className={`fig-lb-row${team.isUser ? " fig-lb-row--user" : ""}`}
             >
               <span className="fig-lb-row-rank">{team.rank}</span>
