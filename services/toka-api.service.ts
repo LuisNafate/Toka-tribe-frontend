@@ -157,6 +157,7 @@ export const TokaApi = {
 
   // Users
   usersMe: () => apiRequest<UserIdentityDto>("/users/me"),
+  usersMeSummary: () => apiRequest("/users/me/summary"),
   usersUpdateMe: (body: { username?: string; avatarUrl?: string }) => apiRequest("/users/me", { method: "PATCH", body }),
 
   // Pets

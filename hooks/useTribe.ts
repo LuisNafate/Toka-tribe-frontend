@@ -154,15 +154,17 @@ export function useTribe() {
     let alive = true;
     async function load() {
       try {
-        const [usersEnv, authEnv] = await Promise.allSettled([
-          TokaApi.usersMe(),
-          TokaApi.authMe(),
-        ]);
-        const usersData = usersEnv.status === "fulfilled" ? usersEnv.value.data : null;
-        const authData = authEnv.status === "fulfilled" ? authEnv.value.data : null;
+        // GET /users/me/summary is the ONLY backend endpoint that returns tribe.id.
+        // GET /users/me and GET /auth/me do NOT include tribeId.
+        const summaryEnv = await TokaApi.usersMeSummary();
+        if (!alive) return;
 
-        const userId = extractUserId(usersData, authData);
-        const tribeId = extractTribeId(usersData, authData);
+        const summary = summaryEnv.data as Record<string, unknown> | null | undefined;
+        const userRec = summary?.user as Record<string, unknown> | null | undefined;
+        const tribeRec = summary?.tribe as Record<string, unknown> | null | undefined;
+
+        const userId = toText(userRec?.id) ?? toText(userRec?.["_id"]) ?? null;
+        const tribeId = toText(tribeRec?.id) ?? toText(tribeRec?.["_id"]) ?? null;
 
         if (alive) setCurrentUserId(userId);
 
@@ -175,6 +177,8 @@ export function useTribe() {
           if (detailEnv.status === "fulfilled") setMyTribe(normalizeTribe(detailEnv.value.data));
           if (membersEnv.status === "fulfilled") setMembers(normalizeMembers(membersEnv.value.data));
         }
+      } catch {
+        // Unauthenticated or no tribe — leave state as null, loading stops in finally.
       } finally {
         if (alive) setLoading(false);
       }
