@@ -30,16 +30,6 @@ export function TokaLoginButton({
   const [status, setStatus] = useState<string>("idle");
   const hasAutoStarted = useRef(false);
 
-  /** Detecta si un username parece un ID provisional generado automáticamente (no un nombre real). */
-  function looksLikeProvisionalId(username: string | null | undefined): boolean {
-    if (!username) return true;
-    const u = username.trim();
-    if (u.length === 0) return true;
-    if (/^toka_/i.test(u)) return true;
-    if (/^[0-9a-f\-]{32,}$/i.test(u)) return true;
-    return false;
-  }
-
   async function handleLogin() {
     setError(null);
     setStatus("Solicitando autorización en Toka Bridge...");
@@ -59,54 +49,29 @@ export function TokaLoginButton({
       const { token } = await exchangeAuthCode(authCode);
       saveSessionToken(token);
 
-      setStatus("Acceso validado. Sincronizando perfil...");
-      const allAuthCodes: string[] = [authCode];
+      setStatus("Acceso validado. Obteniendo información personal...");
+
+      // Siempre pedimos el código de info personal para que fullName/firstName/lastName
+      // queden populados en el backend desde el primer login.
+      let personalAuthCode: string | null = null;
+      try {
+        personalAuthCode = await getPersonalInformationCode();
+      } catch {
+        // Si el bridge de info personal no está disponible, continuamos sin él.
+      }
+
+      setStatus("Sincronizando perfil con backend...");
+      const allAuthCodes = personalAuthCode
+        ? [authCode, personalAuthCode]
+        : [authCode];
 
       try {
         await TokaApi.authSyncProfile(allAuthCodes);
-        setStatus("Perfil sincronizado. Verificando nombre...");
+        setStatus("Perfil sincronizado correctamente.");
       } catch (syncErr) {
         const syncMessage = syncErr instanceof Error ? syncErr.message : "Error desconocido en sync-profile.";
-        setStatus(`Sync inicial omitido: ${syncMessage}. Verificando nombre...`);
+        setStatus(`Sync omitido: ${syncMessage}`);
       }
-
-      void (async () => {
-        try {
-          const usersMeRes = await TokaApi.usersMe();
-          const currentUsername =
-            (usersMeRes as { data?: { username?: string }; username?: string })?.data?.username ??
-            (usersMeRes as { username?: string })?.username ??
-            null;
-
-          if (looksLikeProvisionalId(currentUsername)) {
-            try {
-              const personalAuthCode = await getPersonalInformationCode();
-              await TokaApi.authSyncProfile([authCode, personalAuthCode]);
-            } catch {
-              // Si el bridge de info personal falla (o el sync), es tolerable.
-            }
-
-            try {
-              const authMeRes = await TokaApi.authMe();
-              const resolvedName =
-                (authMeRes as { data?: { username?: string; nickname?: string; name?: string }; username?: string; nickname?: string; name?: string })?.data?.username ??
-                (authMeRes as { data?: { username?: string; nickname?: string; name?: string }; username?: string; nickname?: string; name?: string })?.data?.nickname ??
-                (authMeRes as { data?: { username?: string; nickname?: string; name?: string }; username?: string; nickname?: string; name?: string })?.data?.name ??
-                (authMeRes as { username?: string })?.username ??
-                (authMeRes as { nickname?: string })?.nickname ??
-                null;
-
-              if (resolvedName && !looksLikeProvisionalId(resolvedName)) {
-                await TokaApi.usersUpdateMe({ username: resolvedName });
-              }
-            } catch {
-              // Fallback silencioso.
-            }
-          }
-        } catch {
-          // Cualquier fallo en la sincronización de nombre es silencioso.
-        }
-      })();
 
       setStatus("Redirigiendo...");
 
