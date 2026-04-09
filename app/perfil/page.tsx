@@ -9,6 +9,7 @@ import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import BottomNav from "@/components/BottomNav";
 import { FIGMA_ASSETS } from "@/lib/data";
 import { TokaApi } from "@/services/toka-api.service";
+import { extractProfileSnapshot } from "@/services/user-contracts";
 import { formatAppPoints, refreshAppPointsFromBackend, useAppPoints } from "@/components/use-app-points";
 
 type ProfileViewModel = {
@@ -43,86 +44,6 @@ const DEFAULT_PROFILE: ProfileViewModel = {
   seasonGoalPoints: 0,
 };
 
-function toRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return value as Record<string, unknown>;
-}
-
-function toNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  return null;
-}
-
-function toStringValue(value: unknown): string | null {
-  if (typeof value === "string" && value.trim() !== "") return value.trim();
-  return null;
-}
-
-function findValueByKeys(root: unknown, keys: string[], expectedType: "number" | "string"): number | string | null {
-  const queue: unknown[] = [root];
-  const visited = new Set<object>();
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    const record = toRecord(current);
-    if (!record) continue;
-
-    if (visited.has(record)) continue;
-    visited.add(record);
-
-    for (const key of keys) {
-      const raw = record[key];
-      if (expectedType === "number") {
-        const num = toNumber(raw);
-        if (num !== null) return num;
-      } else {
-        const text = toStringValue(raw);
-        if (text) return text;
-      }
-    }
-
-    for (const value of Object.values(record)) {
-      if (value && typeof value === "object") {
-        queue.push(value);
-      }
-    }
-  }
-
-  return null;
-}
-
-function readSessionsSummary(sessionsData: unknown): { totalScore: number; totalSessions: number } {
-  let sessions: unknown[] = [];
-
-  if (Array.isArray(sessionsData)) {
-    sessions = sessionsData;
-  } else {
-    const record = toRecord(sessionsData);
-    if (record?.sessions && Array.isArray(record.sessions)) {
-      sessions = record.sessions;
-    } else if (record?.items && Array.isArray(record.items)) {
-      sessions = record.items;
-    }
-  }
-
-  let totalScore = 0;
-  for (const item of sessions) {
-    const rec = toRecord(item);
-    if (!rec) continue;
-    const score = toNumber(rec.score);
-    totalScore += score ?? 0;
-  }
-
-  return {
-    totalScore,
-    totalSessions: sessions.length,
-  };
-}
-
 export default function PerfilPage() {
   const { points } = useAppPoints();
   const [profile, setProfile] = useState<ProfileViewModel>(DEFAULT_PROFILE);
@@ -144,35 +65,36 @@ export default function PerfilPage() {
         TokaApi.seasonsCurrent(),
       ]);
 
-      const usersMeData = responses[0].status === "fulfilled" ? responses[0].value.data : null;
-      const authMeData = responses[1].status === "fulfilled" ? responses[1].value.data : null;
-      const sessionsData = responses[2].status === "fulfilled" ? responses[2].value.data : null;
-      const leaderboardData = responses[3].status === "fulfilled" ? responses[3].value.data : null;
-      const seasonData = responses[4].status === "fulfilled" ? responses[4].value.data : null;
+      const usersMeData = responses[0].status === "fulfilled" ? responses[0].value.data ?? null : null;
+      const authMeData = responses[1].status === "fulfilled" ? responses[1].value.data ?? null : null;
+      const sessionsData = responses[2].status === "fulfilled" ? responses[2].value.data ?? null : null;
+      const leaderboardData = responses[3].status === "fulfilled" ? responses[3].value.data ?? null : null;
+      const seasonData = responses[4].status === "fulfilled" ? responses[4].value.data ?? null : null;
 
-      const baseRoot = {
+      const snapshot = extractProfileSnapshot({
         usersMeData,
         authMeData,
         leaderboardData,
         seasonData,
-      };
-
-      const sessionsSummary = readSessionsSummary(sessionsData);
+        sessionsData,
+        fallbackPoints: syncedPoints ?? points,
+        fallbackAvatarUrl: DEFAULT_PROFILE.avatarUrl,
+      });
 
       const nextProfile: ProfileViewModel = {
-        displayName: (findValueByKeys(baseRoot, ["username", "displayName", "name", "nickname", "firstName"], "string") as string | null) ?? DEFAULT_PROFILE.displayName,
-        avatarUrl: (findValueByKeys(baseRoot, ["avatarUrl", "avatar", "profileImage", "imageUrl"], "string") as string | null) ?? DEFAULT_PROFILE.avatarUrl,
-        tierLabel: ((findValueByKeys(baseRoot, ["tier", "division", "league", "rankTier"], "string") as string | null) ?? DEFAULT_PROFILE.tierLabel).toUpperCase(),
-        planLabel: (findValueByKeys(baseRoot, ["plan", "membership", "subscription", "planType"], "string") as string | null) ?? DEFAULT_PROFILE.planLabel,
-        tribeName: (findValueByKeys(baseRoot, ["tribeName", "tribe", "squadName", "teamName"], "string") as string | null) ?? DEFAULT_PROFILE.tribeName,
-        totalPoints: (findValueByKeys(baseRoot, ["individualPoints", "points", "totalPoints", "score", "xp"], "number") as number | null) ?? syncedPoints ?? points,
-        maxStreakDays: (findValueByKeys(baseRoot, ["maxStreak", "bestStreak", "longestStreak"], "number") as number | null) ?? DEFAULT_PROFILE.maxStreakDays,
-        currentStreakDays: (findValueByKeys(baseRoot, ["currentStreak", "streak", "streakDays"], "number") as number | null) ?? DEFAULT_PROFILE.currentStreakDays,
-        completedChallenges: (findValueByKeys(baseRoot, ["completedChallenges", "completedGames", "challengesCompleted", "gamesPlayed"], "number") as number | null) ?? sessionsSummary.totalSessions,
-        seasonsPlayed: (findValueByKeys(baseRoot, ["seasonsPlayed", "seasonCount", "totalSeasons"], "number") as number | null) ?? DEFAULT_PROFILE.seasonsPlayed,
-        bestRank: (findValueByKeys(baseRoot, ["bestRank", "bestPosition", "highestRank", "rank"], "number") as number | null) ?? DEFAULT_PROFILE.bestRank,
-        seasonCurrentPoints: (findValueByKeys(baseRoot, ["seasonPoints", "currentPoints", "points", "score"], "number") as number | null) ?? sessionsSummary.totalScore,
-        seasonGoalPoints: (findValueByKeys(baseRoot, ["seasonGoalPoints", "targetPoints", "goalPoints", "maxPoints"], "number") as number | null) ?? DEFAULT_PROFILE.seasonGoalPoints,
+        displayName: snapshot.displayName,
+        avatarUrl: snapshot.avatarUrl,
+        tierLabel: snapshot.tierLabel,
+        planLabel: snapshot.planLabel,
+        tribeName: snapshot.tribeName,
+        totalPoints: snapshot.totalPoints,
+        maxStreakDays: snapshot.maxStreakDays,
+        currentStreakDays: snapshot.currentStreakDays,
+        completedChallenges: snapshot.completedChallenges,
+        seasonsPlayed: snapshot.seasonsPlayed,
+        bestRank: snapshot.bestRank,
+        seasonCurrentPoints: snapshot.seasonCurrentPoints,
+        seasonGoalPoints: snapshot.seasonGoalPoints,
       };
 
       setProfile(nextProfile);
