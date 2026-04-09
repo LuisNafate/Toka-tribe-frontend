@@ -63,38 +63,29 @@ export default function TribePage() {
   useEffect(() => {
     async function loadTribe() {
       const points = readAppPoints();
-      const usersMe = await Promise.allSettled([TokaApi.usersMe(), TokaApi.authMe(), TokaApi.gameSessionsMe()]);
 
-      const usersData = usersMe[0].status === "fulfilled" ? usersMe[0].value.data : null;
-      const authData = usersMe[1].status === "fulfilled" ? usersMe[1].value.data : null;
-      const sessionsData = usersMe[2].status === "fulfilled" ? usersMe[2].value.data : null;
+      // GET /users/me/summary is the ONLY endpoint that returns tribe.id.
+      // usersMe() and authMe() do NOT include tribeId.
+      const [summaryRes, sessionsRes] = await Promise.allSettled([
+        TokaApi.usersMeSummary(),
+        TokaApi.gameSessionsMe(),
+      ]);
 
-      const root = { usersData, authData };
+      const summary = summaryRes.status === "fulfilled" ? summaryRes.value.data as Record<string, unknown> : null;
+      const tribeRec = toRecord(summary?.tribe);
+      const sessionsData = sessionsRes.status === "fulfilled" ? sessionsRes.value.data : null;
 
-      const tribeId =
-        toText(toRecord(usersData)?.tribeId) ??
-        toText(toRecord(toRecord(usersData)?.tribe)?.id) ??
-        toText(toRecord(authData)?.tribeId) ??
-        null;
+      const tribeId = toText(tribeRec?.id) ?? toText(tribeRec?.["_id"]) ?? null;
 
-      const tierLabel =
-        toText(toRecord(usersData)?.tier) ??
-        toText(toRecord(toRecord(usersData)?.tribe)?.tier) ??
-        toText(toRecord(authData)?.tier) ??
-        "No sincronizado";
-
-      const hasNoTier = tierLabel.toLowerCase().includes("sin") || tierLabel.toLowerCase().includes("none");
+      const tierLabel = toText(tribeRec?.tier) ?? "No sincronizado";
+      const hasNoTier = !tribeRec || tierLabel === "No sincronizado";
       setWithoutTier(hasNoTier);
 
-      let tribeName =
-        toText(toRecord(usersData)?.tribeName) ??
-        toText(toRecord(toRecord(usersData)?.tribe)?.name) ??
-        "Tribe no sincronizada";
-
+      let tribeName = toText(tribeRec?.name) ?? "Tribe no sincronizada";
       let members: Member[] = [];
-      let memberCount = toNumber(toRecord(toRecord(usersData)?.tribe)?.memberCount) ?? 0;
-      let maxMembers = toNumber(toRecord(toRecord(usersData)?.tribe)?.maxMembers) ?? 10;
-      let rankingLabel = "Division no sincronizada";
+      let memberCount = 0;
+      let maxMembers = 10;
+      let rankingLabel = "División no sincronizada";
 
       if (tribeId) {
         const [detailResult, membersResult, historyResult] = await Promise.allSettled([
