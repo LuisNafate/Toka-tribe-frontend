@@ -1,84 +1,173 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FIGMA_ASSETS } from "@/lib/data";
-import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import { AppShell } from "@/components/app-shell";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
+import { TokaApi } from "@/services/toka-api.service";
+
+type TribeCard = {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  tier: string;
+  memberCount: number;
+  maxMembers: number;
+  pointsWeek: number;
+};
 
 const tiers = ["Todos", "Bronce", "Plata", "Oro", "Diamante"];
 
-const mockTribes = [
-  {
-    id: 1,
-    name: "Los Jaguares",
-    avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[0],
-    tier: "Oro" as const,
-    memberCount: 48,
-    maxMembers: 50,
-    pointsWeek: 125400,
-  },
-  {
-    id: 2,
-    name: "Serpientes del Rio",
-    avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[1],
-    tier: "Plata" as const,
-    memberCount: 32,
-    maxMembers: 50,
-    pointsWeek: 98750,
-  },
-  {
-    id: 3,
-    name: "Águilas Nocturnas",
-    avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[2],
-    tier: "Diamante" as const,
-    memberCount: 45,
-    maxMembers: 50,
-    pointsWeek: 156200,
-  },
-  {
-    id: 4,
-    name: "Pumas Veloces",
-    avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[3],
-    tier: "Oro" as const,
-    memberCount: 42,
-    maxMembers: 50,
-    pointsWeek: 132100,
-  },
-  {
-    id: 5,
-    name: "Osos Polares",
-    avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[4],
-    tier: "Plata" as const,
-    memberCount: 28,
-    maxMembers: 50,
-    pointsWeek: 87600,
-  },
-  {
-    id: 6,
-    name: "Leones del Savana",
-    avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[5],
-    tier: "Bronce" as const,
-    memberCount: 15,
-    maxMembers: 50,
-    pointsWeek: 54300,
-  },
+const fallbackTribes: TribeCard[] = [
+  { id: "1", name: "Los Jaguares", avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[0], tier: "Oro", memberCount: 48, maxMembers: 50, pointsWeek: 125400 },
+  { id: "2", name: "Serpientes del Rio", avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[1], tier: "Plata", memberCount: 32, maxMembers: 50, pointsWeek: 98750 },
+  { id: "3", name: "Aguilas Nocturnas", avatarUrl: FIGMA_ASSETS.explorador.tribePhotos[2], tier: "Diamante", memberCount: 45, maxMembers: 50, pointsWeek: 156200 },
 ];
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function toText(value: unknown): string | null {
+  if (typeof value === "string" && value.trim() !== "") return value.trim();
+  return null;
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/,/g, ""));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function normalizeTier(raw: string): string {
+  const value = raw.toLowerCase();
+  if (value.includes("diam")) return "Diamante";
+  if (value.includes("oro")) return "Oro";
+  if (value.includes("plat")) return "Plata";
+  if (value.includes("bron")) return "Bronce";
+  return "Bronce";
+}
+
+function extractTribes(payload: unknown): TribeCard[] {
+  const queue: unknown[] = [payload];
+  const tribes: TribeCard[] = [];
+  let imageCursor = 0;
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        const rec = toRecord(item);
+        if (!rec) continue;
+
+        const id = toText(rec.id) ?? toText(rec.tribeId) ?? null;
+        const name = toText(rec.name) ?? toText(rec.tribeName) ?? null;
+        if (!id || !name) continue;
+
+        const tierRaw = toText(rec.tier) ?? toText(rec.division) ?? "Bronce";
+        const memberCount = toNumber(rec.memberCount) ?? toNumber(rec.membersCount) ?? toNumber(toRecord(rec.members)?.count) ?? 0;
+        const maxMembers = toNumber(rec.maxMembers) ?? toNumber(rec.capacity) ?? 50;
+        const pointsWeek = toNumber(rec.pointsWeek) ?? toNumber(rec.scoreWeek) ?? toNumber(rec.points) ?? 0;
+        const avatarUrl =
+          toText(rec.avatarUrl) ??
+          toText(rec.imageUrl) ??
+          FIGMA_ASSETS.explorador.tribePhotos[imageCursor % FIGMA_ASSETS.explorador.tribePhotos.length];
+
+        tribes.push({
+          id,
+          name,
+          avatarUrl,
+          tier: normalizeTier(tierRaw),
+          memberCount,
+          maxMembers,
+          pointsWeek,
+        });
+        imageCursor += 1;
+      }
+      continue;
+    }
+
+    const rec = toRecord(current);
+    if (!rec) continue;
+
+    for (const value of Object.values(rec)) {
+      if (value && typeof value === "object") queue.push(value);
+    }
+  }
+
+  return tribes.filter((item, idx, arr) => arr.findIndex((x) => x.id === item.id) === idx);
+}
 
 export default function ExplorerPage() {
   const [selectedTier, setSelectedTier] = useState<string>("Todos");
+  const [searchText, setSearchText] = useState("");
+  const [tribes, setTribes] = useState<TribeCard[]>(fallbackTribes);
+  const [loading, setLoading] = useState(false);
+  const [joiningTribeId, setJoiningTribeId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const filteredTribes = mockTribes.filter(
-    (tribe) => selectedTier === "Todos" || tribe.tier === selectedTier
-  );
+  async function loadTribes() {
+    setLoading(true);
+    try {
+      const response = await TokaApi.tribesList();
+      const parsed = extractTribes(response.data);
+      if (parsed.length > 0) {
+        setTribes(parsed);
+      }
+      setMessage(null);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Error desconocido";
+      setMessage(`No se pudo sincronizar explorador. ${detail}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadTribes();
+  }, []);
+
+  async function handleJoin(tribeId: string) {
+    setJoiningTribeId(tribeId);
+    setMessage(null);
+    try {
+      await TokaApi.tribesJoin(tribeId);
+      setMessage("Te uniste a la Tribe correctamente.");
+      await loadTribes();
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Error desconocido";
+      setMessage(`No se pudo unir a la Tribe. ${detail}`);
+    } finally {
+      setJoiningTribeId(null);
+    }
+  }
+
+  const filteredTribes = useMemo(() => {
+    const text = searchText.trim().toLowerCase();
+    return tribes.filter((tribe) => {
+      const byTier = selectedTier === "Todos" || tribe.tier === selectedTier;
+      const bySearch = text.length === 0 || tribe.name.toLowerCase().includes(text);
+      return byTier && bySearch;
+    });
+  }, [tribes, selectedTier, searchText]);
 
   const content = (
     <>
       <header className="fig-mobile-search-head">
         <div className="fig-mobile-search-box">
           <span>🔍</span>
-          <input type="text" placeholder="Buscar Tribe..." />
+          <input
+            type="text"
+            placeholder="Buscar Tribe..."
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+          />
         </div>
         <img src={FIGMA_ASSETS.landing.hero} alt="Avatar" draggable="false" />
       </header>
@@ -117,7 +206,13 @@ export default function ExplorerPage() {
                     <small>PUNTOS SEMANA</small>
                     <strong>{new Intl.NumberFormat("es-ES").format(tribe.pointsWeek)} pts</strong>
                   </div>
-                  <button type="button">Unirse</button>
+                  <button
+                    type="button"
+                    disabled={tribe.memberCount >= tribe.maxMembers || joiningTribeId !== null}
+                    onClick={() => void handleJoin(tribe.id)}
+                  >
+                    {joiningTribeId === tribe.id ? "Uniendo..." : "Unirse"}
+                  </button>
                 </div>
               </article>
             ))}
@@ -137,17 +232,24 @@ export default function ExplorerPage() {
                   </p>
                 </div>
               </div>
-              <button type="button" disabled={tribe.memberCount >= tribe.maxMembers}>
-                {tribe.memberCount >= tribe.maxMembers ? "Lleno" : "Unirse"}
+              <button
+                type="button"
+                disabled={tribe.memberCount >= tribe.maxMembers || joiningTribeId !== null}
+                onClick={() => void handleJoin(tribe.id)}
+              >
+                {joiningTribeId === tribe.id ? "Uniendo..." : tribe.memberCount >= tribe.maxMembers ? "Lleno" : "Unirse"}
               </button>
             </article>
           ))}
         </section>
       </div>
 
-      <button type="button" className="fig-mobile-create-tribe-btn">
+      <button type="button" className="fig-mobile-create-tribe-btn" onClick={() => setMessage("Creación de Tribe se habilita en el siguiente paso de producto.")}>
         + Crear mi Tribe
       </button>
+
+      {loading ? <p className="subtle">Sincronizando Tribes...</p> : null}
+      {message ? <p className="subtle">{message}</p> : null}
 
       {filteredTribes.length === 0 ? (
         <div className="explorer-empty">

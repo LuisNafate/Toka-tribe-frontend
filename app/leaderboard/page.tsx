@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Crown } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
@@ -8,7 +8,8 @@ import { AppPointsBadge } from "@/components/app-points-badge";
 import BottomNav from "@/components/BottomNav";
 import { MobileHamburgerMenu } from "@/components/mobile-hamburger-menu";
 import { Panel, SectionHeader } from "@/components/common";
-import { FIGMA_ASSETS, leaderboardRows } from "@/lib/data";
+import { FIGMA_ASSETS } from "@/lib/data";
+import { TokaApi } from "@/services/toka-api.service";
 
 type Division = "bronce" | "plata" | "oro";
 type Zone = "up" | "down" | "neutral";
@@ -23,46 +24,6 @@ type TribeRank = {
   zone: Zone;
 };
 
-const divisions: Record<Division, TribeRank[]> = {
-  bronce: [
-    { rank: 1, name: "Fire Squad",   pts: 1850, initials: "FS", color: "#ef4444", zone: "up" },
-    { rank: 2, name: "Blue Hawks",   pts: 1720, initials: "BH", color: "#3b82f6", zone: "up" },
-    { rank: 3, name: "Storm Tribe",  pts: 1640, initials: "ST", color: "#6366f1", zone: "neutral" },
-    { rank: 4, name: "Night Owls",   pts: 1520, initials: "NO", color: "#8b5cf6", zone: "up" },
-    { rank: 5, name: "Sand Wolves",  pts: 1380, initials: "SW", color: "#f59e0b", zone: "neutral" },
-    { rank: 6, name: "Ice Runners",  pts: 1250, initials: "IR", color: "#06b6d4", zone: "neutral" },
-    { rank: 7, name: "Lost Tribe",   pts: 1120, initials: "LT", color: "#94a3b8", zone: "down" },
-    { rank: 8, name: "Zero Club",    pts:  980, initials: "ZC", color: "#64748b", zone: "down" },
-  ],
-  plata: [
-    { rank: 1, name: "Los Titanes",    pts: 2450, initials: "LT", color: "#f97316", zone: "up" },
-    { rank: 2, name: "Axo Squad",      pts: 2140, initials: "AX", color: "#4a77e3", isUser: true, zone: "up" },
-    { rank: 3, name: "Cyber Runners",  pts: 1980, initials: "CR", color: "#8b5cf6", zone: "neutral" },
-    { rank: 4, name: "Digital Wolves", pts: 1820, initials: "DW", color: "#10b981", zone: "up" },
-    { rank: 5, name: "Iron Tribe",     pts: 1650, initials: "IT", color: "#ef4444", zone: "neutral" },
-    { rank: 6, name: "Sky Hunters",    pts: 1520, initials: "SH", color: "#14b8a6", zone: "neutral" },
-    { rank: 7, name: "Wave Makers",    pts: 1380, initials: "WM", color: "#6366f1", zone: "down" },
-    { rank: 8, name: "Pulse Unit",     pts: 1240, initials: "PU", color: "#64748b", zone: "down" },
-  ],
-  oro: [
-    { rank: 1, name: "Elite Force",    pts: 4820, initials: "EF", color: "#f59e0b", zone: "up" },
-    { rank: 2, name: "Thunder Clan",   pts: 4510, initials: "TC", color: "#ef4444", zone: "up" },
-    { rank: 3, name: "Golden Wolves",  pts: 4280, initials: "GW", color: "#10b981", zone: "neutral" },
-    { rank: 4, name: "Royal Squad",    pts: 4050, initials: "RS", color: "#8b5cf6", zone: "up" },
-    { rank: 5, name: "Apex Tribe",     pts: 3820, initials: "AT", color: "#6366f1", zone: "neutral" },
-    { rank: 6, name: "Power House",    pts: 3640, initials: "PH", color: "#06b6d4", zone: "neutral" },
-    { rank: 7, name: "Last Stand",     pts: 3420, initials: "LS", color: "#94a3b8", zone: "down" },
-    { rank: 8, name: "End Game",       pts: 3180, initials: "EG", color: "#64748b", zone: "down" },
-  ],
-};
-
-// User is always in Plata #2
-const USER_DIV: Division = "plata";
-const userTribe = divisions.plata.find((t) => t.isUser)!;
-const teamAbove = divisions.plata[0];
-const ptsNeeded = teamAbove.pts - userTribe.pts;
-const progressPct = Math.round((userTribe.pts / teamAbove.pts) * 100);
-
 const DIV_LABELS: Record<Division, string> = {
   bronce: "Bronce",
   plata: "Plata",
@@ -75,17 +36,181 @@ const RANK_CIRCLE_CLASS: Record<number, string> = {
   3: "fig-lb-rank-circle--bronze",
 };
 
+const palette = ["#f97316", "#4a77e3", "#8b5cf6", "#10b981", "#ef4444", "#14b8a6", "#6366f1", "#64748b"];
+
+const FALLBACK_DIVISIONS: Record<Division, TribeRank[]> = {
+  bronce: [
+    { rank: 1, name: "Fire Squad", pts: 1850, initials: "FS", color: "#ef4444", zone: "up" },
+    { rank: 2, name: "Blue Hawks", pts: 1720, initials: "BH", color: "#3b82f6", zone: "up" },
+    { rank: 3, name: "Storm Tribe", pts: 1640, initials: "ST", color: "#6366f1", zone: "neutral" },
+    { rank: 4, name: "Night Owls", pts: 1520, initials: "NO", color: "#8b5cf6", zone: "up" },
+  ],
+  plata: [
+    { rank: 1, name: "Los Titanes", pts: 2450, initials: "LT", color: "#f97316", zone: "up" },
+    { rank: 2, name: "Axo Squad", pts: 2140, initials: "AX", color: "#4a77e3", isUser: true, zone: "up" },
+    { rank: 3, name: "Cyber Runners", pts: 1980, initials: "CR", color: "#8b5cf6", zone: "neutral" },
+    { rank: 4, name: "Digital Wolves", pts: 1820, initials: "DW", color: "#10b981", zone: "up" },
+  ],
+  oro: [
+    { rank: 1, name: "Elite Force", pts: 4820, initials: "EF", color: "#f59e0b", zone: "up" },
+    { rank: 2, name: "Thunder Clan", pts: 4510, initials: "TC", color: "#ef4444", zone: "up" },
+    { rank: 3, name: "Golden Wolves", pts: 4280, initials: "GW", color: "#10b981", zone: "neutral" },
+    { rank: 4, name: "Royal Squad", pts: 4050, initials: "RS", color: "#8b5cf6", zone: "up" },
+  ],
+};
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/,/g, ""));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function toText(value: unknown): string | null {
+  if (typeof value === "string" && value.trim() !== "") return value.trim();
+  return null;
+}
+
+function initialsFromName(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "TR";
+}
+
+function zoneForRank(rank: number): Zone {
+  if (rank <= 2) return "up";
+  if (rank >= 7) return "down";
+  return "neutral";
+}
+
+function normalizeDivision(raw: string): Division {
+  const value = raw.toLowerCase();
+  if (value.includes("oro")) return "oro";
+  if (value.includes("bron")) return "bronce";
+  return "plata";
+}
+
+function extractRows(payload: unknown): TribeRank[] {
+  const queue: unknown[] = [payload];
+  const rows: TribeRank[] = [];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        const rec = toRecord(item);
+        if (!rec) continue;
+
+        const rank = toNumber(rec.rank) ?? toNumber(rec.position) ?? null;
+        const name = toText(rec.name) ?? toText(rec.tribeName) ?? toText(rec.teamName) ?? null;
+        const pts = toNumber(rec.points) ?? toNumber(rec.score) ?? toNumber(rec.totalPoints) ?? null;
+
+        if (rank !== null && name && pts !== null) {
+          rows.push({
+            rank,
+            name,
+            pts,
+            initials: initialsFromName(name),
+            color: palette[(rank - 1 + palette.length) % palette.length],
+            isUser: Boolean(rec.isMine ?? rec.isCurrentUser ?? rec.me ?? false),
+            zone: zoneForRank(rank),
+          });
+        }
+      }
+      continue;
+    }
+
+    const rec = toRecord(current);
+    if (!rec) continue;
+    for (const value of Object.values(rec)) {
+      if (value && typeof value === "object") queue.push(value);
+    }
+  }
+
+  return rows
+    .filter((item, idx, arr) => arr.findIndex((x) => x.rank === item.rank && x.name === item.name) === idx)
+    .sort((a, b) => a.rank - b.rank);
+}
+
 export default function LeaderboardPage() {
-  const [activeDiv, setActiveDiv] = useState<Division>(USER_DIV);
+  const [activeDiv, setActiveDiv] = useState<Division>("plata");
+  const [divisions, setDivisions] = useState<Record<Division, TribeRank[]>>(FALLBACK_DIVISIONS);
+  const [weekLabel, setWeekLabel] = useState("Semana activa");
+  const [warning, setWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadLeaderboard() {
+      const [current, bronce, plata, oro] = await Promise.allSettled([
+        TokaApi.leaderboardCurrent(),
+        TokaApi.leaderboardByDivision("bronce"),
+        TokaApi.leaderboardByDivision("plata"),
+        TokaApi.leaderboardByDivision("oro"),
+      ]);
+
+      const next: Record<Division, TribeRank[]> = {
+        bronce: FALLBACK_DIVISIONS.bronce,
+        plata: FALLBACK_DIVISIONS.plata,
+        oro: FALLBACK_DIVISIONS.oro,
+      };
+
+      if (bronce.status === "fulfilled") {
+        const rows = extractRows(bronce.value.data);
+        if (rows.length > 0) next.bronce = rows;
+      }
+      if (plata.status === "fulfilled") {
+        const rows = extractRows(plata.value.data);
+        if (rows.length > 0) next.plata = rows;
+      }
+      if (oro.status === "fulfilled") {
+        const rows = extractRows(oro.value.data);
+        if (rows.length > 0) next.oro = rows;
+      }
+
+      if (current.status === "fulfilled") {
+        const currentRows = extractRows(current.value.data);
+        if (currentRows.length > 0) {
+          const rawDiv = toText((toRecord(current.value.data)?.division ?? "") as unknown);
+          const inferredDiv = rawDiv ? normalizeDivision(rawDiv) : "plata";
+          next[inferredDiv] = currentRows;
+          setActiveDiv(inferredDiv);
+        }
+
+        const seasonName = toText((toRecord(current.value.data)?.seasonName ?? null) as unknown);
+        if (seasonName) setWeekLabel(seasonName);
+      }
+
+      setDivisions(next);
+
+      const failed = [current, bronce, plata, oro].filter((item) => item.status === "rejected").length;
+      if (failed > 0) {
+        setWarning("Algunos datos del leaderboard no pudieron sincronizarse y se muestran con fallback.");
+      }
+    }
+
+    void loadLeaderboard();
+  }, []);
 
   const teams = divisions[activeDiv];
-  // Podium visual order: 2nd left, 1st center, 3rd right
-  const podium = [teams[1], teams[0], teams[2]];
-  const listTeams = teams.slice(3); // positions 4–8
+  const podiumSource = teams.length >= 3 ? teams : FALLBACK_DIVISIONS[activeDiv];
+  const podium = [podiumSource[1], podiumSource[0], podiumSource[2]].filter(Boolean);
+  const listTeams = teams.slice(3);
+  const userTribe = teams.find((team) => team.isUser) ?? teams[1] ?? teams[0];
+  const teamAbove = teams.find((team) => team.rank === Math.max(1, (userTribe?.rank ?? 2) - 1)) ?? teams[0] ?? userTribe;
+  const ptsNeeded = Math.max(0, (teamAbove?.pts ?? 0) - (userTribe?.pts ?? 0));
+  const progressPct = teamAbove?.pts ? Math.min(100, Math.round(((userTribe?.pts ?? 0) / teamAbove.pts) * 100)) : 0;
 
   return (
     <>
-      {/* ── Desktop (unchanged) ── */}
       <div className="fig-desktop-only">
         <AppShell
           title="Leaderboard"
@@ -95,24 +220,25 @@ export default function LeaderboardPage() {
           <div className="workspace__grid">
             <Panel>
               <SectionHeader
-                eyebrow="División Plata"
+                eyebrow={`División ${DIV_LABELS[activeDiv]}`}
                 title="Clasificación semanal"
                 description="Las posiciones cambian conforme tu Tribe suma puntos."
-                action={<span className="badge">Semana 4</span>}
+                action={<span className="badge">{weekLabel}</span>}
               />
+              {warning ? <p className="subtle">{warning}</p> : null}
               <div className="leaderboard-list">
-                {leaderboardRows.concat([{ rank: 6, name: "Pulse Unit", score: "1,980", tone: "muted" }]).map((row) => (
+                {teams.map((row) => (
                   <div
-                    key={row.name}
-                    className={`leaderboard-row ${row.tone === "highlight" ? "leaderboard-row--highlight" : ""}`}
+                    key={`${row.rank}-${row.name}`}
+                    className={`leaderboard-row ${row.isUser ? "leaderboard-row--highlight" : ""}`}
                   >
                     <div className="rank">{row.rank}</div>
-                    <div className="avatar" style={{ width: 40, height: 40 }}>{row.rank}</div>
+                    <div className="avatar" style={{ width: 40, height: 40 }}>{row.initials}</div>
                     <div>
                       <div className="team-name">{row.name}</div>
                       <div className="subtle">Progreso semanal</div>
                     </div>
-                    <div className="score">{row.score}</div>
+                    <div className="score">{row.pts.toLocaleString("es-ES")}</div>
                   </div>
                 ))}
               </div>
@@ -128,10 +254,7 @@ export default function LeaderboardPage() {
         </AppShell>
       </div>
 
-      {/* ── Mobile ── */}
       <main className="fig-lb-page fig-mobile-only">
-
-        {/* Header */}
         <header className="fig-lb-header">
           <div className="fig-lb-header-left">
             <MobileHamburgerMenu />
@@ -142,7 +265,6 @@ export default function LeaderboardPage() {
           </div>
         </header>
 
-        {/* Division tabs: Bronce | Plata | Oro */}
         <div className="fig-lb-tabs">
           {(["bronce", "plata", "oro"] as Division[]).map((div) => (
             <button
@@ -156,21 +278,21 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
-        {/* Hero card */}
         <div className="fig-lb-hero">
           <div>
             <h2 className="fig-lb-hero-title">Liga TokaTribe</h2>
-            <p className="fig-lb-hero-sub">Semana 4 · Cierra en 2 días 14h</p>
+            <p className="fig-lb-hero-sub">{weekLabel}</p>
           </div>
-          <span className="fig-lb-hero-chip">
-            AXO SQUAD · #{userTribe.rank} EN {DIV_LABELS[USER_DIV].toUpperCase()}
-          </span>
+          {userTribe ? (
+            <span className="fig-lb-hero-chip">
+              {userTribe.name.toUpperCase()} · #{userTribe.rank} EN {DIV_LABELS[activeDiv].toUpperCase()}
+            </span>
+          ) : null}
         </div>
 
-        {/* Podium top 3 */}
         <section className="fig-lb-podium">
           {podium.map((team, i) => {
-            const isFirst = i === 1; // rank 1 is center
+            const isFirst = i === 1;
             return (
               <div
                 key={team.name}
@@ -187,7 +309,7 @@ export default function LeaderboardPage() {
                     {team.initials}
                     {team.isUser && <span className="fig-lb-you-dot" />}
                   </div>
-                  <p className="fig-lb-podium-pts">{team.pts.toLocaleString()} pts</p>
+                  <p className="fig-lb-podium-pts">{team.pts.toLocaleString("es-ES")} pts</p>
                   <p className="fig-lb-podium-name">{team.name}</p>
                 </div>
                 <div className={`fig-lb-rank-circle ${RANK_CIRCLE_CLASS[team.rank] ?? ""}`}>
@@ -198,7 +320,6 @@ export default function LeaderboardPage() {
           })}
         </section>
 
-        {/* List positions 4–8 */}
         <section className="fig-lb-list">
           {listTeams.map((team) => (
             <div
@@ -225,31 +346,32 @@ export default function LeaderboardPage() {
                 <span className="fig-lb-zone-chip fig-lb-zone-chip--down">ZONA DE DESCENSO</span>
               )}
               <span className="fig-lb-row-pts">
-                {team.pts.toLocaleString()}
+                {team.pts.toLocaleString("es-ES")}
               </span>
             </div>
           ))}
         </section>
 
-        {/* Status bar — fixed above the BottomNav */}
-        <div className="fig-lb-footer">
-          <div className="fig-lb-footer-top">
-            <div className="fig-lb-footer-main-row">
-              <span className="fig-lb-footer-eyebrow">TU POSICIÓN</span>
-              <Link href="/tribe" className="fig-lb-footer-link">Ver tu Squad →</Link>
+        {userTribe ? (
+          <div className="fig-lb-footer">
+            <div className="fig-lb-footer-top">
+              <div className="fig-lb-footer-main-row">
+                <span className="fig-lb-footer-eyebrow">TU POSICIÓN</span>
+                <Link href="/tribe" className="fig-lb-footer-link">Ver tu Squad →</Link>
+              </div>
+              <p className="fig-lb-footer-main">
+                #{userTribe.rank} {userTribe.name} · {userTribe.pts.toLocaleString("es-ES")} pts
+              </p>
             </div>
-            <p className="fig-lb-footer-main">
-              #{userTribe.rank} {userTribe.name} · {userTribe.pts.toLocaleString()} pts
-            </p>
+            <div className="fig-lb-footer-meta">
+              <span>A {ptsNeeded.toLocaleString("es-ES")} pts del #1 · {teamAbove?.name ?? "Top"}</span>
+              <span>Progreso {progressPct}%</span>
+            </div>
+            <div className="fig-lb-footer-bar">
+              <div style={{ width: `${progressPct}%` }} />
+            </div>
           </div>
-          <div className="fig-lb-footer-meta">
-            <span>A {ptsNeeded} pts del #1 · {teamAbove.name}</span>
-            <span>Progreso {progressPct}%</span>
-          </div>
-          <div className="fig-lb-footer-bar">
-            <div style={{ width: `${progressPct}%` }} />
-          </div>
-        </div>
+        ) : null}
 
         <BottomNav />
       </main>
