@@ -24,8 +24,8 @@ function normalizePet(raw: Record<string, unknown>): import("@/types/pet").Pet {
   };
 }
 
-// Static fallback catalog — used when the store is empty or not yet deployed.
-// itemId values must match what the service uses once the store is live.
+// Static fallback catalog — used when backend store is empty or not yet deployed.
+// itemId values must match what the backend uses once the store is live.
 const STATIC_CATALOG: import("@/types/pet").PetItem[] = [
   { _id: "static_hat_sombrero",   itemId: "hat_sombrero",   name: "Sombrero",  imageUrl: "/images/items/mascota_sombrero.png",  slot: "hat",       pointCost: 350,  isAvailable: true },
   { _id: "static_shirt_chaqueta", itemId: "shirt_chaqueta", name: "Chaqueta",  imageUrl: "/images/items/mascota_chaqueta.png", slot: "shirt",     pointCost: 750,  isAvailable: true },
@@ -39,15 +39,17 @@ function normalizeCatalog(raw: unknown): import("@/types/pet").PetItem[] {
     const id = toText(r._id) || toText(r.id);
     const slot = (["hat", "shirt", "accessory"].includes(toText(r.slot)) ? toText(r.slot) : null) as import("@/types/pet").PetSlot | null;
     if (!id || !slot) return [];
+    const itemId = toText(r.itemId) || id;
     return [{
       _id: id,
-      itemId: toText(r.itemId) || id,
+      itemId,
       name: toText(r.name) || "Ítem",
       imageUrl: toText(r.imageUrl) || toText(r.image) || "/images/mascota.png",
       slot,
       pointCost: toNum(r.pointCost) || toNum(r.cost) || toNum(r.price),
       isAvailable: r.isAvailable !== false,
       seasonId: toText(r.seasonId) || undefined,
+      requiresMembership: itemId === "acc_lentes" ? true : undefined,
     }];
   });
 }
@@ -86,7 +88,7 @@ export function usePet() {
         let petData: Pet | null = null;
         try {
           const petEnv = await TokaApi.petsMe();
-          // The service may return the pet at root or nested under .data
+          // Backend may return pet at root or nested under .data
           const raw = (petEnv.data ?? petEnv) as Record<string, unknown>;
           petData = normalizePet(raw);
         } catch (petErr) {

@@ -204,7 +204,7 @@ export default function PerfilPage() {
           <h1 className="fig-perfil-name">{profile.displayName}</h1>
           <div className="fig-perfil-chips">
             <span className="fig-perfil-chip fig-perfil-chip--plata">{profile.tierLabel}</span>
-            <span className="fig-perfil-chip fig-perfil-chip--free">{profile.planLabel.toUpperCase()}</span>
+            <Link href="/membresia" className="fig-perfil-chip fig-perfil-chip--free" style={{ textDecoration: "none" }}>{profile.planLabel.toUpperCase()}</Link>
           </div>
           <div className="fig-perfil-stats-row">
             <div className="fig-perfil-stat">
