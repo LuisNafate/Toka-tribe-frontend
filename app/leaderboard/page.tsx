@@ -496,10 +496,10 @@ export default function LeaderboardPage() {
       </div>
 
       <main className="fig-lb-page fig-mobile-only">
-        <header className="fig-lb-header">
-          <div className="fig-lb-header-left">
+        <header className="fig-mobile-topbar fig-retos-topbar">
+          <div className="fig-mobile-topbar__left">
             <MobileHamburgerMenu />
-            <span className="fig-lb-brand">TokaTribe</span>
+            <strong className="fig-retos-brand">TokaTribe</strong>
           </div>
           <div className="fig-retos-avatar">
             <img src="/images/ajolote_2.png" alt="Avatar" />

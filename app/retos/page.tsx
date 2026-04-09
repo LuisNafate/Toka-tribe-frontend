@@ -24,7 +24,7 @@ type ChallengeCard = {
 const FRONTEND_TRIVIA_CHALLENGE: ChallengeCard = {
   id: "frontend-trivia",
   title: "Trivia Toka",
-  description: "Preguntas locales cargadas desde el frontend.",
+  description: "Pon a prueba tu conocimiento y suma puntos para tu tribe.",
   points: 120,
   href: "/retos/trivia/clasico",
   source: "frontend",
@@ -218,7 +218,7 @@ export default function RetosPage() {
         <SectionHeader
           eyebrow="Disponible ahora"
           title="Retos activos"
-          description="Incluye retos diarios y pruebas locales (Trivia + Snake)."
+          description="Incluye dinámicas diarias y juegos rápidos para subir en el ranking."
           action={<Link href="/retos/trivia/clasico" className="badge">Trivia Toka</Link>}
         />
         {challenges.length === 0 ? <p className="subtle">No hay retos activos sincronizados.</p> : null}
